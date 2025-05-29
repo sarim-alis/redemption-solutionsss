@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useFetcher } from "@remix-run/react";
+import { useFetcher, useLoaderData } from "@remix-run/react";
 import {
   Page,
   Layout,
@@ -11,14 +11,57 @@ import {
   List,
   Link,
   InlineStack,
+  DataTable,
+  Badge,
+  Thumbnail
 } from "@shopify/polaris";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 
 export const loader = async ({ request }) => {
-  await authenticate.admin(request);
+  const { admin } = await authenticate.admin(request);
 
-  return null;
+  // Fetch products using the provided GraphQL query
+  const response = await admin.graphql(`
+    query {
+      products(first: 10) {
+        edges {
+          node {
+            id
+            title
+            description
+            vendor
+            status
+            media(first: 10) {
+              edges {
+                node {
+                  __typename
+                  mediaContentType
+                  ... on MediaImage {
+                    id
+                    image {
+                      url
+                      altText
+                    }
+                  }
+                }
+              }
+            }
+            totalInventory
+            category {
+              id
+              name
+            }
+          }
+        }
+      }
+    }
+  `);
+
+  const responseJson = await response.json();
+  const products = responseJson.data.products.edges.map(edge => edge.node);
+
+  return { products };
 };
 
 export const action = async ({ request }) => {
@@ -87,6 +130,7 @@ export const action = async ({ request }) => {
 };
 
 export default function Index() {
+  const { products } = useLoaderData();
   const fetcher = useFetcher();
   const shopify = useAppBridge();
   const isLoading =
@@ -104,6 +148,48 @@ export default function Index() {
   }, [productId, shopify]);
   const generateProduct = () => fetcher.submit({}, { method: "POST" });
 
+  const getProductImage = (product) => {
+    const mediaEdges = product.media?.edges || [];
+    const imageMedia = mediaEdges.find(edge => 
+      edge.node.__typename === "MediaImage" && edge.node.image
+    );
+    return imageMedia?.node.image || null;
+  };
+
+
+ const productRows = products.map(product => {
+    const image = getProductImage(product);
+    
+    return [
+      product.title,
+      // Image column - using Thumbnail component
+      image ? (
+        <Thumbnail
+          source={image.url}
+          alt={image.altText || product.title}
+          size="small"
+        />
+      ) : (
+        <Text variant="bodyMd" as="span" tone="subdued">
+          No image
+        </Text>
+      ),
+      product.status === "ACTIVE" ? <Badge status="success">Active</Badge> : <Badge>Inactive</Badge>,
+      product.totalInventory || 0,
+      product.category?.name || "Uncategorized",
+      product.description ? product.description.substring(0, 50) + "..." : "No description",
+    ];
+  });
+
+  const productTableHeaders = [
+    "Title",
+    "Image",
+    "Status",
+    "Inventory",
+    "Category",
+    "Description"
+  ];
+
   return (
     <Page>
       <TitleBar title="Remix app template">
@@ -118,10 +204,13 @@ export default function Index() {
               <BlockStack gap="500">
                 <BlockStack gap="200">
                   <Text as="h2" variant="headingMd">
-                    Congrats on creating a new Shopify app 🎉
+                    Redemption Solution 🎵⭐🦋
                   </Text>
+                   <Text variant="bodyMd" as="p">
+                     Redemption Solution is a trusted oil change company committed to keeping your vehicle running smoothly and efficiently. 
+                   </Text>
                   <Text variant="bodyMd" as="p">
-                    This embedded app template uses{" "}
+                    App uses{" "}
                     <Link
                       url="https://shopify.dev/docs/apps/tools/app-bridge"
                       target="_blank"
@@ -131,7 +220,7 @@ export default function Index() {
                     </Link>{" "}
                     interface examples like an{" "}
                     <Link url="/app/additional" removeUnderline>
-                      additional page in the app nav
+                      additional page in app nav
                     </Link>
                     , as well as an{" "}
                     <Link
@@ -141,16 +230,37 @@ export default function Index() {
                     >
                       Admin GraphQL
                     </Link>{" "}
-                    mutation demo, to provide a starting point for app
+                    mutation demo, to provide starting point for app
                     development.
                   </Text>
                 </BlockStack>
+                
+                {/* New Products Section */}
                 <BlockStack gap="200">
                   <Text as="h3" variant="headingMd">
-                    Get started with products
+                    Featured Products 📦💗
+                  </Text>
+                  <Text variant="bodyMd" as="p">
+                    These are the featured products from our store. This data is fetched using the GraphQL Admin API.
+                  </Text>
+                  {products.length > 0 ? (
+                    <DataTable
+                      columnContentTypes={['text', 'text', 'text', 'text', 'numeric', 'text', 'text']}
+                      headings={productTableHeaders}
+                      rows={productRows}
+                    />
+                  ) : (
+                    <Text variant="bodyMd" as="p">
+                      No products found. Try generating a product first!
+                    </Text>
+                  )}
+                </BlockStack>
+                <BlockStack gap="200">
+                  <Text as="h3" variant="headingMd">
+                    Create Products 🧚⭐💎
                   </Text>
                   <Text as="p" variant="bodyMd">
-                    Generate a product with GraphQL and get the JSON output for
+                    Generate product with GraphQL and get JSON output for
                     that product. Learn more about the{" "}
                     <Link
                       url="https://shopify.dev/docs/api/admin-graphql/latest/mutations/productCreate"
@@ -164,7 +274,7 @@ export default function Index() {
                 </BlockStack>
                 <InlineStack gap="300">
                   <Button loading={isLoading} onClick={generateProduct}>
-                    Generate a product
+                    Generate product
                   </Button>
                   {fetcher.data?.product && (
                     <Button
