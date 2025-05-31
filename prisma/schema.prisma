@@ -39,3 +39,19 @@ model Voucher {
   redeemed        Boolean  @default(false)
   createdAt       DateTime @default(now())
 }
+
+model Product {
+  id              String   @id @default(cuid())
+  shopifyId       String   @unique
+  title           String
+  description     String?
+  vendor          String?
+  status          String
+  imageUrl        String?
+  imageAlt        String?
+  totalInventory  Int
+  categoryId      String?
+  categoryName    String?
+  createdAt       DateTime @default(now())
+}
+
