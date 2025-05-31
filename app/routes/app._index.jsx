@@ -1,3 +1,4 @@
+// Imports.
 import { useEffect } from "react";
 import { useFetcher, useLoaderData } from "@remix-run/react";
 import {
@@ -19,10 +20,11 @@ import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
 
+// Loader.
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
 
-  // Fetch products using the provided GraphQL query
+  // Fetch products.
   const response = await admin.graphql(`
     query {
       products(first: 10) {
@@ -98,6 +100,8 @@ export const action = async ({ request }) => {
   const color = ["Red", "Orange", "Yellow", "Green"][
     Math.floor(Math.random() * 4)
   ];
+
+  // Create products.
   const response = await admin.graphql(
     `#graphql
       mutation populateProduct($product: ProductCreateInput!) {
@@ -192,7 +196,6 @@ export default function Index() {
     
     return [
       product.title,
-      // Image column - using Thumbnail component
       image ? (
         <Thumbnail
           source={image.url}
@@ -233,7 +236,7 @@ export default function Index() {
                     Products 🎵⭐🦋
                   </Text>
                 
-                {/* New Products Section */}
+                {/* Products table */}
                   {products.length > 0 ? (
                     <DataTable
                       columnContentTypes={['text', 'text', 'text', 'text', 'numeric', 'text', 'text']}
@@ -247,6 +250,8 @@ export default function Index() {
                   )}
                 <BlockStack gap="200">
                 </BlockStack>
+                
+                {/* Generate product. */}
                 <InlineStack gap="300">
                   <Button loading={isLoading} onClick={generateProduct}>
                     Generate product
