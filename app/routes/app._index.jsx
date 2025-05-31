@@ -17,6 +17,7 @@ import {
 } from "@shopify/polaris";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
+import prisma from "../db.server";
 
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
@@ -60,6 +61,34 @@ export const loader = async ({ request }) => {
 
   const responseJson = await response.json();
   const products = responseJson.data.products.edges.map(edge => edge.node);
+
+  // Transform and save products to database.
+  const transformedProducts = products.map((p) => {
+    const media = p.media?.edges.find(edge => edge.node.__typename === "MediaImage");
+    return {
+      shopifyId: p.id,
+      title: p.title,
+      description: p.description || null,
+      vendor: p.vendor || null,
+      status: p.status,
+      imageUrl: media?.node.image.url || null,
+      imageAlt: media?.node.image.altText || null,
+      totalInventory: p.totalInventory || 0,
+      categoryId: p.category?.id || null,
+      categoryName: p.category?.name || null,
+    };
+  });
+
+  // Save to database.
+  await Promise.all(
+    transformedProducts.map((product) =>
+      prisma.product.upsert({
+        where: { shopifyId: product.shopifyId },
+        update: product,
+        create: product,
+      })
+    )
+  );
 
   return { products };
 };
@@ -146,6 +175,7 @@ export default function Index() {
       shopify.toast.show("Product created");
     }
   }, [productId, shopify]);
+  
   const generateProduct = () => fetcher.submit({}, { method: "POST" });
 
   const getProductImage = (product) => {
@@ -433,6 +463,33 @@ export default function Index() {
           </Layout.Section>
         </Layout>
       </BlockStack>
+
+      <TitleBar title="Products" />
+      <Layout>
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="300">
+              <Text as="h2" variant="headingMd">
+                Products
+              </Text>
+              <Button
+                primary
+                loading={isLoading}
+                onClick={generateProduct}
+              >
+                Generate a product
+              </Button>
+              {products.length > 0 && (
+                <DataTable
+                  columnContentTypes={['text', 'text', 'text', 'numeric', 'text', 'text']}
+                  headings={productTableHeaders}
+                  rows={productRows}
+                />
+              )}
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+      </Layout>
     </Page>
   );
 }
