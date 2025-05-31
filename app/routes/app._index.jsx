@@ -61,6 +61,57 @@ export const loader = async ({ request }) => {
     }
   `);
 
+    // Fetch orders.
+  const orderResponse = await admin.graphql(`
+    query {
+      orders(first: 10, reverse: true) {
+        edges {
+          node {
+            id
+            name
+            processedAt
+            totalPriceSet {
+              shopMoney {
+                amount
+                currencyCode
+              }
+            }
+            customer {
+              firstName
+              lastName
+              email
+            }
+            lineItems(first: 10) {
+              edges {
+                node {
+                  title
+                  quantity
+                  originalUnitPriceSet {
+                    shopMoney {
+                      amount
+                      currencyCode
+                    }
+                  }
+                  variant {
+                    id
+                    product {
+                      id
+                      title
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `);
+
+  const orderJson = await orderResponse.json();
+  const orders = orderJson.data.orders.edges.map(edge => edge.node);
+
+
   const responseJson = await response.json();
   const products = responseJson.data.products.edges.map(edge => edge.node);
 
@@ -92,7 +143,7 @@ export const loader = async ({ request }) => {
     )
   );
 
-  return { products };
+  return { products, orders };
 };
 
 export const action = async ({ request }) => {
@@ -163,7 +214,7 @@ export const action = async ({ request }) => {
 };
 
 export default function Index() {
-  const { products } = useLoaderData();
+  const { products, orders } = useLoaderData();
   const fetcher = useFetcher();
   const shopify = useAppBridge();
   const isLoading =
@@ -250,7 +301,7 @@ export default function Index() {
                   )}
                 <BlockStack gap="200">
                 </BlockStack>
-                
+
                 {/* Generate product. */}
                 <InlineStack gap="300">
                   <Button loading={isLoading} onClick={generateProduct}>
@@ -307,6 +358,27 @@ export default function Index() {
                   </>
                 )}
               </BlockStack>
+
+                <Text as="h2" variant="headingMd">
+    Orders 📦🧾
+  </Text>
+
+  {orders.length > 0 ? (
+    <DataTable
+      columnContentTypes={['text', 'text', 'text', 'numeric', 'text']}
+      headings={['Order ID', 'Customer', 'Date', 'Total Price', 'Items']}
+      rows={orders.map(order => [
+        order.name,
+        `${order.customer?.firstName || 'Guest'} ${order.customer?.lastName || ''}`,
+        new Date(order.processedAt).toLocaleDateString(),
+        `${order.totalPriceSet.shopMoney.amount} ${order.totalPriceSet.shopMoney.currencyCode}`,
+        order.lineItems.edges.map(edge => edge.node.title).join(', ')
+      ])}
+    />
+  ) : (
+    <Text variant="bodyMd" as="p">No orders found.</Text>
+  )}
+
             </Card>
           </Layout.Section>
         </Layout>
