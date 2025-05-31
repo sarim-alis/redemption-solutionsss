@@ -145,6 +145,30 @@ export const loader = async ({ request }) => {
     )
   );
 
+  const transformedOrders = orders.map((o) => ({
+  shopifyId: o.id,
+  name: o.name,
+  processedAt: new Date(o.processedAt),
+  totalAmount: parseFloat(o.totalPriceSet.shopMoney.amount),
+  currency: o.totalPriceSet.shopMoney.currencyCode,
+  customerName: `${o.customer?.firstName || "Guest"} ${o.customer?.lastName || ""}`.trim(),
+  customerEmail: o.customer?.email || null,
+  displayFinancialStatus: o.displayFinancialStatus,
+  displayFulfillmentStatus: o.displayFulfillmentStatus,
+  itemsCount: o.lineItems.edges.reduce((sum, edge) => sum + edge.node.quantity, 0),
+}));
+
+await Promise.all(
+  transformedOrders.map((order) =>
+    prisma.order.upsert({
+      where: { shopifyId: order.shopifyId },
+      update: order,
+      create: order,
+    })
+  )
+);
+
+
   return { products, orders };
 };
 

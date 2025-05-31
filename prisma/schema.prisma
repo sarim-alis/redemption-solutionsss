@@ -55,3 +55,18 @@ model Product {
   createdAt       DateTime @default(now())
 }
 
+model Order {
+  id                     String   @id @default(cuid())
+  shopifyId              String   @unique
+  name                   String
+  processedAt            DateTime
+  totalAmount            Float
+  currency               String
+  customerName           String?
+  customerEmail          String?
+  displayFinancialStatus String
+  displayFulfillmentStatus String
+  itemsCount             Int
+  createdAt              DateTime @default(now())
+}
+
