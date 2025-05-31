@@ -61,7 +61,7 @@ export const loader = async ({ request }) => {
     }
   `);
 
-    // Fetch orders.
+  // Fetch orders.
   const orderResponse = await admin.graphql(`
     query {
       orders(first: 10, reverse: true) {
@@ -359,27 +359,31 @@ export default function Index() {
                 )}
               </BlockStack>
 
+            <Box paddingBlockStart="600">
+               <BlockStack gap="400">
                 <Text as="h2" variant="headingMd">
-    Orders 📦🧾
-  </Text>
+                  Orders 📦🧾
+                </Text>
 
-  {orders.length > 0 ? (
-    <DataTable
-      columnContentTypes={['text', 'text', 'text', 'numeric', 'text']}
-      headings={['Order ID', 'Customer', 'Date', 'Total Price', 'Items']}
-      rows={orders.map(order => [
-        order.name,
-        `${order.customer?.firstName || 'Guest'} ${order.customer?.lastName || ''}`,
-        new Date(order.processedAt).toLocaleDateString(),
-        `${order.totalPriceSet.shopMoney.amount} ${order.totalPriceSet.shopMoney.currencyCode}`,
-        order.lineItems.edges.map(edge => edge.node.title).join(', ')
-      ])}
-    />
-  ) : (
-    <Text variant="bodyMd" as="p">No orders found.</Text>
-  )}
-
-            </Card>
+            {orders.length > 0 ? (
+              <DataTable
+                columnContentTypes={['text', 'text', 'text', 'text', 'numeric', 'text']}
+                headings={['Order ID', 'Customer', 'Email', 'Date', 'Price', 'Items']}
+                rows={orders.map(order => [
+                order.name,
+                `${order.customer?.firstName || 'Guest'} ${order.customer?.lastName || ''}`,
+                order.customer?.email || 'N/A',
+                new Date(order.processedAt).toLocaleDateString(),
+                `${order.totalPriceSet.shopMoney.amount} ${order.totalPriceSet.shopMoney.currencyCode}`,
+                order.lineItems.edges.reduce((sum, edge) => sum + edge.node.quantity, 0)
+            ])}
+            />
+            ) : (
+            <Text variant="bodyMd" as="p">No orders found.</Text>
+          )}
+          </BlockStack>
+          </Box>
+          </Card>
           </Layout.Section>
         </Layout>
       </BlockStack>
