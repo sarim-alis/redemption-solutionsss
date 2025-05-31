@@ -3,7 +3,7 @@
 client_id = "0642b91d1c3d3b39d853b7fe3893c409"
 name = "redemption-solutionsss"
 handle = "redemption-solutionsss"
-application_url = "https://techno-captured-sci-category.trycloudflare.com"
+application_url = "https://gates-argue-commodity-opportunity.trycloudflare.com"
 embedded = true
 
 [build]
@@ -27,9 +27,9 @@ scopes = "write_products, read_orders, write_orders, read_customers, read_invent
 
 [auth]
 redirect_urls = [
-  "https://techno-captured-sci-category.trycloudflare.com/auth/callback",
-  "https://techno-captured-sci-category.trycloudflare.com/auth/shopify/callback",
-  "https://techno-captured-sci-category.trycloudflare.com/api/auth/callback"
+  "https://gates-argue-commodity-opportunity.trycloudflare.com/auth/callback",
+  "https://gates-argue-commodity-opportunity.trycloudflare.com/auth/shopify/callback",
+  "https://gates-argue-commodity-opportunity.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
