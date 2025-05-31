@@ -463,33 +463,6 @@ export default function Index() {
           </Layout.Section>
         </Layout>
       </BlockStack>
-
-      <TitleBar title="Products" />
-      <Layout>
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="300">
-              <Text as="h2" variant="headingMd">
-                Products
-              </Text>
-              <Button
-                primary
-                loading={isLoading}
-                onClick={generateProduct}
-              >
-                Generate a product
-              </Button>
-              {products.length > 0 && (
-                <DataTable
-                  columnContentTypes={['text', 'text', 'text', 'numeric', 'text', 'text']}
-                  headings={productTableHeaders}
-                  rows={productRows}
-                />
-              )}
-            </BlockStack>
-          </Card>
-        </Layout.Section>
-      </Layout>
     </Page>
   );
 }
