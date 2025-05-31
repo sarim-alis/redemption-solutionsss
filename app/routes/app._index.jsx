@@ -70,6 +70,8 @@ export const loader = async ({ request }) => {
             id
             name
             processedAt
+            displayFinancialStatus
+            displayFulfillmentStatus
             totalPriceSet {
               shopMoney {
                 amount
@@ -282,6 +284,7 @@ export default function Index() {
         <Layout>
           <Layout.Section>
             <Card>
+              {/* Products */}
               <BlockStack gap="200">
                   <Text as="h2" variant="headingMd">
                     Products 🎵⭐🦋
@@ -302,7 +305,7 @@ export default function Index() {
                 <BlockStack gap="200">
                 </BlockStack>
 
-                {/* Generate product. */}
+                {/* Generate product */}
                 <InlineStack gap="300">
                   <Button loading={isLoading} onClick={generateProduct}>
                     Generate product
@@ -359,23 +362,27 @@ export default function Index() {
                 )}
               </BlockStack>
 
+            {/* Orders */}
             <Box paddingBlockStart="600">
                <BlockStack gap="400">
                 <Text as="h2" variant="headingMd">
                   Orders 📦🧾
                 </Text>
 
+            {/* Orders table */}
             {orders.length > 0 ? (
               <DataTable
-                columnContentTypes={['text', 'text', 'text', 'text', 'numeric', 'text']}
-                headings={['Order ID', 'Customer', 'Email', 'Date', 'Price', 'Items']}
+                columnContentTypes={['text', 'text', 'text', 'text', 'numeric', 'text', 'text', 'text']}
+                headings={['Order ID', 'Customer', 'Email', 'Date', 'Price', 'Items', 'Payment Status', 'Fulfillment Status']}
                 rows={orders.map(order => [
                 order.name,
                 `${order.customer?.firstName || 'Guest'} ${order.customer?.lastName || ''}`,
                 order.customer?.email || 'N/A',
                 new Date(order.processedAt).toLocaleDateString(),
                 `${order.totalPriceSet.shopMoney.amount} ${order.totalPriceSet.shopMoney.currencyCode}`,
-                order.lineItems.edges.reduce((sum, edge) => sum + edge.node.quantity, 0)
+                order.lineItems.edges.reduce((sum, edge) => sum + edge.node.quantity, 0),
+                order.displayFinancialStatus || 'Unknown',
+                order.displayFulfillmentStatus || 'Unknown',
             ])}
             />
             ) : (
