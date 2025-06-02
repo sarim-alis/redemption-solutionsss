@@ -110,12 +110,59 @@ export const loader = async ({ request }) => {
     }
   `);
 
+  // Fetch customers.
+  const customerResponse = await admin.graphql(`
+  query {
+  customers(first: 10) {
+    edges {
+      node {
+        id
+        firstName
+        lastName
+        email
+        state
+        createdAt
+        numberOfOrders
+        orders(first: 5) {
+          edges {
+            node {
+              id
+              fulfillmentOrders(first:5) {
+                edges {
+                  node {
+                    id
+                  }
+                }
+              }
+            }
+          }
+        }
+        amountSpent {
+          amount
+          currencyCode
+        }
+        defaultAddress {
+          address1
+          city
+          province
+          country
+          zip
+        }
+      }
+    }
+  }
+ }
+`);
+
   const orderJson = await orderResponse.json();
   const orders = orderJson.data.orders.edges.map(edge => edge.node);
 
 
   const responseJson = await response.json();
   const products = responseJson.data.products.edges.map(edge => edge.node);
+
+  const customerJson = await customerResponse.json();
+  const customers = customerJson.data.customers.edges.map(edge => edge.node);
 
   // Transform and save products to database.
   const transformedProducts = products.map((p) => {
@@ -145,6 +192,7 @@ export const loader = async ({ request }) => {
     )
   );
 
+  // Transform and save orders to database.
   const transformedOrders = orders.map((o) => ({
   shopifyId: o.id,
   name: o.name,
@@ -158,18 +206,49 @@ export const loader = async ({ request }) => {
   itemsCount: o.lineItems.edges.reduce((sum, edge) => sum + edge.node.quantity, 0),
 }));
 
+  // Save to database.
+  await Promise.all(
+    transformedOrders.map((order) =>
+      prisma.order.upsert({
+        where: { shopifyId: order.shopifyId },
+        update: order,
+        create: order,
+      })
+    )
+  );
+
+  // Transform and save orders to database.
+  const transformedCustomers = customers.map((c) => ({
+  shopifyId: c.id,
+  firstName: c.firstName || null,
+  lastName: c.lastName || null,
+  email: c.email || null,
+  phone: c.phone || null,
+  createdAt: new Date(c.createdAt),
+  state: c.state,
+  totalOrders: c.orders?.edges.length || 0,
+  amountSpent: parseFloat(c.amountSpent?.amount || "0"),
+  currency: c.amountSpent?.currencyCode || "USD",
+  address1: c.defaultAddress?.address1 || null,
+  city: c.defaultAddress?.city || null,
+  province: c.defaultAddress?.province || null,
+  country: c.defaultAddress?.country || null,
+  zip: c.defaultAddress?.zip || null,
+}));
+
+// Save to database.
 await Promise.all(
-  transformedOrders.map((order) =>
-    prisma.order.upsert({
-      where: { shopifyId: order.shopifyId },
-      update: order,
-      create: order,
+  transformedCustomers.map((customer) =>
+    prisma.customer.upsert({
+      where: { shopifyId: customer.shopifyId },
+      update: customer,
+      create: customer,
     })
   )
 );
 
 
-  return { products, orders };
+  return { products, orders, customers };
 };
 
 export const action = async ({ request }) => {
@@ -240,7 +319,7 @@ export const action = async ({ request }) => {
 };
 
 export default function Index() {
-  const { products, orders } = useLoaderData();
+  const { products, orders, customers } = useLoaderData();
   const fetcher = useFetcher();
   const shopify = useAppBridge();
   const isLoading =
@@ -414,6 +493,47 @@ export default function Index() {
           )}
           </BlockStack>
           </Box>
+
+          {/* Customers */}
+          <Box paddingBlockStart="600">
+            <BlockStack gap="400">
+              <Text as="h2" variant="headingMd">
+                Customers 🧍🧍‍♀️🧍‍♂️
+              </Text>
+
+          {/* Customers Table */}
+          {customers.length > 0 ? (
+            <DataTable
+              columnContentTypes={['text', 'text', 'numeric', 'text']}
+              headings={['Name', 'Location', 'Orders', 'Amount Spent',]}
+              rows={customers.map(customer => {
+              const fullName = (customer.firstName || customer.lastName)
+                ? `${customer.firstName || ''} ${customer.lastName || ''}`.trim(): 'Guest';
+
+              const location = customer.defaultAddress?.city && customer.defaultAddress?.country
+              ? `${customer.defaultAddress.city}, ${customer.defaultAddress.country}, ${customer.defaultAddress.province || ''} ${customer.defaultAddress.zip || ''}`.trim()
+              : 'N/A';
+
+              const ordersCount = customer.numberOfOrders ?? customer.orders?.edges?.length ?? 0;
+
+              const amountSpent = customer.amountSpent
+              ? `${customer.amountSpent.amount} ${customer.amountSpent.currencyCode}`
+              : '0.00';
+
+      return [
+        fullName,
+        location,
+        ordersCount,
+        amountSpent,
+      ];
+    })}
+    />
+    ) : (
+      <Text variant="bodyMd" as="p">No customers found.</Text>
+    )}
+      </BlockStack>
+    </Box>
+
           </Card>
           </Layout.Section>
         </Layout>

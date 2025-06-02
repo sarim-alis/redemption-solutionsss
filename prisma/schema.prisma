@@ -70,3 +70,21 @@ model Order {
   createdAt              DateTime @default(now())
 }
 
+model Customer {
+  id           Int     @id @default(autoincrement())
+  shopifyId    String  @unique
+  firstName    String?
+  lastName     String?
+  email        String?
+  phone        String?
+  createdAt    DateTime
+  state        String?
+  totalOrders  Int
+  amountSpent  Float
+  currency     String
+  address1     String?
+  city         String?
+  province     String?
+  country      String?
+  zip          String?
+}

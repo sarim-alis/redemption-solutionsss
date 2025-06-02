@@ -3,7 +3,7 @@
 client_id = "0642b91d1c3d3b39d853b7fe3893c409"
 name = "redemption-solutionsss"
 handle = "redemption-solutionsss"
-application_url = "https://outdoors-depending-charts-length.trycloudflare.com"
+application_url = "https://planes-scholarships-magazines-jun.trycloudflare.com"
 embedded = true
 
 [build]
@@ -23,13 +23,13 @@ api_version = "2025-04"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_products, read_orders, write_orders, read_customers, read_inventory, write_inventory"
+scopes = "write_products, read_orders, write_orders, read_customers, read_inventory, write_inventory, read_assigned_fulfillment_orders, write_assigned_fulfillment_orders, read_merchant_managed_fulfillment_orders, write_merchant_managed_fulfillment_orders, read_third_party_fulfillment_orders, write_third_party_fulfillment_orders"
 
 [auth]
 redirect_urls = [
-  "https://outdoors-depending-charts-length.trycloudflare.com/auth/callback",
-  "https://outdoors-depending-charts-length.trycloudflare.com/auth/shopify/callback",
-  "https://outdoors-depending-charts-length.trycloudflare.com/api/auth/callback"
+  "https://planes-scholarships-magazines-jun.trycloudflare.com/auth/callback",
+  "https://planes-scholarships-magazines-jun.trycloudflare.com/auth/shopify/callback",
+  "https://planes-scholarships-magazines-jun.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
