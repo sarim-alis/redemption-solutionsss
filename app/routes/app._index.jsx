@@ -520,17 +520,17 @@ export default function Index() {
               ? `${customer.amountSpent.amount} ${customer.amountSpent.currencyCode}`
               : '0.00';
 
-      return [
-        fullName,
-        location,
-        ordersCount,
-        amountSpent,
-      ];
-    })}
-    />
-    ) : (
-      <Text variant="bodyMd" as="p">No customers found.</Text>
-    )}
+            return [
+            fullName,
+            location,
+            ordersCount,
+            amountSpent,
+            ];
+          })}
+          />
+        ) : (
+        <Text variant="bodyMd" as="p">No customers found.</Text>
+        )}
       </BlockStack>
     </Box>
 
