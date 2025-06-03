@@ -3,7 +3,7 @@
 client_id = "0642b91d1c3d3b39d853b7fe3893c409"
 name = "redemption-solutionsss"
 handle = "redemption-solutionsss"
-application_url = "https://planes-scholarships-magazines-jun.trycloudflare.com"
+application_url = "https://step-fg-median-abstracts.trycloudflare.com"
 embedded = true
 
 [build]
@@ -27,9 +27,9 @@ scopes = "write_products, read_orders, write_orders, read_customers, read_invent
 
 [auth]
 redirect_urls = [
-  "https://planes-scholarships-magazines-jun.trycloudflare.com/auth/callback",
-  "https://planes-scholarships-magazines-jun.trycloudflare.com/auth/shopify/callback",
-  "https://planes-scholarships-magazines-jun.trycloudflare.com/api/auth/callback"
+  "https://step-fg-median-abstracts.trycloudflare.com/auth/callback",
+  "https://step-fg-median-abstracts.trycloudflare.com/auth/shopify/callback",
+  "https://step-fg-median-abstracts.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
