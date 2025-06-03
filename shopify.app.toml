@@ -3,7 +3,7 @@
 client_id = "0642b91d1c3d3b39d853b7fe3893c409"
 name = "redemption-solutionsss"
 handle = "redemption-solutionsss"
-application_url = "https://step-fg-median-abstracts.trycloudflare.com"
+application_url = "https://influences-fighters-investors-vegetables.trycloudflare.com"
 embedded = true
 
 [build]
@@ -23,13 +23,13 @@ api_version = "2025-04"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_products, read_orders, write_orders, read_customers, read_inventory, write_inventory, read_assigned_fulfillment_orders, write_assigned_fulfillment_orders, read_merchant_managed_fulfillment_orders, write_merchant_managed_fulfillment_orders, read_third_party_fulfillment_orders, write_third_party_fulfillment_orders"
+scopes = "write_products, read_orders, write_orders, read_customers, read_inventory, write_inventory, read_assigned_fulfillment_orders, write_assigned_fulfillment_orders, read_merchant_managed_fulfillment_orders, write_merchant_managed_fulfillment_orders, read_third_party_fulfillment_orders, write_third_party_fulfillment_orders, read_discounts, write_discounts, read_gift_cards, write_gift_cards, read_inventory, write_inventory, "
 
 [auth]
 redirect_urls = [
-  "https://step-fg-median-abstracts.trycloudflare.com/auth/callback",
-  "https://step-fg-median-abstracts.trycloudflare.com/auth/shopify/callback",
-  "https://step-fg-median-abstracts.trycloudflare.com/api/auth/callback"
+  "https://influences-fighters-investors-vegetables.trycloudflare.com/auth/callback",
+  "https://influences-fighters-investors-vegetables.trycloudflare.com/auth/shopify/callback",
+  "https://influences-fighters-investors-vegetables.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
