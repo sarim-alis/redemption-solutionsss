@@ -38,6 +38,8 @@ model Voucher {
   shopifyOrderId  String
   redeemed        Boolean  @default(false)
   createdAt       DateTime @default(now())
+
+  order           Order?   @relation(fields: [shopifyOrderId], references: [shopifyId])
 }
 
 model Product {
@@ -68,6 +70,8 @@ model Order {
   displayFulfillmentStatus String
   itemsCount             Int
   createdAt              DateTime @default(now())
+
+  vouchers           Voucher[]
 }
 
 model Customer {
