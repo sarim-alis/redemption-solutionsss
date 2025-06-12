@@ -3,7 +3,7 @@
 client_id = "0642b91d1c3d3b39d853b7fe3893c409"
 name = "redemption-solutionsss"
 handle = "redemption-solutionsss"
-application_url = "https://precipitation-differently-casa-tvs.trycloudflare.com"
+application_url = "https://difficulties-jurisdiction-speeches-mime.trycloudflare.com"
 embedded = true
 
 [build]
@@ -36,9 +36,9 @@ scopes = "write_products, read_orders, write_orders, read_customers, read_invent
 
 [auth]
 redirect_urls = [
-  "https://precipitation-differently-casa-tvs.trycloudflare.com/auth/callback",
-  "https://precipitation-differently-casa-tvs.trycloudflare.com/auth/shopify/callback",
-  "https://precipitation-differently-casa-tvs.trycloudflare.com/api/auth/callback"
+  "https://difficulties-jurisdiction-speeches-mime.trycloudflare.com/auth/callback",
+  "https://difficulties-jurisdiction-speeches-mime.trycloudflare.com/auth/shopify/callback",
+  "https://difficulties-jurisdiction-speeches-mime.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
