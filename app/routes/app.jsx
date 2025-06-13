@@ -25,7 +25,7 @@ export default function App() {
   const toggleMobileNavigationActive = () =>
     setMobileNavigationActive((mobileNavigationActive) => !mobileNavigationActive);
 
-  // navigationMarkup.
+  // Navigation markup.
   const navigationMarkup = (
     <Navigation location="/">
       <Navigation.Section
