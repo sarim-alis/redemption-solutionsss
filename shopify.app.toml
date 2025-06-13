@@ -3,7 +3,7 @@
 client_id = "0642b91d1c3d3b39d853b7fe3893c409"
 name = "redemption-solutionsss"
 handle = "redemption-solutionsss"
-application_url = "https://offline-abandoned-sponsorship-benz.trycloudflare.com"
+application_url = "https://rated-pretty-flash-bluetooth.trycloudflare.com"
 embedded = true
 
 [build]
@@ -36,9 +36,9 @@ scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gi
 
 [auth]
 redirect_urls = [
-  "https://offline-abandoned-sponsorship-benz.trycloudflare.com/auth/callback",
-  "https://offline-abandoned-sponsorship-benz.trycloudflare.com/auth/shopify/callback",
-  "https://offline-abandoned-sponsorship-benz.trycloudflare.com/api/auth/callback"
+  "https://rated-pretty-flash-bluetooth.trycloudflare.com/auth/callback",
+  "https://rated-pretty-flash-bluetooth.trycloudflare.com/auth/shopify/callback",
+  "https://rated-pretty-flash-bluetooth.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]

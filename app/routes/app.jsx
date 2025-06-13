@@ -83,6 +83,7 @@ export default function App() {
         <Link to="/app/additional">Additional page</Link>
         <Link to="/app/demo">Demo page</Link>
         <Link to="/app/orders">Orders</Link>
+        <Link to="/app/customers">Orders</Link>
       </NavMenu>
     </AppProvider>
   );
