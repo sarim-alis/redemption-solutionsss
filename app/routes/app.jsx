@@ -47,7 +47,7 @@ export default function App() {
             icon: StoreManagedIcon,
           },
           {
-            url: '/app/additional',
+            url: '/app/vouchers',
             label: 'Vouchers',
             icon: ProductIcon,
           },
@@ -57,7 +57,7 @@ export default function App() {
         title="Settings"
         items={[
           {
-            url: '/app/settings',
+            url: '/settings/general',
             label: 'App Settings',
             icon: SettingsIcon,
           },
@@ -83,6 +83,7 @@ export default function App() {
         <Link to="/app" rel="home">Home</Link>
         <Link to="/app/orders">Orders</Link>
         <Link to="/app/customers">Customers</Link>
+        <Link to="/app/vouchers">Vouchers</Link>
       </NavMenu>
     </AppProvider>
   );
