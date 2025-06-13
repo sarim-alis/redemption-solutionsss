@@ -1,3 +1,4 @@
+// Imports.
 import { Link, Outlet, useLoaderData, useRouteError } from "@remix-run/react";
 import { boundary } from "@shopify/shopify-app-remix/server";
 import { AppProvider } from "@shopify/shopify-app-remix/react";
@@ -7,15 +8,16 @@ import { HomeIcon, OrderIcon, ProductIcon, SettingsIcon, StoreManagedIcon, } fro
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
 import { authenticate } from "../shopify.server";
 import { useState } from "react";
-
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
+// Loader.
 export const loader = async ({ request }) => {
   await authenticate.admin(request);
-
   return { apiKey: process.env.SHOPIFY_API_KEY || "" };
 };
 
+
+// Frontend.
 export default function App() {
   const { apiKey } = useLoaderData();
   const [mobileNavigationActive, setMobileNavigationActive] = useState(false);
@@ -23,6 +25,7 @@ export default function App() {
   const toggleMobileNavigationActive = () =>
     setMobileNavigationActive((mobileNavigationActive) => !mobileNavigationActive);
 
+  // navigationMarkup.
   const navigationMarkup = (
     <Navigation location="/">
       <Navigation.Section
@@ -75,25 +78,22 @@ export default function App() {
         </div>
       </Frame>
       
-      {/* Keep the original NavMenu for App Bridge compatibility */}
+      {/* Nav Menu. */}
       <NavMenu>
-        <Link to="/app" rel="home">
-          Home
-        </Link>
-        <Link to="/app/additional">Additional page</Link>
-        <Link to="/app/demo">Demo page</Link>
+        <Link to="/app" rel="home">Home</Link>
         <Link to="/app/orders">Orders</Link>
-        <Link to="/app/customers">Orders</Link>
+        <Link to="/app/customers">Customers</Link>
       </NavMenu>
     </AppProvider>
   );
 }
 
-// Shopify needs Remix to catch some thrown responses, so that their headers are included in the response.
+// Error Boundary.
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }
 
+// Headers.
 export const headers = (headersArgs) => {
   return boundary.headers(headersArgs);
 };
