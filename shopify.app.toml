@@ -3,7 +3,7 @@
 client_id = "0642b91d1c3d3b39d853b7fe3893c409"
 name = "redemption-solutionsss"
 handle = "redemption-solutionsss"
-application_url = "https://program-cookie-pee-arbitrary.trycloudflare.com"
+application_url = "https://offline-abandoned-sponsorship-benz.trycloudflare.com"
 embedded = true
 
 [build]
@@ -15,7 +15,8 @@ api_version = "2025-04"
 
   [[webhooks.subscriptions]]
   topics = [ "app/uninstalled" ]
-  uri = "/webhooks/app/uninstalled"
+  uri = "/webhooks"
+  compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
 
   [[webhooks.subscriptions]]
   topics = [ "app/scopes_update" ]
@@ -29,20 +30,15 @@ api_version = "2025-04"
   topics = [ "orders/create" ]
   uri = "/webhooks/orders/create"
 
-  [[webhooks.subscriptions]]
-  topics = [ "app/uninstalled" ]
-  uri = "/webhooks"
-  compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
-
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_products, read_orders, write_orders, read_customers, read_inventory, write_inventory, read_assigned_fulfillment_orders, write_assigned_fulfillment_orders, read_merchant_managed_fulfillment_orders, write_merchant_managed_fulfillment_orders, read_third_party_fulfillment_orders, write_third_party_fulfillment_orders, read_discounts, write_discounts, read_gift_cards, write_gift_cards, read_inventory, write_inventory, "
+scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gift_cards,read_inventory,read_merchant_managed_fulfillment_orders,read_orders,read_third_party_fulfillment_orders,write_assigned_fulfillment_orders,write_discounts,write_gift_cards,write_inventory,write_merchant_managed_fulfillment_orders,write_orders,write_products,write_third_party_fulfillment_orders"
 
 [auth]
 redirect_urls = [
-  "https://morgan-fabric-immediately-racing.trycloudflare.com/auth/callback",
-  "https://morgan-fabric-immediately-racing.trycloudflare.com/auth/shopify/callback",
-  "https://morgan-fabric-immediately-racing.trycloudflare.com/api/auth/callback"
+  "https://offline-abandoned-sponsorship-benz.trycloudflare.com/auth/callback",
+  "https://offline-abandoned-sponsorship-benz.trycloudflare.com/auth/shopify/callback",
+  "https://offline-abandoned-sponsorship-benz.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
