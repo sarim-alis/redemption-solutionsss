@@ -3,7 +3,7 @@
 client_id = "0642b91d1c3d3b39d853b7fe3893c409"
 name = "redemption-solutionsss"
 handle = "redemption-solutionsss"
-application_url = "https://forests-cycle-abroad-east.trycloudflare.com"
+application_url = "https://filters-unexpected-agent-throughout.trycloudflare.com"
 embedded = true
 
 [build]
@@ -36,9 +36,9 @@ scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gi
 
 [auth]
 redirect_urls = [
-  "https://forests-cycle-abroad-east.trycloudflare.com/auth/callback",
-  "https://forests-cycle-abroad-east.trycloudflare.com/auth/shopify/callback",
-  "https://forests-cycle-abroad-east.trycloudflare.com/api/auth/callback"
+  "https://filters-unexpected-agent-throughout.trycloudflare.com/auth/callback",
+  "https://filters-unexpected-agent-throughout.trycloudflare.com/auth/shopify/callback",
+  "https://filters-unexpected-agent-throughout.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]

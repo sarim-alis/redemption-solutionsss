@@ -56,16 +56,12 @@ export default function App() {
             label: 'Vouchers',
             icon: ProductIcon,
           },
-        ]}
-      />
-      <Navigation.Section
-        title="Settings"
-        items={[
           {
-            url: '/settings/general',
-            label: 'App Settings',
+            url: '/app/settings',
+            label: 'Settings',
             icon: SettingsIcon,
           },
+
         ]}
       />
     </Navigation>

@@ -213,7 +213,7 @@ export default function Index() {
             <Box paddingBlockStart="600">
               <BlockStack gap="400">
                   <Text as="h2" variant="headingMd">
-                    Vouchers 💳⭐
+                    Settings ⚙️⭐
                   </Text>
                 
                 {/* Products table. */}
