@@ -37,7 +37,7 @@ export default function App() {
         items={[
           {
             url: '/app',
-            label: 'Home',
+            label: 'Dashboard',
             icon: HomeIcon,
             exactMatch: true,
           },
