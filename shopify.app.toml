@@ -3,7 +3,7 @@
 client_id = "0642b91d1c3d3b39d853b7fe3893c409"
 name = "redemption-solutionsss"
 handle = "redemption-solutionsss"
-application_url = "https://dollar-supplement-briefly-powers.trycloudflare.com"
+application_url = "https://posted-reproductive-lip-amend.trycloudflare.com"
 embedded = true
 
 [build]
@@ -36,9 +36,9 @@ scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gi
 
 [auth]
 redirect_urls = [
-  "https://dollar-supplement-briefly-powers.trycloudflare.com/auth/callback",
-  "https://dollar-supplement-briefly-powers.trycloudflare.com/auth/shopify/callback",
-  "https://dollar-supplement-briefly-powers.trycloudflare.com/api/auth/callback"
+  "https://posted-reproductive-lip-amend.trycloudflare.com/auth/callback",
+  "https://posted-reproductive-lip-amend.trycloudflare.com/auth/shopify/callback",
+  "https://posted-reproductive-lip-amend.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]

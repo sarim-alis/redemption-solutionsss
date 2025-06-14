@@ -8,7 +8,12 @@ import { HomeIcon, OrderIcon, ProductIcon, SettingsIcon, StoreManagedIcon, } fro
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
 import { authenticate } from "../shopify.server";
 import { useState } from "react";
-export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
+export const links = () => [{ rel: "stylesheet", href: polarisStyles },
+   {
+    rel: "stylesheet",
+    href: "/custom-sidebar.css",
+  },
+];
 
 // Loader.
 export const loader = async ({ request }) => {
