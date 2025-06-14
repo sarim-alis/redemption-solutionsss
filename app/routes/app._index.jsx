@@ -231,8 +231,10 @@ export default function Index() {
         <Layout>
           <Layout.Section>
             <Card>
+
               {/* Products. */}
-              <BlockStack gap="200">
+            <Box paddingBlockStart="600">
+              <BlockStack gap="400">
                   <Text as="h2" variant="headingMd">
                     Products 🎵⭐🦋
                   </Text>
@@ -308,6 +310,7 @@ export default function Index() {
                   </>
                 )}
               </BlockStack>
+              </Box>
 
           </Card>
           </Layout.Section>
