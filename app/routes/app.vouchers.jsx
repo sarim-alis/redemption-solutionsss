@@ -164,23 +164,6 @@ export const action = async ({ request }) => {
 
 export default function Index() {
   const { products } = useLoaderData();
-  const fetcher = useFetcher();
-  const shopify = useAppBridge();
-  const isLoading =
-    ["loading", "submitting"].includes(fetcher.state) &&
-    fetcher.formMethod === "POST";
-  const productId = fetcher.data?.product?.id.replace(
-    "gid://shopify/Product/",
-    "",
-  );
-
-  useEffect(() => {
-    if (productId) {
-      shopify.toast.show("Product created");
-    }
-  }, [productId, shopify]);
-  
-  const generateProduct = () => fetcher.submit({}, { method: "POST" });
 
   const getProductImage = (product) => {
     const mediaEdges = product.media?.edges || [];
@@ -232,15 +215,15 @@ export default function Index() {
           <Layout.Section>
             <Card>
 
-              {/* Products. */}
+              {/* Vouchers. */}
             <Box paddingBlockStart="600">
               <BlockStack gap="400">
                   <Text as="h2" variant="headingMd">
-                    Products 🎵⭐🦋
+                    Vouchers 💳⭐
                   </Text>
                 
                 {/* Products table. */}
-                  {products.length > 0 ? (
+                  {/* {products.length > 0 ? (
                     <DataTable
                       columnContentTypes={['text', 'text', 'text', 'text', 'numeric', 'text', 'text']}
                       headings={productTableHeaders}
@@ -250,65 +233,8 @@ export default function Index() {
                     <Text variant="bodyMd" as="p">
                       No products found. Try generating a product first!
                     </Text>
-                  )}
-                <BlockStack gap="200">
-                </BlockStack>
+                  )} */}
 
-                {/* Generate product. */}
-                <InlineStack gap="300">
-                  <Button loading={isLoading} onClick={generateProduct}>
-                    Generate product
-                  </Button>
-                  {fetcher.data?.product && (
-                    <Button
-                      url={`shopify:admin/products/${productId}`}
-                      target="_blank"
-                      variant="plain"
-                    >
-                      View product
-                    </Button>
-                  )}
-                </InlineStack>
-                {fetcher.data?.product && (
-                  <>
-                    <Text as="h3" variant="headingMd">
-                      {" "}
-                      productCreate mutation
-                    </Text>
-                    <Box
-                      padding="400"
-                      background="bg-surface-active"
-                      borderWidth="025"
-                      borderRadius="200"
-                      borderColor="border"
-                      overflowX="scroll"
-                    >
-                      <pre style={{ margin: 0 }}>
-                        <code>
-                          {JSON.stringify(fetcher.data.product, null, 2)}
-                        </code>
-                      </pre>
-                    </Box>
-                    <Text as="h3" variant="headingMd">
-                      {" "}
-                      productVariantsBulkUpdate mutation
-                    </Text>
-                    <Box
-                      padding="400"
-                      background="bg-surface-active"
-                      borderWidth="025"
-                      borderRadius="200"
-                      borderColor="border"
-                      overflowX="scroll"
-                    >
-                      <pre style={{ margin: 0 }}>
-                        <code>
-                          {JSON.stringify(fetcher.data.variant, null, 2)}
-                        </code>
-                      </pre>
-                    </Box>
-                  </>
-                )}
               </BlockStack>
               </Box>
 
