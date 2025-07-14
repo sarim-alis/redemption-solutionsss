@@ -1,44 +1,36 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "0642b91d1c3d3b39d853b7fe3893c409"
-name = "redemption-solutionsss"
-handle = "redemption-solutionsss"
-application_url = "https://ward-researcher-fossil-laundry.trycloudflare.com"
+client_id = "45f507e1809ed0b0a96b6c8eba1e2950"
+name = "redemption-solutions"
+handle = "redemption-solutions"
+application_url = "https://sec-bedrooms-joint-reaction.trycloudflare.com"
 embedded = true
-
-[build]
-include_config_on_deploy = true
-automatically_update_urls_on_dev = true
 
 [webhooks]
 api_version = "2025-04"
-
-  [[webhooks.subscriptions]]
-  topics = [ "app/uninstalled" ]
-  uri = "/webhooks/app/uninstalled"
 
   [[webhooks.subscriptions]]
   topics = [ "app/scopes_update" ]
   uri = "/webhooks/app/scopes_update"
 
   [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+    [[webhooks.subscriptions]]
   topics = [ "orders/paid" ]
   uri = "/webhooks/orders/paid"
-
-  [[webhooks.subscriptions]]
-  topics = [ "orders/create" ]
-  uri = "/webhooks/orders/create"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "read_assigned_fulfillment_orders, read_customers, read_discounts, read_gift_cards, read_inventory, read_merchant_managed_fulfillment_orders, read_orders, read_third_party_fulfillment_orders, write_assigned_fulfillment_orders, write_discounts, write_gift_cards, write_inventory, write_merchant_managed_fulfillment_orders, write_orders, write_products, write_third_party_fulfillment_orders"
 
 [auth]
-redirect_urls = [
-  "https://ward-researcher-fossil-laundry.trycloudflare.com/auth/callback",
-  "https://ward-researcher-fossil-laundry.trycloudflare.com/auth/shopify/callback",
-  "https://ward-researcher-fossil-laundry.trycloudflare.com/api/auth/callback"
-]
+redirect_urls = ["https://sec-bedrooms-joint-reaction.trycloudflare.com/auth/callback", "https://sec-bedrooms-joint-reaction.trycloudflare.com/auth/shopify/callback", "https://sec-bedrooms-joint-reaction.trycloudflare.com/api/auth/callback"]
 
 [pos]
 embedded = false
+
+[build]
+automatically_update_urls_on_dev = true
+include_config_on_deploy = true

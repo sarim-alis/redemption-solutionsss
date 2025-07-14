@@ -32,12 +32,13 @@ model Session {
 }
 
 model Voucher {
-  id              String   @id @unique @default(cuid())
-  code            String   @unique
-  customerEmail   String
-  shopifyOrderId  String
-  redeemed        Boolean  @default(false)
-  createdAt       DateTime @default(now())
+  id            String   @id @default(uuid())
+  code          String   @unique
+  shopifyOrderId String
+  customerEmail String
+  used          Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  order         Order    @relation(fields: [shopifyOrderId], references: [shopifyOrderId])
 }
 
 model Product {
@@ -53,5 +54,22 @@ model Product {
   categoryId      String?
   categoryName    String?
   createdAt       DateTime @default(now())
+}
+
+model Order {
+  id                String   @id @default(cuid())
+  shopifyOrderId    String   @unique
+  customerEmail     String?
+  customerName      String?
+  totalPrice        Float
+  currency          String
+  status            String
+  fulfillmentStatus String?
+  itemQuantity      Int
+  processedAt       DateTime
+  lineItems         Json?    // Store line items as JSON
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  vouchers          Voucher[] // Relation to vouchers
 }
 
