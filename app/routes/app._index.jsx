@@ -216,7 +216,7 @@ export default function Index() {
       <Page fullWidth>
         <TitleBar title="Dashboard" primaryAction />
         <BlockStack gap="500">
-          <div style={{ display: "flex", gap: 24, marginBottom: 32, flexWrap: "nowrap", width: "100%" }}>
+          {/* <div style={{ display: "flex", gap: 24, marginBottom: 32, flexWrap: "nowrap", width: "100%" }}>
             <div style={{ flex: 1, background: "#fff", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", padding: 24, display: "flex", alignItems: "center", minHeight: 100 }}>
               <FaShoppingCart size={28} color="#6366f1" style={{ marginRight: 12 }} />
               <div style={{ textAlign: "left" }}>
@@ -238,11 +238,11 @@ export default function Index() {
                 <div style={{ fontSize: 20, fontWeight: 700, color: "#64748b" }}>{unpaidOrders}</div>
               </div>
             </div>
-          </div>
+          </div> */}
           <Layout>
             <Layout.Section oneHalf>
               <Card>
-                <Text as="h2" variant="headingMd">Order Analytics</Text>
+                {/* <Text as="h2" variant="headingMd">Order Analytics</Text> */}
                 <DashboardOrderChart paidOrders={paidOrders} unpaidOrders={unpaidOrders} />
               </Card>
             </Layout.Section>
