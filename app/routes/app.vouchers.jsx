@@ -1,29 +1,28 @@
+// Imports.
 import React from "react";
 import { useLoaderData } from "@remix-run/react";
 import SidebarLayout from "../components/SidebarLayout";
+import { json } from "@remix-run/node";
+import { getAllVouchers } from "../models/voucher.server";
 
+
+// Loader.
+export const loader = async () => {
+  const vouchers = await getAllVouchers();
+  return json({ vouchers });
+};
+
+
+// Frontend.
 export default function VouchersPage() {
-  let data;
-  try {
-    data = useLoaderData();
-  } catch (e) {
-    data = null;
-  }
-  const vouchers = data && data.vouchers ? data.vouchers : [];
+  const { vouchers } = useLoaderData();
+  console.log("📦 vouchers list:", vouchers);
 
   return (
     <SidebarLayout>
       <div style={{ padding: 40 }}>
         <div
-          style={{
-            overflowX: "auto",
-            width: "100%",
-            margin: 0,
-            background: "#fff",
-            borderRadius: 12,
-            boxShadow: "0 2px 16px #0001",
-            border: "1px solid #eee",
-          }}
+          style={containerStyle}
         >
           <table
             style={{
@@ -34,56 +33,11 @@ export default function VouchersPage() {
           >
             <thead style={{ background: "#f3f4f6" }}>
               <tr>
-                <th
-                  style={{
-                    padding: "12px 6px",
-                    fontWeight: 600,
-                    borderBottom: "2px solid #e5e7eb",
-                    fontSize: 13,
-                  }}
-                >
-                  Voucher Code
-                </th>
-                <th
-                  style={{
-                    padding: "12px 6px",
-                    fontWeight: 600,
-                    borderBottom: "2px solid #e5e7eb",
-                    fontSize: 13,
-                  }}
-                >
-                  Order ID
-                </th>
-                <th
-                  style={{
-                    padding: "12px 6px",
-                    fontWeight: 600,
-                    borderBottom: "2px solid #e5e7eb",
-                    fontSize: 13,
-                  }}
-                >
-                  Customer Email
-                </th>
-                <th
-                  style={{
-                    padding: "12px 6px",
-                    fontWeight: 600,
-                    borderBottom: "2px solid #e5e7eb",
-                    fontSize: 13,
-                  }}
-                >
-                  Used
-                </th>
-                <th
-                  style={{
-                    padding: "12px 6px",
-                    fontWeight: 600,
-                    borderBottom: "2px solid #e5e7eb",
-                    fontSize: 13,
-                  }}
-                >
-                  Created At
-                </th>
+                <th style={headStyle}>Voucher Code</th>
+                <th style={headStyle}>Order ID</th>
+                <th style={headStyle}>Customer Email</th>
+                <th style={headStyle}>Used</th>
+                <th style={headStyle}>Created At</th>
               </tr>
             </thead>
             <tbody>
@@ -95,41 +49,10 @@ export default function VouchersPage() {
                       background: idx % 2 === 0 ? "#fafbfc" : "#fff",
                     }}
                   >
-                    <td
-                      style={{
-                        padding: "8px 6px",
-                        borderBottom: "1px solid #f3f4f6",
-                        fontFamily: "monospace",
-                        fontSize: 13,
-                      }}
-                    >
-                      {v.code}
-                    </td>
-                    <td
-                      style={{
-                        padding: "8px 6px",
-                        borderBottom: "1px solid #f3f4f6",
-                        fontSize: 13,
-                      }}
-                    >
-                      {v.shopifyOrderId}
-                    </td>
-                    <td
-                      style={{
-                        padding: "8px 6px",
-                        borderBottom: "1px solid #f3f4f6",
-                        fontSize: 13,
-                      }}
-                    >
-                      {v.customerEmail}
-                    </td>
-                    <td
-                      style={{
-                        padding: "8px 6px",
-                        borderBottom: "1px solid #f3f4f6",
-                        fontSize: 13,
-                      }}
-                    >
+                    <td style={cellStyle}>{v.code}</td>
+                    <td style={cellStyle}>{v.shopifyOrderId}</td>
+                    <td style={cellStyle}>{v.customerEmail}</td>
+                    <td style={cellStyle}>
                       <span
                         style={{
                           display: "inline-block",
@@ -139,19 +62,11 @@ export default function VouchersPage() {
                           color: v.used ? "#065f46" : "#92400e",
                           fontWeight: 600,
                           fontSize: 12,
-                        }}
-                      >
+                        }}>
                         {v.used ? "Yes" : "No"}
                       </span>
                     </td>
-                    <td
-                      style={{
-                        padding: "8px 6px",
-                        borderBottom: "1px solid #f3f4f6",
-                        color: "#6b7280",
-                        fontSize: 13,
-                      }}
-                    >
+                    <td style={cellStyle}>
                       {new Date(v.createdAt).toLocaleString()}
                     </td>
                   </tr>
@@ -180,3 +95,28 @@ export default function VouchersPage() {
     </SidebarLayout>
   );
 }
+
+// Styles.
+const containerStyle ={
+  overflowX: "auto",
+  width: "100%",
+  margin: 0,
+  background: "#fff",
+  borderRadius: 12,
+  boxShadow: "0 2px 16px #0001",
+  border: "1px solid #eee",
+}
+
+const headStyle = {
+  padding: "12px 6px",
+  fontWeight: 600,
+  borderBottom: "2px solid #e5e7eb",
+  fontSize: 13,
+};
+
+const cellStyle = {
+  padding: "8px 6px",
+  borderBottom: "1px solid #f3f4f6",
+  fontSize: 13,
+  color: "#6b7280",
+};
