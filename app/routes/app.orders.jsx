@@ -4,9 +4,42 @@ import { Page, DataTable, Text, BlockStack, Badge, Button } from "@shopify/polar
 import SidebarLayout from "../components/SidebarLayout";
 import { authenticate } from "../shopify.server";
 import { saveOrder } from "../models/order.server";
+import prisma from "../db.server";
+import { sendEmail } from "../utils/mail.server";
 
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
+  
+  // ✅ TEST EMAIL FIRST - This will run when the page loads
+  console.log('🧪 Testing email functionality...');
+  try {
+    await sendEmail({
+      to: "sarimslayerali786@gmail.com",
+      subject: "🧪 Nodemailer Test - " + new Date().toLocaleString(),
+      text: "This is a test email to check if nodemailer is working properly. If you receive this, the email configuration is correct!",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #4CAF50;">✅ Nodemailer Test Successful!</h2>
+          <p>This is a test email sent at: <strong>${new Date().toLocaleString()}</strong></p>
+          <p>If you received this email, your nodemailer configuration is working correctly.</p>
+          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3>Test Details:</h3>
+            <ul>
+              <li>✅ SMTP connection established</li>
+              <li>✅ Email sent successfully</li>
+              <li>✅ HTML formatting working</li>
+            </ul>
+          </div>
+          <p style="color: #666;">This email was sent from your Shopify orders page loader.</p>
+        </div>
+      `,
+    });
+    console.log('✅ Test email sent successfully to sarimslayerali786@gmail.com');
+  } catch (emailError) {
+    console.error('❌ Test email failed:', emailError.message);
+    console.error('Full error:', emailError);
+  }
+  
   console.log('🔄 Starting to fetch orders...');
   const orderResponse = await admin.graphql(`
     query {
@@ -130,6 +163,42 @@ export const loader = async ({ request }) => {
           shopifyOrderId: savedOrder.shopifyOrderId,
           status: savedOrder.status
         });
+
+        // ✅ Find Voucher by shopifyOrderId - Fixed to use numericId
+        const voucher = await prisma.voucher.findFirst({
+          where: {
+            shopifyOrderId: numericId, // Use numericId instead of full GraphQL ID
+          },
+        });
+
+        // ✅ Send Email (keeping your original logic but with better error handling)
+        if (order.customer.email && voucher) {
+          try {
+            await sendEmail({
+              // to: "sarimslayerali786@gmail.com",
+              to: order.customer.email,
+              subject: `🎟️ Your Voucher Code for Order ${order.name}`,
+              text: `Hello ${order.customer.firstName},\n\nThank you for your order ${order.name}.\nHere is your voucher code: ${voucher.code}`,
+              html: `
+                <p>Hello <strong>${order.customer.firstName}</strong>,</p>
+                <p>Thank you for your order <strong>${order.name}</strong>.</p>
+                <p>🎁 Here is your voucher code: <strong style="font-size: 18px;">${voucher.code}</strong></p>
+              `,
+            });
+            console.log('📧 Voucher email sent to customer for order:', order.name);
+          } catch (emailErr) {
+            console.error('❌ Failed to send voucher email:', emailErr.message);
+            console.error('Full email error:', emailErr);
+          }
+        } else {
+          console.log('⚠️ No email or voucher found for customer/order:', {
+            orderId: numericId,
+            hasCustomerEmail: !!order.customer?.email,
+            hasVoucher: !!voucher,
+            voucherCode: voucher?.code
+          });
+        }
+
         savedCount++;
       } catch (error) {
         console.error('❌ Failed to save order:', {
