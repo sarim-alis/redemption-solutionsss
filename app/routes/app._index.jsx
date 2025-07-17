@@ -214,7 +214,7 @@ export default function Index() {
   return (
     <SidebarLayout>
       <Page fullWidth>
-        <TitleBar title="Dashboard" primaryAction />
+        <TitleBar title="Report" primaryAction />
         <BlockStack gap="500">
           {/* <div style={{ display: "flex", gap: 24, marginBottom: 32, flexWrap: "nowrap", width: "100%" }}>
             <div style={{ flex: 1, background: "#fff", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", padding: 24, display: "flex", alignItems: "center", minHeight: 100 }}>
