@@ -3,7 +3,7 @@ import { Link, useLocation } from "@remix-run/react";
 import { Frame, Navigation } from "@shopify/polaris";
 
 const navItems = [
-  { label: "Dashboard", url: "/app" },
+  { label: "Report", url: "/app" },
   { label: "Products", url: "/app/products" },
   { label: "Orders", url: "/app/orders" },
   { label: "Vouchers", url: "/app/vouchers" },
