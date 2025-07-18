@@ -6,6 +6,7 @@ import { authenticate } from "../shopify.server";
 import { saveOrder } from "../models/order.server";
 import prisma from "../db.server";
 import { sendEmail } from "../utils/mail.server";
+// import { hasCustomerOrderedBefore } from "../models/order.server";
 
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
@@ -172,32 +173,92 @@ export const loader = async ({ request }) => {
         });
 
         // ✅ Send Email (keeping your original logic but with better error handling)
-        if (order.customer.email && voucher) {
-          try {
-            await sendEmail({
-              // to: "sarimslayerali786@gmail.com",
-              to: order.customer.email,
-              subject: `🎟️ Your Voucher Code for Order ${order.name}`,
-              text: `Hello ${order.customer.firstName},\n\nThank you for your order ${order.name}.\nHere is your voucher code: ${voucher.code}`,
-              html: `
-                <p>Hello <strong>${order.customer.firstName}</strong>,</p>
-                <p>Thank you for your order <strong>${order.name}</strong>.</p>
-                <p>🎁 Here is your voucher code: <strong style="font-size: 18px;">${voucher.code}</strong></p>
-              `,
-            });
-            console.log('📧 Voucher email sent to customer for order:', order.name);
-          } catch (emailErr) {
-            console.error('❌ Failed to send voucher email:', emailErr.message);
-            console.error('Full email error:', emailErr);
-          }
-        } else {
-          console.log('⚠️ No email or voucher found for customer/order:', {
-            orderId: numericId,
-            hasCustomerEmail: !!order.customer?.email,
-            hasVoucher: !!voucher,
-            voucherCode: voucher?.code
-          });
-        }
+        // if (order.customer.email && voucher) {
+        //   try {
+        //     await sendEmail({
+        //       // to: "sarimslayerali786@gmail.com",
+        //       to: order.customer.email,
+        //       subject: `🎟️ Your Voucher Code for Order ${order.name}`,
+        //       text: `Hello ${order.customer.firstName},\n\nThank you for your order ${order.name}.\nHere is your voucher code: ${voucher.code}`,
+        //       html: `
+        //         <p>Hello <strong>${order.customer.firstName}</strong>,</p>
+        //         <p>Thank you for your order <strong>${order.name}</strong>.</p>
+        //         <p>🎁 Here is your voucher code: <strong style="font-size: 18px;">${voucher.code}</strong></p>
+        //       `,
+        //     });
+        //     console.log('📧 Voucher email sent to customer for order:', order.name);
+        //   } catch (emailErr) {
+        //     console.error('❌ Failed to send voucher email:', emailErr.message);
+        //     console.error('Full email error:', emailErr);
+        //   }
+        // } else {
+        //   console.log('⚠️ No email or voucher found for customer/order:', {
+        //     orderId: numericId,
+        //     hasCustomerEmail: !!order.customer?.email,
+        //     hasVoucher: !!voucher,
+        //     voucherCode: voucher?.code
+        //   });
+        // }
+
+// Move this function to top-level scope, outside of loader
+// async function hasCustomerOrderedBefore(customerEmail) {
+//   const existingOrders = await prisma.order.findMany({
+//     where: {
+//       customerEmail: customerEmail,
+//     },
+//   });
+//   return existingOrders.length > 1; // More than one means this isn't their first order
+// }
+
+//         const previousOrders = await asCustomerOrderedBefore(order.customer.id); // You must implement this
+
+// if (order.customer.email && voucher) {
+//   const isNewCustomer = previousOrders.length === 0; // 🔥 New customer check
+
+//   if (isNewCustomer) {
+//     try {
+//       await sendEmail({
+//         to: order.customer.email,
+//         subject: `🎟️ Your Voucher Code for Order ${order.name}`,
+//         text: `Hello ${order.customer.firstName},\n\nThank you for your order ${order.name}.\nHere is your voucher code: ${voucher.code}`,
+//         html: `
+//           <p>Hello <strong>${order.customer.firstName}</strong>,</p>
+//           <p>Thank you for your order <strong>${order.name}</strong>.</p>
+//           <p>🎁 Here is your voucher code: <strong style="font-size: 18px;">${voucher.code}</strong></p>
+//         `,
+//       });
+//       console.log('📧 Voucher email sent to NEW customer for order:', order.name);
+//     } catch (emailErr) {
+//       console.error('❌ Failed to send voucher email:', emailErr.message);
+//     }
+//   } else {
+//     console.log('⚠️ Existing customer – no email sent for order:', order.name);
+//   }
+// }
+
+// if (order.customer?.email && voucher) {
+//   const isReturningCustomer = await hasCustomerOrderedBefore(order.customer.email);
+
+//   if (!isReturningCustomer) {
+//     try {
+//       await sendEmail({
+//         to: order.customer.email,
+//         subject: `🎟️ Your Voucher Code for Order ${order.name}`,
+//         text: `Hello ${order.customer.firstName},\n\nThank you for your order ${order.name}.\nHere is your voucher code: ${voucher.code}`,
+//         html: `
+//           <p>Hello <strong>${order.customer.firstName}</strong>,</p>
+//           <p>Thank you for your order <strong>${order.name}</strong>.</p>
+//           <p>🎁 Here is your voucher code: <strong style="font-size: 18px;">${voucher.code}</strong></p>
+//         `,
+//       });
+//       console.log('📧 Voucher email sent to NEW customer for order:', order.name);
+//     } catch (err) {
+//       console.error("❌ Failed to send email:", err.message);
+//     }
+//   } else {
+//     console.log("⚠️ Existing customer – no email sent for order:", order.name);
+//   }
+// }
 
         savedCount++;
       } catch (error) {

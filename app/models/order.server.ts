@@ -219,3 +219,12 @@ export async function saveOrder(orderData: ShopifyOrder) {
     throw new Error(`Failed to save order ${info.shopifyOrderId}: ${dbError.message}`);
   }
 }
+
+// export async function hasCustomerOrderedBefore(customerEmail: string): Promise<boolean> {
+//   const existingOrders = await prisma.order.findMany({
+//     where: {
+//       customerEmail: customerEmail,
+//     },
+//   });
+//   return existingOrders.length === 1;
+// }
