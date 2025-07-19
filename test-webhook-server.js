@@ -14,11 +14,13 @@ app.post('/test-webhook', (req, res) => {
   res.status(200).json({ received: true });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Test webhook server running on http://localhost:${PORT}`);
-  console.log('📡 You can test webhooks by sending POST requests to:');
-  console.log(`   http://localhost:${PORT}/test-webhook`);
-});
+// app.listen(PORT, () => {
+//   console.log(`🚀 Test webhook server running on http://localhost:${PORT}`);
+//   console.log('📡 You can test webhooks by sending POST requests to:');
+//   console.log(`   http://localhost:${PORT}/test-webhook`);
+// });
+app.listen(process.env.PORT || 3000, '0.0.0.0') // ✅ Correct for Heroku
+
 
 // Keep the process alive
 process.on('SIGINT', () => {
