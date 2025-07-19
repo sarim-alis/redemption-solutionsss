@@ -220,11 +220,11 @@ export async function saveOrder(orderData: ShopifyOrder) {
   }
 }
 
-// export async function hasCustomerOrderedBefore(customerEmail: string): Promise<boolean> {
-//   const existingOrders = await prisma.order.findMany({
-//     where: {
-//       customerEmail: customerEmail,
-//     },
-//   });
-//   return existingOrders.length === 1;
-// }
+export async function hasCustomerOrderedBefore(customerEmail: string): Promise<boolean> {
+  const existingOrders = await prisma.order.findMany({
+    where: {
+      customerEmail: customerEmail,
+    },
+  });
+  return existingOrders.length === 1;
+}
