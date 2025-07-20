@@ -7,6 +7,7 @@ const navItems = [
   { label: "Products", url: "/app/products" },
   { label: "Orders", url: "/app/orders" },
   { label: "Vouchers", url: "/app/vouchers" },
+  // { label: "Customers", url: "/app/customers" },
 ];
 
 export default function SidebarLayout({ children }) {

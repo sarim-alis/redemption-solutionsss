@@ -1,9 +1,19 @@
 import prisma from "../db.server";
 import { v4 as uuidv4 } from "uuid";
 
+function generateVoucherCode(): string {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    code += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return `${code.slice(0, 4)}-${code.slice(4)}`;
+}
+
 export async function createVoucher({ shopifyOrderId, customerEmail }: { shopifyOrderId: string, customerEmail: string }) {
   // Generate a unique code for the voucher
-  const code = uuidv4();
+  // const code = uuidv4();
+  const code = generateVoucherCode();
   return prisma.voucher.create({
     data: {
       code,
