@@ -1,20 +1,13 @@
-// Imports.
+import React, { useState } from "react";
 import { useLoaderData } from "@remix-run/react";
 import { Page, DataTable, Text, BlockStack, Badge, Button } from "@shopify/polaris";
 import SidebarLayout from "../components/SidebarLayout";
 import { authenticate } from "../shopify.server";
 import { saveOrder } from "../models/order.server";
-import prisma from "../db.server";
-import { sendEmail } from "../utils/mail.server";
-import { hasCustomerOrderedBefore } from "../models/order.server";
 
-
-// Loader.
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
   console.log('🔄 Starting to fetch orders...');
-
-  // Order data.
   const orderResponse = await admin.graphql(`
     query {
       orders(first: 250, reverse: true) {
@@ -137,48 +130,6 @@ export const loader = async ({ request }) => {
           shopifyOrderId: savedOrder.shopifyOrderId,
           status: savedOrder.status
         });
-
-        // Find Voucher by shopifyOrderId.
-        const voucher = await prisma.voucher.findFirst({
-          where: {
-            shopifyOrderId: numericId
-          },
-        });
-
-      if (order.customer.email && voucher) {
-        const isFirstOrder = await hasCustomerOrderedBefore(order.customer.email);
-
-      if (isFirstOrder) {
-        try {
-          await sendEmail({
-           to: order.customer.email,
-          subject: `🎟️ Your Voucher Code for Order ${order.name}`,
-          text: `Hello ${order.customer.firstName},\n\nThank you for your order ${order.name}.\nHere is your voucher code: ${voucher.code}`,
-          html: `
-          <p>Hello <strong>${order.customer.firstName}</strong>,</p>
-          <p>Thank you for your order <strong>${order.name}</strong>.</p>
-          <p>🎁 Here is your voucher code: <strong style="font-size: 18px;">${voucher.code}</strong></p>
-        `,
-        });
-        console.log('📧 Voucher email sent to first-time customer for order:', order.name);
-      } catch (emailErr) {
-      console.error('❌ Failed to send voucher email:', emailErr.message);
-      console.error('Full email error:', emailErr);
-      }
-    } else {
-    console.log('ℹ️ Customer has ordered before, skipping voucher email:', {
-      email: order.customer.email,
-      orderId: numericId,
-    });
-   }
-    } else {
-    console.log('⚠️ No email or voucher found for customer/order:', {
-    orderId: numericId,
-    hasCustomerEmail: !!order.customer?.email,
-    hasVoucher: !!voucher,
-    voucherCode: voucher?.code
-  });
-  }
         savedCount++;
       } catch (error) {
         console.error('❌ Failed to save order:', {
@@ -208,8 +159,6 @@ export const loader = async ({ request }) => {
   return { orders, hasNextPage, totalOrders, savedCount, skippedCount, voucherMap };
 };
 
-
-// Frontend.
 export default function OrdersPage() {
   const { orders, hasNextPage, totalOrders, savedCount, skippedCount, voucherMap } = useLoaderData();
 
