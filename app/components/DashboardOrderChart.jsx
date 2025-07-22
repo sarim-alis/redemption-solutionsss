@@ -31,7 +31,7 @@ import { useState } from "react"
 
 
 // Frontend.
-export default function DashboardOrderChart() {
+export default function DashboardOrderChart({ paidOrders, unpaidOrders, analytics }) {
   // Filters.
   const [filters, setFilters] = useState({
     date: "Today",
@@ -74,6 +74,7 @@ export default function DashboardOrderChart() {
       fontFamily: "Arial, sans-serif",
       padding: "20px",
       minHeight: "100vh",
+      position: "relative",
     },
     header: {
       display: "flex",
@@ -81,18 +82,6 @@ export default function DashboardOrderChart() {
       marginBottom: "20px",
       border: "2px solid white",
       padding: "15px",
-    },
-    hamburger: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "4px",
-      marginRight: "20px",
-      cursor: "pointer",
-    },
-    hamburgerLine: {
-      width: "25px",
-      height: "3px",
-      backgroundColor: "white",
     },
     title: {
       fontSize: "32px",
@@ -270,11 +259,6 @@ resetButton: {
     <div style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
-        <div style={styles.hamburger}>
-          <div style={styles.hamburgerLine}></div>
-          <div style={styles.hamburgerLine}></div>
-          <div style={styles.hamburgerLine}></div>
-        </div>
         <h1 style={styles.title}>Sales & Vouchers Report</h1>
       </div>
 
@@ -316,19 +300,19 @@ resetButton: {
       <div style={styles.metricsGrid}>
         <div style={styles.metricCard}>
           <div style={styles.metricLabel}>Total Product Sales</div>
-          <div style={styles.metricValue}>$13,320.00</div>
+          <div style={styles.metricValue}>${analytics?.totalProductSales?.toFixed(2) || '0.00'}</div>
         </div>
         <div style={styles.metricCard}>
           <div style={styles.metricLabel}>Total Gift Card Balances</div>
-          <div style={styles.metricValue}>$2,298.45</div>
+          <div style={styles.metricValue}>${analytics?.totalGiftCardBalance?.toFixed(2) || '0.00'}</div>
         </div>
         <div style={styles.metricCard}>
-          <div style={styles.metricLabel}>Total Vouchers Redeemed</div>
-          <div style={styles.metricValue}>850</div>
+          <div style={styles.metricLabel}>Total Vouchers</div>
+          <div style={styles.metricValue}>{analytics?.totalVouchers || 0}</div>
         </div>
         <div style={styles.metricCard}>
           <div style={styles.metricLabel}>Active Vouchers</div>
-          <div style={styles.metricValue}>320</div>
+          <div style={styles.metricValue}>{analytics?.activeVouchers || 0}</div>
         </div>
       </div>
 
@@ -346,23 +330,30 @@ resetButton: {
 
         {/* Pie Chart */}
         <div style={styles.chartContainer}>
-          <div style={styles.chartTitle}>Expired vs. Active Vouchers</div>
+          <div style={styles.chartTitle}>Active vs. Total Vouchers</div>
           <div style={styles.pieChart}>
             <div style={styles.pieContainer}>
               <svg width="100" height="100" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="40" fill="#dc3545" stroke="white" strokeWidth="2" />
-                <path d="M 50 10 A 40 40 0 1 1 20 70 L 50 50 Z" fill="#28a745" stroke="white" strokeWidth="2" />
+                {analytics?.totalVouchers > 0 && (
+                  <path 
+                    d={`M 50 10 A 40 40 0 ${analytics.activeVouchers / analytics.totalVouchers > 0.5 ? 1 : 0} 1 ${50 + 40 * Math.sin(2 * Math.PI * analytics.activeVouchers / analytics.totalVouchers)} ${50 - 40 * Math.cos(2 * Math.PI * analytics.activeVouchers / analytics.totalVouchers)} L 50 50 Z`} 
+                    fill="#28a745" 
+                    stroke="white" 
+                    strokeWidth="2" 
+                  />
+                )}
               </svg>
             </div>
           </div>
           <div style={styles.pieLegend}>
             <div style={styles.legendItem}>
               <div style={{ ...styles.legendColor, backgroundColor: "#dc3545" }}></div>
-              <span>40% Expired</span>
+              <span>{analytics?.totalVouchers > 0 ? Math.round(((analytics.totalVouchers - analytics.activeVouchers) / analytics.totalVouchers) * 100) : 0}% Inactive</span>
             </div>
             <div style={styles.legendItem}>
               <div style={{ ...styles.legendColor, backgroundColor: "#28a745" }}></div>
-              <span>60% Active</span>
+              <span>{analytics?.totalVouchers > 0 ? Math.round((analytics.activeVouchers / analytics.totalVouchers) * 100) : 0}% Active</span>
             </div>
           </div>
         </div>

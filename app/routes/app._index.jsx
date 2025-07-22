@@ -99,12 +99,56 @@ export const loader = async ({ request }) => {
     }
   `);
 
+  // Fetch gift cards
+  const giftCardResponse = await admin.graphql(`
+    query {
+      giftCards(first: 100) {
+        edges {
+          node {
+            id
+            initialValue {
+              amount
+            }
+            balance {
+              amount
+            }
+            enabled
+          }
+        }
+      }
+    }
+  `);
+
   const orderJson = await orderResponse.json();
   const orders = orderJson.data.orders.edges.map(edge => edge.node);
 
+  const giftCardJson = await giftCardResponse.json();
+  const giftCards = giftCardJson.data.giftCards.edges.map(edge => edge.node);
 
   const responseJson = await response.json();
   const products = responseJson.data.products.edges.map(edge => edge.node);
+
+  // Calculate analytics
+  const totalProductSales = orders.reduce((total, order) => {
+    if (order.displayFinancialStatus === "PAID" || order.displayFinancialStatus === "PAID_IN_FULL") {
+      const orderTotal = parseFloat(order.totalPriceSet.shopMoney.amount);
+      return total + orderTotal;
+    }
+    return total;
+  }, 0);
+
+  const totalGiftCardBalance = giftCards.reduce((total, card) => {
+    const balance = parseFloat(card.balance.amount);
+    return total + balance;
+  }, 0);
+
+  // Fetch vouchers from database
+  const allVouchers = await prisma.voucher.findMany();
+  const activeVouchers = await prisma.voucher.findMany({
+    where: {
+      used: false
+    }
+  });
 
   // Transform and save products to database.
   const transformedProducts = products.map((p) => {
@@ -134,7 +178,17 @@ export const loader = async ({ request }) => {
     )
   );
 
-  return { products, orders };
+  return { 
+    products, 
+    orders, 
+    giftCards,
+    analytics: {
+      totalProductSales,
+      totalGiftCardBalance,
+      totalVouchers: allVouchers.length,
+      activeVouchers: activeVouchers.length
+    }
+  };
 };
 
 export const action = async ({ request }) => {
@@ -205,7 +259,7 @@ export const action = async ({ request }) => {
 };
 
 export default function Index() {
-  const { orders = [] } = useLoaderData();
+  const { orders = [], giftCards = [], analytics } = useLoaderData();
   // Calculate analytics from real order data
   const totalOrders = orders.length;
   const paidOrders = orders.filter(o => o.displayFinancialStatus === "PAID" || o.displayFinancialStatus === "PAID_IN_FULL").length;
@@ -213,42 +267,18 @@ export default function Index() {
 
   return (
     <SidebarLayout>
-      <Page fullWidth>
-        <TitleBar title="Report" primaryAction />
-        <BlockStack gap="500">
-          {/* <div style={{ display: "flex", gap: 24, marginBottom: 32, flexWrap: "nowrap", width: "100%" }}>
-            <div style={{ flex: 1, background: "#fff", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", padding: 24, display: "flex", alignItems: "center", minHeight: 100 }}>
-              <FaShoppingCart size={28} color="#6366f1" style={{ marginRight: 12 }} />
-              <div style={{ textAlign: "left" }}>
-                <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Total Orders</div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: "#64748b" }}>{totalOrders}</div>
-              </div>
-            </div>
-            <div style={{ flex: 1, background: "#fff", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", padding: 24, display: "flex", alignItems: "center", minHeight: 100 }}>
-              <FaCheckCircle size={28} color="#22c55e" style={{ marginRight: 12 }} />
-              <div style={{ textAlign: "left" }}>
-                <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Paid Orders</div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: "#64748b" }}>{paidOrders}</div>
-              </div>
-            </div>
-            <div style={{ flex: 1, background: "#fff", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", padding: 24, display: "flex", alignItems: "center", minHeight: 100 }}>
-              <FaTimesCircle size={28} color="#ef4444" style={{ marginRight: 12 }} />
-              <div style={{ textAlign: "left" }}>
-                <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Unpaid Orders</div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: "#64748b" }}>{unpaidOrders}</div>
-              </div>
-            </div>
-          </div> */}
-          <Layout>
-            <Layout.Section oneHalf>
-              <Card>
-                {/* <Text as="h2" variant="headingMd">Order Analytics</Text> */}
-                <DashboardOrderChart paidOrders={paidOrders} unpaidOrders={unpaidOrders} />
-              </Card>
-            </Layout.Section>
-          </Layout>
-        </BlockStack>
-      </Page>
+      <div style={{ 
+        margin: 0, 
+        padding: 0, 
+        backgroundColor: "#666666",
+        minHeight: "100vh"
+      }}>
+        <DashboardOrderChart 
+          paidOrders={paidOrders} 
+          unpaidOrders={unpaidOrders}
+          analytics={analytics}
+        />
+      </div>
     </SidebarLayout>
   );
 }
