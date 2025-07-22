@@ -39,6 +39,7 @@ model Voucher {
   used          Boolean  @default(false)
   createdAt     DateTime @default(now())
   order         Order    @relation(fields: [shopifyOrderId], references: [shopifyOrderId])
+  emailSent      Boolean  @default(false)
 }
 
 model Product {

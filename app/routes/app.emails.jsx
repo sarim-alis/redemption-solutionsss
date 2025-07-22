@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+// Imports.
 import { useLoaderData } from "@remix-run/react";
 import { Page, DataTable, Text, BlockStack, Badge, Button } from "@shopify/polaris";
 import SidebarLayout from "../components/SidebarLayout";
@@ -6,42 +6,107 @@ import { authenticate } from "../shopify.server";
 import { saveOrder } from "../models/order.server";
 import prisma from "../db.server";
 import { sendEmail } from "../utils/mail.server";
-// import { hasCustomerOrderedBefore } from "../models/order.server";
+import { hasCustomerOrderedBefore } from "../models/order.server";
+// import { generateVoucherEmailHTML } from "../utils/voucherEmailTemplate";
 
+
+// Format date.
+function formatDate(dateStr) {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+// Add months to date.
+function addMonths(dateStr, months) {
+  const date = new Date(dateStr);
+  date.setMonth(date.getMonth() + months);
+  return date;
+}
+
+// Format customer name.
+function formatCustomerName(email) {
+  if (!email) return "Customer";
+  const namePart = email.split("@")[0];
+  return namePart.charAt(0).toUpperCase() + namePart.slice(1);
+}
+
+// Template
+function generateVoucherEmailHTML(voucher) {
+  const validThrough = voucher?.createdAt
+    ? formatDate(addMonths(voucher.createdAt, 3))
+    : "N/A";
+  const issuedOn = voucher?.createdAt
+    ? formatDate(voucher.createdAt)
+    : "N/A";
+  const name = formatCustomerName(voucher.customerEmail);
+
+  return `
+    <div style="max-width:600px;margin:20px auto;font-family:Arial,sans-serif;margin-bottom:40px;">
+      <div style="border:2px solid #4a5568;background:#f7fafc;padding:40px 30px;border-radius:0 8px 8px 8px;text-align:left;margin-bottom:20px;">
+        <p style="font-size:18px;font-weight:500;margin-bottom:15px;">Hey ${name},</p>
+        <p style="font-size:18px;font-weight:500;margin-bottom:15px;">Thank you for your purchase of the Oil Change Vouchers/ Gift Cards. Use the Vouchers below to redeem at participating locations. See below for terms and details.</p>
+      </div>
+
+      <div style="border:2px solid #4a5568;background:#f7fafc;padding:40px 30px;border-radius:0 8px 8px 8px;text-align:center;margin-bottom:20px;">
+        <h1 style="font-size:28px;font-weight:bold;color:#2d3748;margin-bottom:16px;letter-spacing:0.5px;">Jiffy Lube Oil Change Voucher</h1>
+        <p style="font-size:16px;color:#718096;margin-bottom:40px;line-height:1.5;">
+          Present this at participating locations<br />to redeem.
+        </p>
+        <div style="width: 100%; display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #e2e8f0;">
+          <span style="font-size:16px;color:#4299e1;font-weight:500;">Valid through:</span>
+          <span style="font-size:16px;color:#4299e1;font-weight:500;">${validThrough}</span>
+        </div>
+        <div style="width: 100%; display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #e2e8f0;">
+          <span style="font-size:16px;color:#4299e1;font-weight:500;">Issued on:</span>
+          <span style="font-size:16px;color:#4299e1;font-weight:500;">${issuedOn}</span>
+        </div>
+        <div style="width: 100%; display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #e2e8f0;">
+          <span style="font-size:16px;color:#4299e1;font-weight:500;">Used on:</span>
+          <span style="font-size:16px;color:#4299e1;font-weight:500;">---</span>
+        </div>
+        <div style="width: 100%; border:3px solid #2d3748;border-radius:8px;padding:20px;margin:30px 0;background:#edf2f7;display:flex;justify-content:space-around;">
+          <div style="font-size:24px;color:#2d3748;font-weight:600;margin-bottom:8px;">Voucher Code</div>
+          <div style="font-size:24px;font-weight:bold;color:#2d3748;letter-spacing:2px;">${voucher.code}</div>
+        </div>
+        <div style="font-size:14px;color:#4299e1;line-height:1.4;text-align:left;margin-top:20px;">
+          * Must be used at participating locations<br />
+          ** Term 2<br />
+          *** Term 3
+        </div>
+      </div>
+
+      <div style="border:2px solid #4a5568;background:#f7fafc;padding:40px 30px;border-radius:0 8px 8px 8px;text-align:left;margin-bottom:20px;">
+        <p style="font-size:18px;font-weight:500;margin-bottom:15px;">Terms and Conditions</p>
+        <p style="font-size:18px;font-weight:500;margin-bottom:15px;">Details of Terms. Locations available to redeem. How to redeem.</p>
+      </div>
+
+      <div style="padding:40px;border-radius:8px;max-width:480px;margin:0 auto;font-family:Arial,sans-serif;">
+        <div style="background:#fff;border:2px solid black;border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:32px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <img src="/logo.svg" alt="Logo" style="width:40px;height:40px;" />
+            <span style="font-weight:500;color:#2d3748;font-size:16px;">${voucher.code}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:18px;color:#2d3748;font-weight:500;">Balance:</span>
+            <span style="font-size:28px;color:#2d3748;font-weight:700;">$50.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+
+// Loader.
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
-  
-  // ✅ TEST EMAIL FIRST - This will run when the page loads
-  console.log('🧪 Testing email functionality...');
-  try {
-    await sendEmail({
-      to: "sarimslayerali786@gmail.com",
-      subject: "🧪 Nodemailer Test - " + new Date().toLocaleString(),
-      text: "This is a test email to check if nodemailer is working properly. If you receive this, the email configuration is correct!",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h2 style="color: #4CAF50;">✅ Nodemailer Test Successful!</h2>
-          <p>This is a test email sent at: <strong>${new Date().toLocaleString()}</strong></p>
-          <p>If you received this email, your nodemailer configuration is working correctly.</p>
-          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-            <h3>Test Details:</h3>
-            <ul>
-              <li>✅ SMTP connection established</li>
-              <li>✅ Email sent successfully</li>
-              <li>✅ HTML formatting working</li>
-            </ul>
-          </div>
-          <p style="color: #666;">This email was sent from your Shopify orders page loader.</p>
-        </div>
-      `,
-    });
-    console.log('✅ Test email sent successfully to sarimslayerali786@gmail.com');
-  } catch (emailError) {
-    console.error('❌ Test email failed:', emailError.message);
-    console.error('Full error:', emailError);
-  }
-  
   console.log('🔄 Starting to fetch orders...');
+
+  // Order data.
   const orderResponse = await admin.graphql(`
     query {
       orders(first: 250, reverse: true) {
@@ -156,6 +221,7 @@ export const loader = async ({ request }) => {
         lineItems: lineItems.edges.length
       });
 
+      let savedOrder;
       try {
         console.log('💾 Attempting to save order:', numericId);
         const savedOrder = await saveOrder(orderData);
@@ -165,101 +231,39 @@ export const loader = async ({ request }) => {
           status: savedOrder.status
         });
 
-        // ✅ Find Voucher by shopifyOrderId - Fixed to use numericId
+        // Find Voucher by shopifyOrderId.
         const voucher = await prisma.voucher.findFirst({
           where: {
-            shopifyOrderId: numericId, // Use numericId instead of full GraphQL ID
+            shopifyOrderId: numericId
           },
         });
 
-        // ✅ Send Email (keeping your original logic but with better error handling)
-        // if (order.customer.email && voucher) {
-        //   try {
-        //     await sendEmail({
-        //       // to: "sarimslayerali786@gmail.com",
-        //       to: order.customer.email,
-        //       subject: `🎟️ Your Voucher Code for Order ${order.name}`,
-        //       text: `Hello ${order.customer.firstName},\n\nThank you for your order ${order.name}.\nHere is your voucher code: ${voucher.code}`,
-        //       html: `
-        //         <p>Hello <strong>${order.customer.firstName}</strong>,</p>
-        //         <p>Thank you for your order <strong>${order.name}</strong>.</p>
-        //         <p>🎁 Here is your voucher code: <strong style="font-size: 18px;">${voucher.code}</strong></p>
-        //       `,
-        //     });
-        //     console.log('📧 Voucher email sent to customer for order:', order.name);
-        //   } catch (emailErr) {
-        //     console.error('❌ Failed to send voucher email:', emailErr.message);
-        //     console.error('Full email error:', emailErr);
-        //   }
-        // } else {
-        //   console.log('⚠️ No email or voucher found for customer/order:', {
-        //     orderId: numericId,
-        //     hasCustomerEmail: !!order.customer?.email,
-        //     hasVoucher: !!voucher,
-        //     voucherCode: voucher?.code
-        //   });
-        // }
+      if (order.customer.email && voucher) {
+        const isFirstOrder = await hasCustomerOrderedBefore(order.customer.email);
 
-// Move this function to top-level scope, outside of loader
-// async function hasCustomerOrderedBefore(customerEmail) {
-//   const existingOrders = await prisma.order.findMany({
-//     where: {
-//       customerEmail: customerEmail,
-//     },
-//   });
-//   return existingOrders.length > 1; // More than one means this isn't their first order
-// }
+      if (isFirstOrder && !voucher.emailSent) {
+        try {
+          await sendEmail({
+           to: order.customer.email,
+           subject: `Here are your Oil Change Vouchers! Where to Redeem... 🎟️`,
+           text: `Hello ${order.customer.firstName},\n\nThank you for your order ${order.name}.\nHere is your voucher code: ${voucher.code}`,
+           html: generateVoucherEmailHTML(voucher),
+        });
 
-//         const previousOrders = await asCustomerOrderedBefore(order.customer.id); // You must implement this
 
-// if (order.customer.email && voucher) {
-//   const isNewCustomer = previousOrders.length === 0; // 🔥 New customer check
-
-//   if (isNewCustomer) {
-//     try {
-//       await sendEmail({
-//         to: order.customer.email,
-//         subject: `🎟️ Your Voucher Code for Order ${order.name}`,
-//         text: `Hello ${order.customer.firstName},\n\nThank you for your order ${order.name}.\nHere is your voucher code: ${voucher.code}`,
-//         html: `
-//           <p>Hello <strong>${order.customer.firstName}</strong>,</p>
-//           <p>Thank you for your order <strong>${order.name}</strong>.</p>
-//           <p>🎁 Here is your voucher code: <strong style="font-size: 18px;">${voucher.code}</strong></p>
-//         `,
-//       });
-//       console.log('📧 Voucher email sent to NEW customer for order:', order.name);
-//     } catch (emailErr) {
-//       console.error('❌ Failed to send voucher email:', emailErr.message);
-//     }
-//   } else {
-//     console.log('⚠️ Existing customer – no email sent for order:', order.name);
-//   }
-// }
-
-// if (order.customer?.email && voucher) {
-//   const isReturningCustomer = await hasCustomerOrderedBefore(order.customer.email);
-
-//   if (!isReturningCustomer) {
-//     try {
-//       await sendEmail({
-//         to: order.customer.email,
-//         subject: `🎟️ Your Voucher Code for Order ${order.name}`,
-//         text: `Hello ${order.customer.firstName},\n\nThank you for your order ${order.name}.\nHere is your voucher code: ${voucher.code}`,
-//         html: `
-//           <p>Hello <strong>${order.customer.firstName}</strong>,</p>
-//           <p>Thank you for your order <strong>${order.name}</strong>.</p>
-//           <p>🎁 Here is your voucher code: <strong style="font-size: 18px;">${voucher.code}</strong></p>
-//         `,
-//       });
-//       console.log('📧 Voucher email sent to NEW customer for order:', order.name);
-//     } catch (err) {
-//       console.error("❌ Failed to send email:", err.message);
-//     }
-//   } else {
-//     console.log("⚠️ Existing customer – no email sent for order:", order.name);
-//   }
-// }
-
+        if (!voucher.emailSent) {
+        // Send email logic
+        await prisma.voucher.update({
+            where: { code },
+            data: { emailSent: true },
+        });
+        }
+      } catch (emailErr) {
+      console.error('❌ Failed to send voucher email:', emailErr.message);
+      console.error('Full email error:', emailErr);
+      }
+    }
+    }
         savedCount++;
       } catch (error) {
         console.error('❌ Failed to save order:', {
@@ -267,7 +271,10 @@ export const loader = async ({ request }) => {
           error: error.message
         });
         skippedCount++;
+        continue;
       }
+
+      
     } catch (error) {
       console.error('❌ Error processing order:', {
         name: order.name,
@@ -289,7 +296,9 @@ export const loader = async ({ request }) => {
   return { orders, hasNextPage, totalOrders, savedCount, skippedCount, voucherMap };
 };
 
-export default function OrdersPage() {
+
+// Frontend.
+export default function EmailsPage() {
   const { orders, hasNextPage, totalOrders, savedCount, skippedCount, voucherMap } = useLoaderData();
 
   return (
