@@ -31,39 +31,109 @@ import { useState } from "react"
 
 
 // Frontend.
+import { useLoaderData } from "@remix-run/react";
+
+
 export default function DashboardOrderChart({ paidOrders, unpaidOrders, analytics }) {
-  // Filters.
+  // Filters state
   const [filters, setFilters] = useState({
-    date: "Today",
+    date: "All",
     products: "All Products",
     locations: "All Locations",
-  })
+  });
+  // Show reset button only if any filter is not default
+  const isFilterActive = filters.date !== "All" || filters.products !== "All Products" || filters.locations !== "All Locations";
 
-  // Sales data.
-  const salesData = [
-    { product: "Oil Change", sales: "$260.00", revenue: "$4,120.00" },
-    { product: "50 Gift Card", sales: "$50.00", revenue: "$2,500.00" },
-    { product: "100 Gift Card", sales: "$10.00", revenue: "$1,000.00" },
-    { product: "2 Oil Changes", sales: "$10.00", revenue: "$700.00" },
-  ]
+  // Get dynamic product sales and voucher redemptions from loader
+  const { productSales: allProductSales, voucherRedemptions: allVoucherRedemptions } = useLoaderData();
 
-  // Voucher redemptions.
-  const voucherRedemptions = [
-    { product: "Oil Change", date: "01-06", location: "Pomona" },
-    { product: "2 Oil Changes", date: "01-06", location: "Ventura" },
-    { product: "2 Oil Changes", date: "30-05", location: "Century City" },
-    { product: "3 Oil Changes", date: "30-05", location: "Santa Monica" },
-    { product: "Oil Change", date: "30-05", location: "Woodland Hills" },
-  ]
+  // Helper: date filter
+  function isDateMatch(dateString, filter) {
+    if (filter === "All") return true;
+    if (!dateString) return false;
+    // Normalize dateString to yyyy-mm-dd
+    let norm = dateString;
+    // ISO or yyyy-mm-dd
+    if (/^\d{4}-\d{2}-\d{2}/.test(dateString)) {
+      norm = dateString.slice(0, 10);
+    } else if (/^\d{2}-\d{2}-\d{4}$/.test(dateString)) {
+      // dd-mm-yyyy or mm-dd-yyyy (treat as dd-mm-yyyy)
+      const [d, m, y] = dateString.split('-');
+      norm = `${y}-${m}-${d}`;
+    } else if (/^\d{2}-\d{2}$/.test(dateString)) {
+      // dd-mm or mm-dd, always treat as MM-DD (US style)
+      const [m, d] = dateString.split('-');
+      norm = `${new Date().getFullYear()}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    }
+    // Try to parse
+    const date = new Date(norm);
+    if (isNaN(date.getTime())) return false;
+    // Compare only date part (ignore time)
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    if (filter === "Today") {
+      return date.getFullYear() === today.getFullYear() &&
+        date.getMonth() === today.getMonth() &&
+        date.getDate() === today.getDate();
+    }
+    if (filter === "Yesterday") {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      return date.getFullYear() === yesterday.getFullYear() &&
+        date.getMonth() === yesterday.getMonth() &&
+        date.getDate() === yesterday.getDate();
+    }
+    if (filter === "This Week") {
+      // Week starts on Monday
+      const firstDayOfWeek = new Date(today);
+      firstDayOfWeek.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+      firstDayOfWeek.setHours(0,0,0,0);
+      const lastDayOfWeek = new Date(firstDayOfWeek);
+      lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+      lastDayOfWeek.setHours(23,59,59,999);
+      return date >= firstDayOfWeek && date <= lastDayOfWeek;
+    }
+    if (filter === "This Month") {
+      return date.getFullYear() === today.getFullYear() &&
+        date.getMonth() === today.getMonth();
+    }
+    return true;
+  }
 
-  // giftCardRedemptions.
+  // Helper: product filter
+  function isProductMatch(product, filter) {
+    if (filter === "All Products") return true;
+    return product === filter;
+  }
+
+  // Helper: location filter
+  function isLocationMatch(location, filter) {
+    if (filter === "All Locations") return true;
+    return location === filter;
+  }
+
+  // Filtered product sales
+  const productSales = (allProductSales || []).filter(item =>
+    isDateMatch(item.date, filters.date) &&
+    isProductMatch(item.product, filters.products) &&
+    isLocationMatch(item.location, filters.locations)
+  );
+
+  // Filtered voucher redemptions
+  const voucherRedemptions = (allVoucherRedemptions || []).filter(item =>
+    isDateMatch(item.date, filters.date) &&
+    isProductMatch(item.product, filters.products) &&
+    isLocationMatch(item.location, filters.locations)
+  );
+
+  // giftCardRedemptions (static for now)
   const giftCardRedemptions = [
     { product: "$50.00", date: "01-06", location: "Ventura" },
     { product: "$100.00", date: "01-06", location: "Woodland Hills" },
     { product: "$100.00", date: "01-06", location: "Woodland Hills" },
     { product: "$150.00", date: "30-05", location: "Santa Monica" },
     { product: "$50.00", date: "30-05", location: "Pomona" },
-  ]
+  ];
 
 
   // STYLES.
@@ -268,16 +338,18 @@ resetButton: {
         <select
           style={styles.select}
           value={filters.date}
-          onChange={(e) => setFilters({ ...filters, date: e.target.value })}
+          onChange={e => setFilters(f => ({ ...f, date: e.target.value }))}
         >
+          <option>All</option>
           <option>Today</option>
           <option>Yesterday</option>
           <option>This Week</option>
+          <option>This Month</option>
         </select>
         <select
           style={styles.select}
           value={filters.products}
-          onChange={(e) => setFilters({ ...filters, products: e.target.value })}
+          onChange={e => setFilters(f => ({ ...f, products: e.target.value }))}
         >
           <option>All Products</option>
           <option>Oil Change</option>
@@ -286,21 +358,29 @@ resetButton: {
         <select
           style={styles.select}
           value={filters.locations}
-          onChange={(e) => setFilters({ ...filters, locations: e.target.value })}
+          onChange={e => setFilters(f => ({ ...f, locations: e.target.value }))}
         >
           <option>All Locations</option>
           <option>Pomona</option>
           <option>Ventura</option>
         </select>
-        <button style={styles.button}>Apply</button>
-        <button style={styles.resetButton}>Reset</button>
+        {isFilterActive && (
+          <button
+            style={styles.resetButton}
+            onClick={() => setFilters({ date: "All", products: "All Products", locations: "All Locations" })}
+          >
+            Reset
+          </button>
+        )}
       </div>
 
       {/* Metrics Cards */}
       <div style={styles.metricsGrid}>
         <div style={styles.metricCard}>
           <div style={styles.metricLabel}>Total Product Sales</div>
-          <div style={styles.metricValue}>${analytics?.totalProductSales?.toFixed(2) || '0.00'}</div>
+          <div style={styles.metricValue}>
+            ${productSales.reduce((sum, item) => sum + (item.revenue || 0), 0).toFixed(2)}
+          </div>
         </div>
         <div style={styles.metricCard}>
           <div style={styles.metricLabel}>Total Gift Card Balances</div>
@@ -328,37 +408,52 @@ resetButton: {
           </div>
         </div>
 
-        {/* Pie Chart */}
-        <div style={styles.chartContainer}>
-          <div style={styles.chartTitle}>Active vs. Total Vouchers</div>
-          <div style={styles.pieChart}>
-            <div style={styles.pieContainer}>
-              <svg width="100" height="100" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="40" fill="#dc3545" stroke="white" strokeWidth="2" />
-                {analytics?.totalVouchers > 0 && (
-                  <path 
-                    d={`M 50 10 A 40 40 0 ${analytics.activeVouchers / analytics.totalVouchers > 0.5 ? 1 : 0} 1 ${50 + 40 * Math.sin(2 * Math.PI * analytics.activeVouchers / analytics.totalVouchers)} ${50 - 40 * Math.cos(2 * Math.PI * analytics.activeVouchers / analytics.totalVouchers)} L 50 50 Z`} 
-                    fill="#28a745" 
-                    stroke="white" 
-                    strokeWidth="2" 
-                  />
-                )}
-              </svg>
-            </div>
-          </div>
-          <div style={styles.pieLegend}>
-            <div style={styles.legendItem}>
-              <div style={{ ...styles.legendColor, backgroundColor: "#dc3545" }}></div>
-              <span>{analytics?.totalVouchers > 0 ? Math.round(((analytics.totalVouchers - analytics.activeVouchers) / analytics.totalVouchers) * 100) : 0}% Inactive</span>
-            </div>
-            <div style={styles.legendItem}>
-              <div style={{ ...styles.legendColor, backgroundColor: "#28a745" }}></div>
-              <span>{analytics?.totalVouchers > 0 ? Math.round((analytics.activeVouchers / analytics.totalVouchers) * 100) : 0}% Active</span>
-            </div>
-          </div>
-        </div>
 
-        {/* Group Product Sales Table */}
+  <div style={styles.chartContainer}>
+    <div style={styles.chartTitle}>Active vs. Total Vouchers</div>
+    <div style={styles.pieChart}>
+      <div style={styles.pieContainer}>
+        <svg width="100" height="100" viewBox="0 0 100 100">
+          {/* Agar totalVouchers 0 hai to gray circle dikhaye */}
+          {(!analytics?.totalVouchers || analytics.totalVouchers === 0) && (
+            <circle cx="50" cy="50" r="40" fill="#888" stroke="white" strokeWidth="2" />
+          )}
+          {/* Agar 100% active hai to green circle dikhaye */}
+          {analytics?.totalVouchers > 0 && analytics.activeVouchers === analytics.totalVouchers && (
+            <circle cx="50" cy="50" r="40" fill="#28a745" stroke="white" strokeWidth="2" />
+          )}
+          {/* Agar 0% active hai to red circle dikhaye */}
+          {analytics?.totalVouchers > 0 && analytics.activeVouchers === 0 && (
+            <circle cx="50" cy="50" r="40" fill="#dc3545" stroke="white" strokeWidth="2" />
+          )}
+          {/* Agar kuch active hain kuch inactive hain to proportion dikhaye */}
+          {analytics?.totalVouchers > 0 && analytics.activeVouchers > 0 && analytics.activeVouchers < analytics.totalVouchers && (
+            <>
+              <circle cx="50" cy="50" r="40" fill="#dc3545" stroke="white" strokeWidth="2" />
+              <path 
+                d={`M 50 10 A 40 40 0 ${analytics.activeVouchers / analytics.totalVouchers > 0.5 ? 1 : 0} 1 ${50 + 40 * Math.sin(2 * Math.PI * analytics.activeVouchers / analytics.totalVouchers)} ${50 - 40 * Math.cos(2 * Math.PI * analytics.activeVouchers / analytics.totalVouchers)} L 50 50 Z`} 
+                fill="#28a745" 
+                stroke="white" 
+                strokeWidth="2" 
+              />
+            </>
+          )}
+        </svg>
+      </div>
+    </div>
+    <div style={styles.pieLegend}>
+      <div style={styles.legendItem}>
+        <div style={{ ...styles.legendColor, backgroundColor: "#dc3545" }}></div>
+        <span>{analytics?.totalVouchers > 0 ? Math.round(((analytics.totalVouchers - analytics.activeVouchers) / analytics.totalVouchers) * 100) : 0}% Inactive</span>
+      </div>
+      <div style={styles.legendItem}>
+        <div style={{ ...styles.legendColor, backgroundColor: "#28a745" }}></div>
+        <span>{analytics?.totalVouchers > 0 ? Math.round((analytics.activeVouchers / analytics.totalVouchers) * 100) : 0}% Active</span>
+      </div>
+    </div>
+  </div>
+
+        {/* Group Product Sales Table (Dynamic) */}
         <div style={styles.chartContainer}>
           <div style={styles.chartTitle}>Group Product Sales</div>
           <table style={styles.table}>
@@ -370,13 +465,17 @@ resetButton: {
               </tr>
             </thead>
             <tbody>
-              {salesData.map((item, index) => (
-                <tr key={index}>
-                  <td style={styles.tableCell}>{item.product}</td>
-                  <td style={styles.tableCell}>{item.sales}</td>
-                  <td style={styles.tableCell}>{item.revenue}</td>
-                </tr>
-              ))}
+              {productSales && productSales.length > 0 ? (
+                productSales.map((item, index) => (
+                  <tr key={index}>
+                    <td style={styles.tableCell}>{item.product}</td>
+                    <td style={styles.tableCell}>{item.sales}</td>
+                    <td style={styles.tableCell}>${item.revenue.toFixed(2)}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr><td style={styles.tableCell} colSpan={3}>No sales data</td></tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -384,7 +483,7 @@ resetButton: {
 
       {/* Bottom Tables */}
       <div style={styles.tablesGrid}>
-        {/* Voucher Redemptions */}
+        {/* Voucher Redemptions (Dynamic) */}
         <div style={styles.tableContainer}>
           <div style={styles.tableTitle}>Voucher Redemptions</div>
           <table style={styles.table}>
@@ -396,13 +495,17 @@ resetButton: {
               </tr>
             </thead>
             <tbody>
-              {voucherRedemptions.map((item, index) => (
-                <tr key={index}>
-                  <td style={styles.tableCell}>{item.product}</td>
-                  <td style={styles.tableCell}>{item.date}</td>
-                  <td style={styles.tableCell}>{item.location}</td>
-                </tr>
-              ))}
+              {voucherRedemptions && voucherRedemptions.length > 0 ? (
+                voucherRedemptions.map((item, index) => (
+                  <tr key={index}>
+                    <td style={styles.tableCell}>{item.product}</td>
+                    <td style={styles.tableCell}>{item.date}</td>
+                    <td style={styles.tableCell}>{item.location}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr><td style={styles.tableCell} colSpan={3}>No voucher redemptions</td></tr>
+              )}
             </tbody>
           </table>
         </div>
