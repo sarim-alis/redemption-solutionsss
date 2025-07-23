@@ -3,7 +3,7 @@
 client_id = "45f507e1809ed0b0a96b6c8eba1e2950"
 name = "redemption-solutions"
 handle = "redemption-solutions"
-application_url = "https://preventing-republican-weblog-pct.trycloudflare.com"
+application_url = "https://concept-aquatic-fool-tomorrow.trycloudflare.com"
 embedded = true
 
 [build]
@@ -30,9 +30,9 @@ scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gi
 
 [auth]
 redirect_urls = [
-  "https://preventing-republican-weblog-pct.trycloudflare.com/auth/callback",
-  "https://preventing-republican-weblog-pct.trycloudflare.com/auth/shopify/callback",
-  "https://preventing-republican-weblog-pct.trycloudflare.com/api/auth/callback"
+  "https://concept-aquatic-fool-tomorrow.trycloudflare.com/auth/callback",
+  "https://concept-aquatic-fool-tomorrow.trycloudflare.com/auth/shopify/callback",
+  "https://concept-aquatic-fool-tomorrow.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
