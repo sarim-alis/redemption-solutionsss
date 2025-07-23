@@ -16,7 +16,7 @@ export const loader = async ({ request }) => {
   // Fetch products.
   const response = await admin.graphql(`
     query {
-      products(first: 10) {
+      products(first: 30) {
         edges {
           node {
             id
@@ -24,7 +24,7 @@ export const loader = async ({ request }) => {
             description
             vendor
             status
-            media(first: 10) {
+            media(first: 30) {
               edges {
                 node {
                   __typename
@@ -38,6 +38,9 @@ export const loader = async ({ request }) => {
                   }
                 }
               }
+            }
+            metafield(namespace: "custom", key: "product_type") {
+              value
             }
             totalInventory
             category {
@@ -72,7 +75,7 @@ export const loader = async ({ request }) => {
               lastName
               email
             }
-            lineItems(first: 10) {
+            lineItems(first: 30) {
               edges {
                 node {
                   title
@@ -164,6 +167,7 @@ export const loader = async ({ request }) => {
       totalInventory: p.totalInventory || 0,
       categoryId: p.category?.id || null,
       categoryName: p.category?.name || null,
+      type: p.metafield?.value || null,
     };
   });
 
@@ -207,7 +211,7 @@ export const action = async ({ request }) => {
             title
             handle
             status
-            variants(first: 10) {
+            variants(first: 30) {
               edges {
                 node {
                   id

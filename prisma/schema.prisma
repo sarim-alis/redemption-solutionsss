@@ -54,6 +54,7 @@ model Product {
   totalInventory  Int
   categoryId      String?
   categoryName    String?
+  type            String? 
   createdAt       DateTime @default(now())
 }
 

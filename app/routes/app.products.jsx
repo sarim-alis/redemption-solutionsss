@@ -8,7 +8,7 @@ export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
   const response = await admin.graphql(`
     query {
-      products(first: 10) {
+      products(first: 30) {
         edges {
           node {
             id
@@ -16,7 +16,7 @@ export const loader = async ({ request }) => {
             description
             vendor
             status
-            media(first: 10) {
+            media(first: 30) {
               edges {
                 node {
                   __typename
@@ -30,6 +30,9 @@ export const loader = async ({ request }) => {
                   }
                 }
               }
+            }
+            metafield(namespace: "custom", key: "product_type") {
+              value
             }
             totalInventory
             category {
@@ -57,6 +60,7 @@ export default function ProductsPage() {
 
   const productRows = products.map(product => {
     const image = getProductImage(product);
+    const productType = product.metafield?.value || "N/A";
     return [
       product.title,
       image ? (
@@ -67,6 +71,7 @@ export default function ProductsPage() {
       product.status === "ACTIVE" ? <Badge status="success">Active</Badge> : <Badge>Inactive</Badge>,
       product.totalInventory || 0,
       <Badge tone="info" progress="complete">{product.category?.name || "Uncategorized"}</Badge>,
+      <Text variant="bodyMd" as="span">{productType}</Text>,
     ];
   });
 
@@ -75,7 +80,8 @@ export default function ProductsPage() {
     "Image",
     "Status",
     "Inventory",
-    "Category"
+    "Category",
+    "Type"
   ];
 
   return (
