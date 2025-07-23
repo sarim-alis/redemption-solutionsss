@@ -10,10 +10,17 @@ import { FaShoppingCart, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import DashboardOrderChart from '../components/DashboardOrderChart';
 
 // Loader.
+
+import { parse } from "url";
+import { parse as parseQuery } from "querystring";
+
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
+  const urlObj = parse(request.url);
+  const query = parseQuery(urlObj.query || "");
+  const filterDate = query.date || "All";
 
-  // Fetch products.
+  // Fetch products
   const response = await admin.graphql(`
     query {
       products(first: 30) {
@@ -53,7 +60,7 @@ export const loader = async ({ request }) => {
     }
   `);
 
-  // Fetch orders.
+  // Fetch orders
   const orderResponse = await admin.graphql(`
     query {
       orders(first: 250, reverse: true) {
@@ -123,13 +130,31 @@ export const loader = async ({ request }) => {
   `);
 
   const orderJson = await orderResponse.json();
-  const orders = orderJson.data.orders.edges.map(edge => edge.node);
-
+  let orders = orderJson.data.orders.edges.map(edge => edge.node);
   const giftCardJson = await giftCardResponse.json();
   const giftCards = giftCardJson.data.giftCards.edges.map(edge => edge.node);
-
   const responseJson = await response.json();
   const products = responseJson.data.products.edges.map(edge => edge.node);
+
+  // Filter orders by date
+  if (filterDate !== "All") {
+    const today = new Date();
+    orders = orders.filter(order => {
+      const orderDate = new Date(order.processedAt);
+      if (filterDate === "Today") {
+        return orderDate.toDateString() === today.toDateString();
+      } else if (filterDate === "Yesterday") {
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate() - 1);
+        return orderDate.toDateString() === yesterday.toDateString();
+      } else if (filterDate === "This Week") {
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay());
+        return orderDate >= weekStart && orderDate <= today;
+      }
+      return true;
+    });
+  }
 
   // Calculate analytics
   const totalProductSales = orders.reduce((total, order) => {
@@ -182,6 +207,65 @@ export const loader = async ({ request }) => {
     )
   );
 
+  // Product sales by product (dynamic)
+  const productSalesMap = {};
+  orders.forEach(order => {
+    if (order.displayFinancialStatus === "PAID" || order.displayFinancialStatus === "PAID_IN_FULL") {
+      order.lineItems.edges.forEach(itemEdge => {
+        const item = itemEdge.node;
+        const title = item.title;
+        const quantity = item.quantity;
+        const price = parseFloat(item.originalUnitPriceSet.shopMoney.amount);
+        if (!productSalesMap[title]) {
+          productSalesMap[title] = { sales: 0, revenue: 0 };
+        }
+        productSalesMap[title].sales += quantity;
+        productSalesMap[title].revenue += price * quantity;
+      });
+    }
+  });
+  const productSales = Object.entries(productSalesMap).map(([product, data]) => ({
+    product,
+    sales: data.sales,
+    revenue: data.revenue
+  }));
+
+  // Voucher Redemptions (dynamic)
+  // Join voucher with order and lineItems
+  const voucherRedemptions = await prisma.voucher.findMany({
+    where: { used: true },
+    include: {
+      order: true
+    }
+  });
+
+  // For each voucher, try to get product name from order.lineItems (JSON)
+  const voucherRedemptionRows = voucherRedemptions.map(voucher => {
+    let product = "";
+    let location = voucher.customerEmail || "";
+    let date = voucher.createdAt.toISOString().slice(0, 10);
+    // Try to get product from order.lineItems
+    if (voucher.order && voucher.order.lineItems) {
+      try {
+        const items = Array.isArray(voucher.order.lineItems)
+          ? voucher.order.lineItems
+          : JSON.parse(voucher.order.lineItems);
+        if (Array.isArray(items) && items.length > 0) {
+          product = items[0].title || "";
+        } else if (items.edges && items.edges.length > 0) {
+          product = items.edges[0].node.title || "";
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    return {
+      product,
+      date,
+      location
+    };
+  });
+
   return { 
     products, 
     orders, 
@@ -191,7 +275,9 @@ export const loader = async ({ request }) => {
       totalGiftCardBalance,
       totalVouchers: allVouchers.length,
       activeVouchers: activeVouchers.length
-    }
+    },
+    productSales,
+    voucherRedemptions: voucherRedemptionRows
   };
 };
 

@@ -118,9 +118,9 @@ export default function SidebarLayout({ children }) {
       paddingTop: "0px", 
       marginTop: "0px", 
       minHeight: "100vh",
-      width: "calc(100% - 90px)", // Adjusted for both margins (60+15+15)
-      transition: "none", // Remove transitions for page content
-      backgroundColor: "#666666", // Match dashboard background
+      width: "calc(100% - 90px)", 
+      transition: "none", 
+      backgroundColor: "#666666", 
     }
   };
 
