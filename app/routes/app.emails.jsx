@@ -144,6 +144,9 @@ export const loader = async ({ request }) => {
                     product {
                       id
                       title
+                       metafield(namespace: "custom", key: "product_type") {
+                        value
+                      }
                     }
                   }
                 }
