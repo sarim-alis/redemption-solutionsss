@@ -3,7 +3,7 @@
 client_id = "45f507e1809ed0b0a96b6c8eba1e2950"
 name = "redemption-solutions"
 handle = "redemption-solutions"
-application_url = "https://neil-risks-terrorism-limousines.trycloudflare.com"
+application_url = "https://strength-again-constructed-chat.trycloudflare.com"
 embedded = true
 
 [build]
@@ -29,11 +29,7 @@ api_version = "2025-04"
 scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gift_cards,read_inventory,read_merchant_managed_fulfillment_orders,read_orders,read_third_party_fulfillment_orders,write_assigned_fulfillment_orders,write_discounts,write_gift_cards,write_inventory,write_merchant_managed_fulfillment_orders,write_orders,write_products,write_third_party_fulfillment_orders"
 
 [auth]
-redirect_urls = [
-  "https://neil-risks-terrorism-limousines.trycloudflare.com/auth/callback",
-  "https://neil-risks-terrorism-limousines.trycloudflare.com/auth/shopify/callback",
-  "https://neil-risks-terrorism-limousines.trycloudflare.com/api/auth/callback"
-]
+redirect_urls = ["https://strength-again-constructed-chat.trycloudflare.com/auth/callback", "https://strength-again-constructed-chat.trycloudflare.com/auth/shopify/callback", "https://strength-again-constructed-chat.trycloudflare.com/api/auth/callback"]
 
 [pos]
 embedded = false
