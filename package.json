@@ -38,6 +38,7 @@
     "@types/nodemailer": "^6.4.17",
     "antd": "^5.26.6",
     "chart.js": "^4.5.0",
+    "formik": "^2.4.6",
     "isbot": "^5.1.0",
     "nodemailer": "^7.0.5",
     "pdfkit": "^0.17.1",
