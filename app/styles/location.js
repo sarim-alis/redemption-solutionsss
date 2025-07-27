@@ -8,6 +8,11 @@ const styles = {
     marginBottom: '1rem',
     color: 'white'
   },
+  button: {
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    borderColor: 'rgba(0, 0, 0, 0.45)',
+    color: 'white',
+  },
 };
 
 export default styles;
