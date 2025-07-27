@@ -5,6 +5,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
+import 'antd/dist/reset.css';
 
 export default function App() {
   return (
