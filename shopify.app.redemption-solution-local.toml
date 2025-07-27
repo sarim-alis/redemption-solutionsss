@@ -3,7 +3,7 @@
 client_id = "f7446fe6c9a4204ee3763a7baa250700"
 name = "redemption-solution-local"
 handle = "redemption-solution-local-1"
-application_url = "https://unto-rebates-impossible-aquarium.trycloudflare.com"
+application_url = "https://foo-ultram-package-pretty.trycloudflare.com"
 embedded = true
 
 [build]
@@ -19,9 +19,9 @@ scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gi
 
 [auth]
 redirect_urls = [
-  "https://unto-rebates-impossible-aquarium.trycloudflare.com/auth/callback",
-  "https://unto-rebates-impossible-aquarium.trycloudflare.com/auth/shopify/callback",
-  "https://unto-rebates-impossible-aquarium.trycloudflare.com/api/auth/callback"
+  "https://foo-ultram-package-pretty.trycloudflare.com/auth/callback",
+  "https://foo-ultram-package-pretty.trycloudflare.com/auth/shopify/callback",
+  "https://foo-ultram-package-pretty.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]

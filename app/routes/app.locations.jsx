@@ -24,10 +24,34 @@ const Locations = () => {
     validationSchema: Yup.object({
       name: Yup.string().required('Location name is required'),
     }),
-    onSubmit: (values) => {
-      console.log('Form Values:', values);
-      // Integration to API will come later
-    },
+    // onSubmit: (values) => {
+    //   console.log('Form Values:', values);
+    //   // Integration to API will come later
+    // },
+    onSubmit: async (values) => {
+  try {
+    const res = await fetch("/api/models", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(values),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      console.error("Error:", data.error);
+      return;
+    }
+
+    const data = await res.json();
+    console.log("Location created:", data.location);
+    formik.resetForm();
+    closeDrawer();
+  } catch (error) {
+    console.error("Request failed:", error);
+  }
+},
   });
 
   return (
