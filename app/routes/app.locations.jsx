@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Page, Text } from "@shopify/polaris";
 import SidebarLayout from "../components/SidebarLayout";
-import { Drawer, Form, Input, Button } from 'antd';
+import { Drawer, Form, Input, Button, Dropdown, Menu } from 'antd';
 import { MoreOutlined } from '@ant-design/icons';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -32,6 +32,31 @@ export const loader = async () => {
   const locations = await getAllLocations();
   return json({ locations });
 };
+
+// Action Menu.
+const actionMenu = (locationId) => (
+  <Menu
+    items={[
+      {
+        key: 'edit',
+        label: 'Edit',
+        onClick: () => {
+          console.log('Edit', locationId);
+          // Handle Edit logic here
+        },
+      },
+      {
+        key: 'delete',
+        label: 'Delete',
+        onClick: () => {
+          console.log('Delete', locationId);
+          // Handle Delete logic here
+        },
+      },
+    ]}
+  />
+);
+
 
 
 // Frontend.
@@ -91,15 +116,26 @@ const Locations = () => {
             <Button onClick={openDrawer} style={{backgroundColor: '#fff',color: 'black',border: 'none',fontWeight: 'bold',display: 'flex',alignItems: 'center',gap: '6px'}}>Add Location</Button>
           </div>
 
-          {/* List */}
         <div style={{ marginTop: "40px" }}>
-        <Text variant="headingMd" as="h2">Location Name</Text>
-          <ul style={{ color: "white", marginTop: "10px" , textDecoration: "none", listStyleType: "none"}}>
-            {locations.map((loc) => (
-             <li key={loc.id}>{loc.name}</li>
-            ))}
-          </ul>
-        </div>
+          <div style={{display: 'flex',justifyContent: 'flex-start',fontWeight: 'bold',paddingBottom: '12px',borderBottom: '2px solid white',gap: '250px',color: 'white'}}>
+            <Text variant="headingMd" as="h2">Location Name</Text>
+            <Text variant="headingMd" as="h2">Actions</Text>
+          </div>
+
+  {locations.map((loc) => (
+    <div
+      key={loc.id}
+      style={{display: 'flex',justifyContent: 'flex-start',alignItems: 'center',padding: '12px 0',gap: '250px',color: 'white'}}
+    >
+      <span>{loc.name}</span>
+      <Dropdown overlay={actionMenu(loc.id)} trigger={['click']} placement="bottomRight" arrow>
+        <MoreOutlined style={{ fontSize: 20, cursor: 'pointer' }} />
+      </Dropdown>
+    </div>
+  ))}
+</div>
+
+        
 
 
           {/* Drawer */}
