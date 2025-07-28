@@ -33,6 +33,36 @@ export const loader = async () => {
   return json({ locations });
 };
 
+
+// Frontend.
+const Locations = () => {
+  // const { locations } = useLoaderData();
+  const { locations: initialLocations } = useLoaderData();
+  const [locations, setLocations] = useState(initialLocations);
+
+  const handleDelete = async (locationId) => {
+  try {
+    const res = await fetch("/api/location", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id: locationId }),
+    });
+
+    if (!res.ok) {
+      console.error("❌ Delete failed");
+      return;
+    }
+
+    // Remove from local state
+    setLocations((prev) => prev.filter((loc) => loc.id !== locationId));
+    console.log("🗑️ Deleted:", locationId);
+  } catch (err) {
+    console.error("❌ Error deleting:", err);
+  }
+};
+
 // Action Menu.
 const actionMenu = (locationId) => (
   <Menu
@@ -48,22 +78,11 @@ const actionMenu = (locationId) => (
       {
         key: 'delete',
         label: 'Delete',
-        onClick: () => {
-          console.log('Delete', locationId);
-          // Handle Delete logic here
-        },
+        onClick: () => handleDelete(locationId),
       },
     ]}
   />
 );
-
-
-
-// Frontend.
-const Locations = () => {
-  // const { locations } = useLoaderData();
-  const { locations: initialLocations } = useLoaderData();
-  const [locations, setLocations] = useState(initialLocations);
   
   // States.
   const [drawerVisible, setDrawerVisible] = useState(false);
@@ -130,7 +149,7 @@ const Locations = () => {
       key={loc.id}
       style={{display: 'flex',justifyContent: 'flex-start',alignItems: 'center',padding: '12px 0',gap: '250px',color: 'white'}}
     >
-      <span>{loc.name}</span>
+      <span style={{minWidth: "120px"}}>{loc.name}</span>
       <Dropdown overlay={actionMenu(loc.id)} trigger={['click']} placement="bottomRight" arrow>
         <MoreOutlined style={{ fontSize: 20, cursor: 'pointer' }} />
       </Dropdown>

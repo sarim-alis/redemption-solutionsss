@@ -3,7 +3,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    gap: '30rem',
+    gap: '8rem',
     marginTop: '1rem',
     marginBottom: '1rem',
     color: 'white',
