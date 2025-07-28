@@ -42,3 +42,10 @@ export async function getLocationById(id: string) {
     where: { id },
   });
 }
+
+// Delete a location by ID
+export async function deleteLocation(id: string) {
+  return prisma.location.delete({
+    where: { id },
+  });
+}
