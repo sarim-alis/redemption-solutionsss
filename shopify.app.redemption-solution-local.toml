@@ -3,12 +3,8 @@
 client_id = "f7446fe6c9a4204ee3763a7baa250700"
 name = "redemption-solution-local"
 handle = "redemption-solution-local-1"
-application_url = "https://ob-wp-edit-diego.trycloudflare.com"
+application_url = "https://southern-driving-rc-hungary.trycloudflare.com"
 embedded = true
-
-[build]
-automatically_update_urls_on_dev = true
-include_config_on_deploy = true
 
 [webhooks]
 api_version = "2025-07"
@@ -19,10 +15,13 @@ scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gi
 
 [auth]
 redirect_urls = [
-  "https://ob-wp-edit-diego.trycloudflare.com/auth/callback",
-  "https://ob-wp-edit-diego.trycloudflare.com/auth/shopify/callback",
-  "https://ob-wp-edit-diego.trycloudflare.com/api/auth/callback"
+  "https://southern-driving-rc-hungary.trycloudflare.com/auth/callback",
+  "https://southern-driving-rc-hungary.trycloudflare.com/auth/shopify/callback",
+  "https://southern-driving-rc-hungary.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
 embedded = false
+
+[build]
+automatically_update_urls_on_dev = true
