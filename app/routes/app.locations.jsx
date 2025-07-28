@@ -1,6 +1,6 @@
 // app/routes/app.location.jsx
 // Imports.
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Page, Text } from "@shopify/polaris";
 import SidebarLayout from "../components/SidebarLayout";
 import { Drawer, Form, Input, Button, Dropdown, Menu } from 'antd';
@@ -39,6 +39,9 @@ const Locations = () => {
   // const { locations } = useLoaderData();
   const { locations: initialLocations } = useLoaderData();
   const [locations, setLocations] = useState(initialLocations);
+  const [editDrawerVisible, setEditDrawerVisible] = useState(false);
+  const [editingLocation, setEditingLocation] = useState(null);
+
 
   const handleDelete = async (locationId) => {
   try {
@@ -71,9 +74,11 @@ const actionMenu = (locationId) => (
         key: 'edit',
         label: 'Edit',
         onClick: () => {
-          console.log('Edit', locationId);
-          // Handle Edit logic here
-        },
+  const loc = locations.find((l) => l.id === locationId);
+  setEditingLocation(loc);
+  setEditDrawerVisible(true);
+}
+
       },
       {
         key: 'delete',
@@ -127,6 +132,58 @@ const actionMenu = (locationId) => (
   }
 },
   });
+
+  const editFormik = useFormik({
+  initialValues: {
+    id: '',
+    name: '',
+  },
+  enableReinitialize: true,
+  validationSchema: Yup.object({
+    name: Yup.string().required("Location name is required"),
+  }),
+  onSubmit: async (values) => {
+    try {
+      const res = await fetch("/api/location", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        console.error("Error updating:", data.error);
+        return;
+      }
+
+      const data = await res.json();
+      console.log("✅ Updated:", data.location);
+
+      setLocations((prev) =>
+        prev.map((loc) =>
+          loc.id === data.location.id ? data.location : loc
+        )
+      );
+
+      setEditDrawerVisible(false);
+      setEditingLocation(null);
+    } catch (error) {
+      console.error("❌ Update failed:", error);
+    }
+  },
+});
+
+useEffect(() => {
+  if (editingLocation) {
+    editFormik.setValues({
+      id: editingLocation.id,
+      name: editingLocation.name,
+    });
+  }
+}, [editingLocation]);
+
 
   return (
     <SidebarLayout>
@@ -191,6 +248,56 @@ const actionMenu = (locationId) => (
     </Button>
   </form>
 </Drawer>
+
+<Drawer
+  title="Edit Location ✏️"
+  placement="right"
+  open={editDrawerVisible}
+  onClose={() => {
+    setEditDrawerVisible(false);
+    setEditingLocation(null);
+  }}
+>
+  <form onSubmit={editFormik.handleSubmit}>
+    <div style={{ marginBottom: "20px" }}>
+      <label
+        style={{
+          display: "block",
+          fontSize: "16px",
+          marginBottom: "8px",
+        }}
+      >
+        Location Name <span style={{ color: "#ce1127" }}>*</span>
+      </label>
+      <Input
+        name="name"
+        placeholder="e.g. Woodland Hills"
+        style={{ width: "100%", height: "40px" }}
+        value={editFormik.values.name}
+        onChange={editFormik.handleChange}
+        onBlur={editFormik.handleBlur}
+        status={
+          editFormik.touched.name && editFormik.errors.name ? "error" : ""
+        }
+      />
+      {editFormik.touched.name && editFormik.errors.name && (
+        <div style={{ color: "#ff4d4f", marginTop: "4px" }}>
+          {editFormik.errors.name}
+        </div>
+      )}
+    </div>
+
+    <Button
+      htmlType="submit"
+      block
+      style={styles.button}
+      loading={editFormik.isSubmitting}
+    >
+      Update Location
+    </Button>
+  </form>
+</Drawer>
+
 
         </Page>
       </div>
