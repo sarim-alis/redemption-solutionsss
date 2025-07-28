@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "@remix-run/react";
 import { Frame, Navigation, Icon } from "@shopify/polaris";
-import { ChartVerticalFilledIcon, ProductIcon, OrderIcon, ReceiptIcon, EmailIcon, LocationIcon } from "@shopify/polaris-icons";
+import { ChartVerticalFilledIcon, ProductIcon, OrderIcon, ReceiptIcon, EmailIcon, LocationIcon, PersonFilledIcon } from "@shopify/polaris-icons";
 
 const navItems = [
   { label: "Report", url: "/app", icon: ChartVerticalFilledIcon },
@@ -11,6 +11,7 @@ const navItems = [
   // { label: "Customers", url: "/app/customers", icon: CustomersIcon },
   { label: "Emails", url: "/app/emails", icon: EmailIcon },
   { label: "Locations", url: "/app/locations", icon: LocationIcon },
+  { label: "Users", url: "/app/users", icon: PersonFilledIcon },
 ];
 
 export default function SidebarLayout({ children }) {
