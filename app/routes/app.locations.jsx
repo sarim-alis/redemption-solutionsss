@@ -8,10 +8,9 @@ import { MoreOutlined } from '@ant-design/icons';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useLoaderData } from "@remix-run/react";
-import { authenticate } from '../shopify.server';
-import { Form as RemixForm } from "@remix-run/react";
 import { json, redirect } from "@remix-run/node";
 import { createLocation } from '../models/location.server';
+import { getAllLocations } from '../models/location.server';
 import styles from '../styles/location.js';
 
 
@@ -28,9 +27,16 @@ export const action = async ({ request }) => {
   return redirect("/app.locations"); // refresh after save
 };
 
+// Loader.
+export const loader = async () => {
+  const locations = await getAllLocations();
+  return json({ locations });
+};
+
 
 // Frontend.
 const Locations = () => {
+  const { locations } = useLoaderData();
   
   // States.
   const [drawerVisible, setDrawerVisible] = useState(false);
@@ -78,11 +84,23 @@ const Locations = () => {
   return (
     <SidebarLayout>
       <div style={{ color: "white" }}>
-        <Page fullWidth title="Locations 📍">
+        <Page fullWidth>
+          {/* Header */}
           <div style={styles.container}>
-            <Text variant="headingMd" as="h1">Add Location 🍺</Text>
-            <MoreOutlined onClick={openDrawer} style={{ fontSize: '20px', fontWeight: 'bold', cursor: 'pointer' }}/>
+           <Text variant="headingXl" as="h1">Locations 🍺📍⭐</Text>
+            <Button onClick={openDrawer} style={{backgroundColor: '#fff',color: 'black',border: 'none',fontWeight: 'bold',display: 'flex',alignItems: 'center',gap: '6px'}}>Add Location</Button>
           </div>
+
+          {/* List */}
+        <div style={{ marginTop: "40px" }}>
+        <Text variant="headingMd" as="h2">Location Name</Text>
+          <ul style={{ color: "white", marginTop: "10px" , textDecoration: "none", listStyleType: "none"}}>
+            {locations.map((loc) => (
+             <li key={loc.id}>{loc.name}</li>
+            ))}
+          </ul>
+        </div>
+
 
           {/* Drawer */}
         <Drawer title="Add Location 🍺" placement="right" open={drawerVisible} onClose={closeDrawer}>
