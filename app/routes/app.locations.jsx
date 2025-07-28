@@ -61,7 +61,9 @@ const actionMenu = (locationId) => (
 
 // Frontend.
 const Locations = () => {
-  const { locations } = useLoaderData();
+  // const { locations } = useLoaderData();
+  const { locations: initialLocations } = useLoaderData();
+  const [locations, setLocations] = useState(initialLocations);
   
   // States.
   const [drawerVisible, setDrawerVisible] = useState(false);
@@ -98,6 +100,7 @@ const Locations = () => {
 
     const data = await res.json();
     console.log("Location created:", data.location);
+    setLocations([...locations, data.location]);
     formik.resetForm();
     closeDrawer();
   } catch (error) {
