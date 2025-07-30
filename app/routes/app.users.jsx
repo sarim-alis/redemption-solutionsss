@@ -53,8 +53,8 @@ const Users = () => {
           return;
         }
 
-        const newEmployee = await response.json();
-        setEmployees(prev => [...prev, newEmployee]);
+        const { employee } = await response.json();
+        setEmployees(prev => [...prev, employee]);
         alert('User created successfully!');
         resetForm();
         closeDrawer();
