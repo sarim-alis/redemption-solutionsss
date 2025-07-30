@@ -1,7 +1,7 @@
 const styles = {
    container: {
       background: '#f9f9f9',
-      height: '100vh',
+      height: '90vh',
       display: 'flex',
       justifyContent: 'left',
       alignItems: 'center',

@@ -3,11 +3,12 @@
 client_id = "c2f415f66df6ec14c9b7ccef564c014c"
 name = "redeem-gift"
 handle = "redeem-gift"
-application_url = "https://shadows-verified-herbs-boxes.trycloudflare.com"
+application_url = "https://ascii-transcripts-acknowledged-number.trycloudflare.com"
 embedded = true
 
 [build]
 include_config_on_deploy = true
+automatically_update_urls_on_dev = true
 
 [webhooks]
 api_version = "2025-07"
@@ -18,9 +19,9 @@ scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gi
 
 [auth]
 redirect_urls = [
-  "https://shadows-verified-herbs-boxes.trycloudflare.com/auth/callback",
-  "https://shadows-verified-herbs-boxes.trycloudflare.com/auth/shopify/callback",
-  "https://shadows-verified-herbs-boxes.trycloudflare.com/api/auth/callback"
+  "https://ascii-transcripts-acknowledged-number.trycloudflare.com/auth/callback",
+  "https://ascii-transcripts-acknowledged-number.trycloudflare.com/auth/shopify/callback",
+  "https://ascii-transcripts-acknowledged-number.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
