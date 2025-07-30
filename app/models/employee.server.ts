@@ -1,5 +1,6 @@
 import prisma from "../db.server";
 
+// createEmployee.
 export async function createEmployee(username: string, email?: string, address?: string, password?: string) {
   return prisma.employee.create({
     data: {
@@ -11,4 +12,7 @@ export async function createEmployee(username: string, email?: string, address?:
   });
 }
 
- 
+// getAllEmployees.
+ export async function getAllEmployees() {
+  return prisma.employee.findMany();
+}
