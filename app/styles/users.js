@@ -1,12 +1,15 @@
 const styles = {
-   container: {
-      background: '#f9f9f9',
-      height: '90vh',
+    container: {
       display: 'flex',
-      justifyContent: 'left',
+      justifyContent: 'flex-start',
       alignItems: 'center',
-      marginTop: '-120px'
-    },
+      gap: '8rem',
+      marginTop: '1rem',
+      marginBottom: '1rem',
+      color: 'white',
+      paddingBottom: '20px',
+      borderBottom: '2px solid white',
+  },
     form: {
       background: '#fff',
       padding: '30px',
@@ -33,6 +36,11 @@ const styles = {
       borderRadius: '4px',
       fontSize: '14px',
     },
+    button: {
+      backgroundColor: 'rgba(0, 0, 0, 0.45)',
+      borderColor: 'rgba(0, 0, 0, 0.45)',
+      color: 'white',
+  },
 };
 
 export default styles;

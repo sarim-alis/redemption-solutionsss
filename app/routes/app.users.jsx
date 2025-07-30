@@ -3,16 +3,16 @@
 import { useState } from 'react';
 import { Page, Text } from "@shopify/polaris";
 import SidebarLayout from '../components/SidebarLayout';
-import { Drawer, Form, Input, Button, Dropdown, Menu } from 'antd';
+import { Drawer, Input, Button, Dropdown } from 'antd';
 import { MoreOutlined } from '@ant-design/icons';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useLoaderData } from "@remix-run/react";
-import { json, redirect } from "@remix-run/node";
+import { json } from "@remix-run/node";
 import { getAllEmployees } from "../models/employee.server.js";
 import styles from '../styles/users.js';
 
-// Loader to get initial employees
+// Loader.
 export const loader = async () => {
   const employees = await getAllEmployees();
   return json({ employees });
@@ -22,7 +22,10 @@ export const loader = async () => {
 const Users = () => {
   const { employees: initialEmployees } = useLoaderData();
   const [employees, setEmployees] = useState(initialEmployees);
-  const [isHovered, setIsHovered] = useState(false);
+  const [drawerVisible, setDrawerVisible] = useState(false);
+
+  const openDrawer = () => setDrawerVisible(true);
+  const closeDrawer = () => setDrawerVisible(false);
 
   const formik = useFormik({
     initialValues: {
@@ -37,7 +40,7 @@ const Users = () => {
       address: Yup.string().required('Address is required'),
       password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
     }),
-    onSubmit: async (values, { resetForm }) => {
+    onSubmit: async (values, { resetForm, setSubmitting }) => {
       try {
         const response = await fetch('/api/employee', {
           method: 'POST',
@@ -51,110 +54,29 @@ const Users = () => {
         }
 
         const newEmployee = await response.json();
+        setEmployees(prev => [...prev, newEmployee]);
         alert('User created successfully!');
-        setEmployees([...employees, newEmployee]);
         resetForm();
+        closeDrawer();
       } catch (err) {
         console.error(err);
         alert('Unexpected error');
+      } finally {
+        setSubmitting(false);
       }
     },
   });
 
-  const buttonStyle = {
-    padding: '10px',
-    backgroundColor: isHovered ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.45)',
-    borderColor: 'rgba(0, 0, 0, 0.45)',
-    color: 'white',
-    borderRadius: '4px',
-    cursor: 'pointer'
-  };
-
   return (
     <SidebarLayout>
-      <Page fullWidth title="Users 🧑⭐🌱">
+     <div style={{ color: "white" }}>
+      <Page fullWidth>
+        {/* Header */}
         <div style={styles.container}>
-          <form style={styles.form} onSubmit={formik.handleSubmit}>
-            <img
-              src="/logo.svg"
-              alt="Logo"
-              style={{ width: '120px', height: '120px', marginBottom: '20px', margin: 'auto' }}
-            />
-
-            {/* Username */}
-            <label style={styles.label}>
-              Username<span style={{ color: '#ce1127' }}>*</span>
-            </label>
-            <input
-              type="text"
-              name="username"
-              value={formik.values.username}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              style={styles.input}
-            />
-            {formik.touched.username && formik.errors.username && (
-              <div style={{ color: '#ff4d4f', marginBottom: '8px' }}>{formik.errors.username}</div>
-            )}
-
-            {/* Email */}
-            <label style={styles.label}>
-              Email<span style={{ color: '#ce1127' }}>*</span>
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formik.values.email}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              style={styles.input}
-            />
-            {formik.touched.email && formik.errors.email && (
-              <div style={{ color: '#ff4d4f', marginBottom: '8px' }}>{formik.errors.email}</div>
-            )}
-
-            {/* Address */}
-            <label style={styles.label}>
-              Address<span style={{ color: '#ce1127' }}>*</span>
-            </label>
-            <input
-              type="text"
-              name="address"
-              value={formik.values.address}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              style={styles.input}
-            />
-            {formik.touched.address && formik.errors.address && (
-              <div style={{ color: '#ff4d4f', marginBottom: '8px' }}>{formik.errors.address}</div>
-            )}
-
-            {/* Password */}
-            <label style={styles.label}>
-              Password<span style={{ color: '#ce1127' }}>*</span>
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={formik.values.password}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              style={styles.input}
-            />
-            {formik.touched.password && formik.errors.password && (
-              <div style={{ color: '#ff4d4f', marginBottom: '8px' }}>{formik.errors.password}</div>
-            )}
-
-            {/* Submit */}
-            <button
-              type="submit"
-              style={buttonStyle}
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-            >
-              Sign Up
-            </button>
-          </form>
+          <Text variant="headingXl" as="h1">Employees 👨‍💼🧑⭐🌱</Text>
+          <Button onClick={openDrawer} style={{ fontWeight: 'bold' }}>
+            Add Employee
+          </Button>
         </div>
 
         {/* Employee List */}
@@ -165,7 +87,7 @@ const Users = () => {
             fontWeight: 'bold',
             paddingBottom: '12px',
             borderBottom: '2px solid white',
-            gap: '220px',
+            gap: '450px',
             color: 'white'
           }}>
             <Text variant="headingMd" as="h2">Name</Text>
@@ -182,20 +104,68 @@ const Users = () => {
                 justifyContent: 'flex-start',
                 alignItems: 'center',
                 padding: '12px 0',
-                gap: '170px',
+                gap: '310px',
                 color: 'white'
               }}
             >
-              <span style={{ minWidth: "90px" }}>{emp.username}</span>
-              <span style={{ minWidth: "90px" }}>{emp.email}</span>
-              <span style={{ minWidth: "90px" }}>{emp.address}</span>
+              <span style={{ minWidth: "170px" }}>{emp.username}</span>
+              <span style={{ minWidth: "170px" }}>{emp.email}</span>
+              <span style={{ minWidth: "170px" }}>{emp.address}</span>
               <Dropdown trigger={['click']} placement="bottomRight" arrow>
                 <MoreOutlined style={{ fontSize: 20, cursor: 'pointer' }} />
               </Dropdown>
             </div>
           ))}
         </div>
+
+        {/* Drawer to Add Employee */}
+        <Drawer
+          title="Add Employee 🧑‍💼"
+          placement="right"
+          open={drawerVisible}
+          onClose={closeDrawer}
+          width={400}
+        >
+          <form onSubmit={formik.handleSubmit}>
+            <div style={{ marginBottom: '16px' }}>
+              <label>Username <span style={{ color: '#ce1127' }}>*</span></label>
+              <Input name="username" placeholder="Doron" style={{ width: '100%', height: '40px' }} value={formik.values.username} onChange={formik.handleChange} onBlur={formik.handleBlur} />
+              {formik.touched.username && formik.errors.username && (
+                <div style={{ color: '#ff4d4f' }}>{formik.errors.username}</div>
+              )}
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label>Email <span style={{ color: '#ce1127' }}>*</span></label>
+              <Input name="email" placeholder="doron@gmail.com" style={{ width: '100%', height: '40px' }} value={formik.values.email} onChange={formik.handleChange} onBlur={formik.handleBlur} />
+              {formik.touched.email && formik.errors.email && (
+                <div style={{ color: '#ff4d4f' }}>{formik.errors.email}</div>
+              )}
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label>Address <span style={{ color: '#ce1127' }}>*</span></label>
+              <Input name="address" placeholder="United States" style={{ width: '100%', height: '40px' }} value={formik.values.address} onChange={formik.handleChange} onBlur={formik.handleBlur} />
+              {formik.touched.address && formik.errors.address && (
+                <div style={{ color: '#ff4d4f' }}>{formik.errors.address}</div>
+              )}
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label>Password <span style={{ color: '#ce1127' }}>*</span></label>
+              <Input.Password name="password" placeholder="******" style={{ width: '100%', height: '40px' }} value={formik.values.password} onChange={formik.handleChange} onBlur={formik.handleBlur} />
+              {formik.touched.password && formik.errors.password && (
+                <div style={{ color: '#ff4d4f' }}>{formik.errors.password}</div>
+              )}
+            </div>
+
+            <Button htmlType="submit" block style={styles.button} loading={formik.isSubmitting}>
+              Save
+            </Button>
+          </form>
+        </Drawer>
       </Page>
+        </div> 
     </SidebarLayout>
   );
 };
