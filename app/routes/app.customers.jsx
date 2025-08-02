@@ -25,7 +25,7 @@ const Customers = () => {
      <div style={{ color: "white" }}>
       <Page fullWidth>
         {/* Header */}
-          <Text variant="headingXl" as="h1">Customers 🙍🏻‍♂️⭐🌱</Text>
+        <Text variant="headingXl" as="h1">Customers 🙍🏻‍♂️⭐🌱</Text>
 
         {/* Customer List */}
         <div style={{ marginTop: "40px" }}>
