@@ -1,117 +1,173 @@
+// app/routes/app.users.jsx
 // Imports.
-import React from "react";
+import { useState } from 'react';
+import { Page, Text } from "@shopify/polaris";
+import SidebarLayout from '../components/SidebarLayout';
+import { Drawer, Input, Button, Dropdown } from 'antd';
+import { MoreOutlined } from '@ant-design/icons';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
 import { useLoaderData } from "@remix-run/react";
-import styles from "../styles/customer.js";
 import { json } from "@remix-run/node";
-import { getVoucherByOrderId } from "../models/voucher.server";
-
-// Format date.
-function formatDate(dateStr) {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", {year: "numeric", month: "short", day: "numeric",});
-}
-
-// Add months to date.
-function addMonths(dateStr, months) {
-  const date = new Date(dateStr);
-  date.setMonth(date.getMonth() + months);
-  return date;
-}
-
-// Format customer name.
-function formatCustomerName(email) {
-  if (!email) return "Customer";
-  const namePart = email.split("@")[0];
-  return namePart.charAt(0).toUpperCase() + namePart.slice(1);
-}
-
+import { getAllEmployees } from "../models/employee.server.js";
+import styles from '../styles/users.js';
 
 // Loader.
 export const loader = async () => {
-  const shopifyOrderId = "5935739404384";
-  const voucher = await getVoucherByOrderId(shopifyOrderId);
-  return json({ voucher });
-  // const vouchers = await getAllVouchers();
-  // return json({ vouchers });
+  const employees = await getAllEmployees();
+  return json({ employees });
 };
 
+// Component
+const Users = () => {
+  const { employees: initialEmployees } = useLoaderData();
+  const [employees, setEmployees] = useState(initialEmployees);
+  const [drawerVisible, setDrawerVisible] = useState(false);
 
-// Frontend.
-export default function CustomersPage() {
-  const { voucher } = useLoaderData();
-  console.log("📦 Voucher data:", voucher);
+  const openDrawer = () => setDrawerVisible(true);
+  const closeDrawer = () => setDrawerVisible(false);
+
+  const formik = useFormik({
+    initialValues: {
+      username: '',
+      email: '',
+      address: '',
+      password: '',
+    },
+    validationSchema: Yup.object({
+      username: Yup.string().required('Username is required'),
+      email: Yup.string().email('Invalid email').required('Email is required'),
+      address: Yup.string().required('Address is required'),
+      password: Yup.string().required('Password is required'),
+    }),
+    onSubmit: async (values, { resetForm, setSubmitting }) => {
+      try {
+        const response = await fetch('/api/employee', {
+          method: 'POST',
+          body: new URLSearchParams(values),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          alert('Error: ' + error.error);
+          return;
+        }
+
+        const { employee } = await response.json();
+        setEmployees(prev => [...prev, employee]);
+        alert('User created successfully!');
+        resetForm();
+        closeDrawer();
+      } catch (err) {
+        console.error(err);
+        alert('Unexpected error');
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
 
   return (
-     <div style={styles.containerStyle}>
-      {/* Subject */}
-      {/* <div style={styles.subjectStyle}>
-        <p style={styles.subjectTitle}>Subject, Here are your Oil Change Vouchers! Where to Redeem.</p>
-      </div> */}
-
-      {/* Customer Greeting */}
-      <div style={styles.subjectStyle}>
-        <p style={styles.customerTitle}>Hey {formatCustomerName(voucher.customerEmail)},</p>
-        <p style={styles.customerTitle}>Thank you for your purchase of the Oil Change Vouchers/ Gift Cards. Use the Vouchers below to redeem at participating locations. See below for terms and details.</p>
-      </div>
-
-
-      {/* Voucher Details */}
-      <div style={styles.voucherStyle}>
-        <h1 style={styles.titleStyle}>Jiffy Lube Oil Change Voucher</h1>
-        <p style={styles.subtitleStyle}>
-          Present this at participating locations
-          <br />
-          to redeem.
-        </p>
-
-        <div style={styles.infoRowStyle}>
-          <span style={styles.labelStyle}>Valid through:</span>
-          <span style={styles.valueStyle}>{voucher.createdAt ? formatDate(addMonths(voucher.createdAt, 3)) : "N/A"}</span>
+    <SidebarLayout>
+     <div style={{ color: "white" }}>
+      <Page fullWidth>
+        {/* Header */}
+        <div style={styles.container}>
+          <Text variant="headingXl" as="h1">Customers 🙍🏻‍♂️⭐🌱</Text>
+          <Button onClick={openDrawer} style={{ fontWeight: 'bold' }}>
+            Add Customer
+          </Button>
         </div>
 
-        <div style={styles.infoRowStyle}>
-          <span style={styles.labelStyle}>Issued on:</span>
-          <span style={styles.valueStyle}>{voucher.createdAt ? formatDate(voucher.createdAt) : "N/A"}</span>
+        {/* Employee List */}
+        <div style={{ marginTop: "40px" }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'flex-start',
+            fontWeight: 'bold',
+            paddingBottom: '12px',
+            borderBottom: '2px solid white',
+            gap: '450px',
+            color: 'white'
+          }}>
+            <Text variant="headingMd" as="h2">Name</Text>
+            <Text variant="headingMd" as="h2">Email</Text>
+            <Text variant="headingMd" as="h2">Address</Text>
+            <Text variant="headingMd" as="h2">Actions</Text>
+          </div>
+
+          {employees.map(emp => (
+            <div
+              key={emp.id}
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-start',
+                alignItems: 'center',
+                padding: '12px 0',
+                gap: '310px',
+                color: 'white'
+              }}
+            >
+              <span style={{ minWidth: "170px" }}>{emp.username}</span>
+              <span style={{ minWidth: "170px" }}>{emp.email}</span>
+              <span style={{ minWidth: "170px" }}>{emp.address}</span>
+              <Dropdown trigger={['click']} placement="bottomRight" arrow>
+                <MoreOutlined style={{ fontSize: 20, cursor: 'pointer' }} />
+              </Dropdown>
+            </div>
+          ))}
         </div>
 
-        <div style={styles.infoRowStyle}>
-          <span style={styles.labelStyle}>Used on:</span>
-          <span style={styles.valueStyle}>---</span>
-        </div>
+        {/* Drawer to Add Employee */}
+        <Drawer
+          title="Add Customer 🙍🏻‍♂️"
+          placement="right"
+          open={drawerVisible}
+          onClose={closeDrawer}
+          width={400}
+        >
+          <form onSubmit={formik.handleSubmit}>
+            <div style={{ marginBottom: '16px' }}>
+              <label>Username <span style={{ color: '#ce1127' }}>*</span></label>
+              <Input name="username" placeholder="Doron" style={{ width: '100%', height: '40px' }} value={formik.values.username} onChange={formik.handleChange} onBlur={formik.handleBlur} />
+              {formik.touched.username && formik.errors.username && (
+                <div style={{ color: '#ff4d4f' }}>{formik.errors.username}</div>
+              )}
+            </div>
 
-        <div style={styles.codeContainerStyle}>
-          <div style={styles.codeLabelStyle}>Voucher Code</div>
-          <div style={styles.codeStyle}>{voucher.code}</div>
-        </div>
+            <div style={{ marginBottom: '16px' }}>
+              <label>Email <span style={{ color: '#ce1127' }}>*</span></label>
+              <Input name="email" placeholder="doron@gmail.com" style={{ width: '100%', height: '40px' }} value={formik.values.email} onChange={formik.handleChange} onBlur={formik.handleBlur} />
+              {formik.touched.email && formik.errors.email && (
+                <div style={{ color: '#ff4d4f' }}>{formik.errors.email}</div>
+              )}
+            </div>
 
-        <div style={styles.termsStyle}>
-          * Must be used at participating locations
-          <br />
-          ** Term 2<br />
-          *** Term 3
-        </div>
-      </div>
+            <div style={{ marginBottom: '16px' }}>
+              <label>Address <span style={{ color: '#ce1127' }}>*</span></label>
+              <Input name="address" placeholder="United States" style={{ width: '100%', height: '40px' }} value={formik.values.address} onChange={formik.handleChange} onBlur={formik.handleBlur} />
+              {formik.touched.address && formik.errors.address && (
+                <div style={{ color: '#ff4d4f' }}>{formik.errors.address}</div>
+              )}
+            </div>
 
-      {/* Terms and Conditions */}
-      <div style={styles.subjectStyle}>
-        <p style={styles.customerTitle}>Terms and Conditions</p>
-        <p style={styles.customerTitle}>Details of Terms. Locations available to redeem. How to redeem.</p>
-      </div>
+            <div style={{ marginBottom: '16px' }}>
+              <label>Password <span style={{ color: '#ce1127' }}>*</span></label>
+              <Input.Password name="password" placeholder="******" style={{ width: '100%', height: '40px' }} value={formik.values.password} onChange={formik.handleChange} onBlur={formik.handleBlur} />
+              {formik.touched.password && formik.errors.password && (
+                <div style={{ color: '#ff4d4f' }}>{formik.errors.password}</div>
+              )}
+            </div>
 
-      {/* Gift Card */}
-      <div style={styles.cardContainer}>
-        <div style={styles.giftCard}>
-         <div style={styles.cardHeader}>
-          <img src="/logo.svg" alt="Logo" style={styles.logoStyle} />
-          <span style={styles.voucherCode}>{voucher.code}</span>
-         </div>
+            <Button htmlType="submit" block style={styles.button} loading={formik.isSubmitting}>
+              Save
+            </Button>
+          </form>
+        </Drawer>
+      </Page>
+        </div> 
+    </SidebarLayout>
+  );
+};
 
-         <div style={styles.balanceRow}>
-          <span style={styles.balanceLabel}>Balance:</span>
-           <span style={styles.balanceAmount}>$50.00</span>
-         </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+export default Users;
