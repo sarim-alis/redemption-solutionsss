@@ -5,20 +5,20 @@ import { Page, Text } from "@shopify/polaris";
 import SidebarLayout from '../components/SidebarLayout';
 import { useLoaderData } from "@remix-run/react";
 import { json } from "@remix-run/node";
-import { getAllEmployees } from "../models/employee.server.js";
+import { getAllCustomers } from '../models/customer.server.js';
 import styles from '../styles/customers.js';
 
 // Loader.
 export const loader = async () => {
-  const employees = await getAllEmployees();
-  return json({ employees });
+  const customers = await getAllCustomers();
+  return json({ customers });
 };
 
 
 // Frontend.
 const Customers = () => {
-  const { employees: initialEmployees } = useLoaderData();
-  const [employees] = useState(initialEmployees);
+  const { customers: initialCustomers } = useLoaderData();
+  const [customers] = useState(initialCustomers);
 
   return (
     <SidebarLayout>
@@ -32,16 +32,12 @@ const Customers = () => {
           <div style={{display: 'flex',justifyContent: 'flex-start',fontWeight: 'bold',paddingBottom: '12px',borderBottom: '2px solid white',gap: '450px',color: 'white'}}>
             <Text variant="headingMd" as="h2">Name</Text>
             <Text variant="headingMd" as="h2">Email</Text>
-            <Text variant="headingMd" as="h2">Address</Text>
-            <Text variant="headingMd" as="h2">Phone</Text>
           </div>
 
-          {employees.map(emp => (
-            <div key={emp.id} style={{display: 'flex',justifyContent: 'flex-start',alignItems: 'center',padding: '12px 0',gap: '310px',color: 'white'}}>
-              <span style={{ minWidth: "170px" }}>{emp.username}</span>
-              <span style={{ minWidth: "170px" }}>{emp.email}</span>
-              <span style={{ minWidth: "170px" }}>{emp.address}</span>
-              <span style={{ minWidth: "170px" }}>{emp.address}</span>
+          {customers.map(customer => (
+            <div key={customer.id} style={{display: 'flex',justifyContent: 'flex-start',alignItems: 'center',padding: '12px 0',gap: '310px',color: 'white'}}>
+              <span style={{ minWidth: "170px" }}>{customer.firstName} {customer.lastName}</span>
+              <span style={{ minWidth: "170px" }}>{customer.email}</span>
             </div>
           ))}
         </div>
