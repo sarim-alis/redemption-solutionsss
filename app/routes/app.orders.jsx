@@ -7,6 +7,7 @@ import { saveOrder } from "../models/order.server";
 import prisma from "../db.server";
 import { sendEmail } from "../utils/mail.server";
 // import { hasCustomerOrderedBefore } from "../models/order.server";
+import { saveCustomer } from "../models/customer.server";
 
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
@@ -59,9 +60,11 @@ export const loader = async ({ request }) => {
               }
             }
             customer {
+              id
               firstName
               lastName
               email
+              createdAt
             }
             lineItems(first: 10) {
               edges {
@@ -104,6 +107,8 @@ export const loader = async ({ request }) => {
   // Save each order to database
   let savedCount = 0;
   let skippedCount = 0;
+  let customersSaved = 0;
+  let customersSkipped = 0;
   
   for (const order of orders) {
     try {
@@ -117,6 +122,46 @@ export const loader = async ({ request }) => {
         customerKeys: Object.keys(order.customer || {}),
         customerEmail: order.customer?.email
       });
+
+      // ✅ SAVE CUSTOMER FIRST (if exists)
+      let savedCustomer = null;
+      if (order.customer && order.customer.id) {
+        try {
+          const customerShopifyId = order.customer.id.split('/').pop();
+          
+          console.log('👤 Processing customer:', {
+            customerId: customerShopifyId,
+            email: order.customer.email,
+            name: `${order.customer.firstName || ''} ${order.customer.lastName || ''}`.trim()
+          });
+
+          // Prepare customer data
+          const customerData = {
+            shopifyId: customerShopifyId,
+            firstName: order.customer.firstName,
+            lastName: order.customer.lastName,
+            email: order.customer.email,
+          };
+
+          console.log('💾 Attempting to save customer:', customerShopifyId);
+          savedCustomer = await saveCustomer(customerData);
+          console.log('✅ Customer saved successfully:', {
+            id: savedCustomer.id,
+            shopifyId: savedCustomer.shopifyId,
+            email: savedCustomer.email
+          });
+          customersSaved++;
+        } catch (customerError) {
+          console.error('❌ Failed to save customer:', {
+            customerId: order.customer.id,
+            email: order.customer.email,
+            error: customerError.message
+          });
+          customersSkipped++;
+        }
+      } else {
+        console.log('⚠️ Order has no customer data:', numericId);
+      }
 
       // Prepare line items data with proper structure
       const lineItems = {
@@ -145,6 +190,7 @@ export const loader = async ({ request }) => {
         id: numericId,
         shopifyOrderId: numericId,
         customer: order.customer,
+        customerId: savedCustomer?.id || null, // Link to saved customer
         displayFinancialStatus: order.displayFinancialStatus,
         displayFulfillmentStatus: order.displayFulfillmentStatus,
         totalPriceSet: order.totalPriceSet,
@@ -154,6 +200,7 @@ export const loader = async ({ request }) => {
 
       console.log('📦 Prepared order data:', {
         orderId: numericId,
+        customerId: savedCustomer?.id,
         customerEmail: order.customer?.email,
         status: order.displayFinancialStatus,
         lineItems: lineItems.edges.length
@@ -165,6 +212,7 @@ export const loader = async ({ request }) => {
         console.log('✅ Order saved successfully:', {
           id: savedOrder.id,
           shopifyOrderId: savedOrder.shopifyOrderId,
+          customerId: savedOrder.customerId,
           status: savedOrder.status
         });
 
@@ -282,6 +330,7 @@ export const loader = async ({ request }) => {
   }
   
   console.log(`💾 Orders saved: ${savedCount}, skipped: ${skippedCount}`);
+  console.log(`👤 Customers saved: ${customersSaved}, skipped: ${customersSkipped}`);
   
   // Fetch any existing vouchers for these orders
   const orderIdsList = orders.map(o => o.name.split('/').pop() || o.name);
@@ -289,22 +338,45 @@ export const loader = async ({ request }) => {
   const vouchers = await getVouchersByOrderIds(orderIdsList);
   const voucherMap = vouchers.reduce((map, v) => ({ ...map, [v.shopifyOrderId]: v.code }), {});
 
-  return { orders, hasNextPage, totalOrders, savedCount, skippedCount, voucherMap };
+  return { 
+    orders, 
+    hasNextPage, 
+    totalOrders, 
+    savedCount, 
+    skippedCount, 
+    customersSaved, 
+    customersSkipped, 
+    voucherMap 
+  };
 };
 
 export default function OrdersPage() {
-  const { orders, hasNextPage, totalOrders, savedCount, skippedCount, voucherMap } = useLoaderData();
+  const { 
+    orders, 
+    hasNextPage, 
+    totalOrders, 
+    savedCount, 
+    skippedCount, 
+    customersSaved, 
+    customersSkipped, 
+    voucherMap 
+  } = useLoaderData();
 
   return (
     <SidebarLayout>
       <Page fullWidth title={`Orders (${totalOrders} showing${hasNextPage ? ', more available' : ''})`}>
         <BlockStack gap="400">
           <Text variant="bodyMd" tone="success" alignment="center">
-            🔄 Orders are automatically saved to database via webhooks and when viewing this page
+            🔄 Orders and customers are automatically saved to database via webhooks and when viewing this page
           </Text>
           {savedCount !== undefined && savedCount > 0 && (
             <Text variant="bodyMd" tone="success" alignment="center">
               💾 Just saved {savedCount} orders to database{skippedCount > 0 ? `, skipped ${skippedCount} existing` : ''}
+            </Text>
+          )}
+          {customersSaved !== undefined && customersSaved > 0 && (
+            <Text variant="bodyMd" tone="success" alignment="center">
+              👤 Saved {customersSaved} customers{customersSkipped > 0 ? `, skipped ${customersSkipped} existing` : ''}
             </Text>
           )}
           {hasNextPage && (
