@@ -3,7 +3,7 @@
 client_id = "c2f415f66df6ec14c9b7ccef564c014c"
 name = "redeem-gift"
 handle = "redeem-gift"
-application_url = "https://gem-efficient-landscape-ozone.trycloudflare.com"
+application_url = "https://yield-cells-bibliography-stage.trycloudflare.com"
 embedded = true
 
 [build]
@@ -19,9 +19,9 @@ scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gi
 
 [auth]
 redirect_urls = [
-  "https://gem-efficient-landscape-ozone.trycloudflare.com/auth/callback",
-  "https://gem-efficient-landscape-ozone.trycloudflare.com/auth/shopify/callback",
-  "https://gem-efficient-landscape-ozone.trycloudflare.com/api/auth/callback"
+  "https://yield-cells-bibliography-stage.trycloudflare.com/auth/callback",
+  "https://yield-cells-bibliography-stage.trycloudflare.com/auth/shopify/callback",
+  "https://yield-cells-bibliography-stage.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
