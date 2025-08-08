@@ -115,7 +115,9 @@ async function processOrderData(orderData: ShopifyOrder): Promise<ProcessResult>
           productId: edge.node.variant?.product?.id?.split('/').pop() || null,
           variantId: edge.node.variant?.id?.split('/').pop() || null,
           //@ts-ignore
-          type: edge.node.variant?.product?.metafield?.value || null
+          type: edge.node.variant?.product?.metafield?.value || null,
+          //@ts-ignore
+          expire: edge.node.variant?.product?.metafield_expiry?.value || null
         }));
     }
 
