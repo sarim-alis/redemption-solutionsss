@@ -46,7 +46,10 @@ export const loader = async ({ request }) => {
                 }
               }
             }
-            metafield(namespace: "custom", key: "product_type") {
+            expiryDate: metafield(namespace: "custom", key: "expiry_date") {
+              value
+            }
+            productType: metafield(namespace: "custom", key: "product_type") {
               value
             }
             totalInventory
@@ -192,7 +195,8 @@ export const loader = async ({ request }) => {
       totalInventory: p.totalInventory || 0,
       categoryId: p.category?.id || null,
       categoryName: p.category?.name || null,
-      type: p.metafield?.value || null,
+      type: p.productType?.value || null,
+      expire: p.expiryDate?.value ? new Date(p.expiryDate.value) : null,
     };
   });
 

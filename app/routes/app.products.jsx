@@ -31,7 +31,10 @@ export const loader = async ({ request }) => {
                 }
               }
             }
-            metafield(namespace: "custom", key: "product_type") {
+            expiryDate: metafield(namespace: "custom", key: "expiry_date") {
+              value
+            }
+            productType: metafield(namespace: "custom", key: "product_type") {
               value
             }
             totalInventory
@@ -60,8 +63,10 @@ export default function ProductsPage() {
 
   const productRows = products.map(product => {
     const image = getProductImage(product);
-    const productType = product.metafield?.value || "N/A";
-    return [
+    const productType = product.productType?.value || "—";
+    const expiryDate = product.expiryDate?.value || "—";
+
+  return [
       product.title,
       image ? (
         <Thumbnail source={image.url} alt={image.altText || product.title} size="small" />
@@ -72,6 +77,7 @@ export default function ProductsPage() {
       product.totalInventory || 0,
       <Badge tone="info" progress="complete">{product.category?.name || "Uncategorized"}</Badge>,
       <Text variant="bodyMd" as="span">{productType}</Text>,
+      <Text variant="bodyMd" as="span">{expiryDate}</Text>,
     ];
   });
 
@@ -81,7 +87,8 @@ export default function ProductsPage() {
     "Status",
     "Inventory",
     "Category",
-    "Type"
+    "Type",
+    "Expiry Date"
   ];
 
   return (
@@ -90,7 +97,7 @@ export default function ProductsPage() {
         <BlockStack gap="200">
           {products.length > 0 ? (
             <DataTable
-              columnContentTypes={['text', 'text', 'text', 'numeric', 'text']}
+              columnContentTypes={['text', 'text', 'text', 'numeric', 'text', 'text', 'text']}
               headings={productTableHeaders}
               rows={productRows}
             />
