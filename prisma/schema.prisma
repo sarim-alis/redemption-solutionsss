@@ -79,6 +79,7 @@ model Order {
   customer          Customer? @relation("CustomerOrders", fields: [customerId], references: [id])
   locationUsed      String?
   redeemedAt        DateTime?
+  statusUse         String?
 }
 
 model Location {
