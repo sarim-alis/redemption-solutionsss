@@ -3,7 +3,7 @@
 client_id = "c2f415f66df6ec14c9b7ccef564c014c"
 name = "redeem-gift"
 handle = "redeem-gift"
-application_url = "https://leaving-displays-folder-excluding.trycloudflare.com"
+application_url = "https://ability-documentary-keno-aged.trycloudflare.com"
 embedded = true
 
 [build]
@@ -19,9 +19,9 @@ scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gi
 
 [auth]
 redirect_urls = [
-  "https://leaving-displays-folder-excluding.trycloudflare.com/auth/callback",
-  "https://leaving-displays-folder-excluding.trycloudflare.com/auth/shopify/callback",
-  "https://leaving-displays-folder-excluding.trycloudflare.com/api/auth/callback"
+  "https://ability-documentary-keno-aged.trycloudflare.com/auth/callback",
+  "https://ability-documentary-keno-aged.trycloudflare.com/auth/shopify/callback",
+  "https://ability-documentary-keno-aged.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
