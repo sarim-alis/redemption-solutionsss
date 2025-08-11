@@ -77,8 +77,8 @@ model Order {
   vouchers          Voucher[] // Relation to vouchers
   customerId        String?
   customer          Customer? @relation("CustomerOrders", fields: [customerId], references: [id])
-  locationUsed      String?
-  redeemedAt        DateTime?
+  locationUsed      String[]
+  redeemedAt        DateTime[]
   statusUse         Boolean  @default(false)
 }
 
