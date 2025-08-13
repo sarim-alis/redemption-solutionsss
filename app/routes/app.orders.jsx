@@ -11,37 +11,6 @@ import { saveCustomer } from "../models/customer.server";
 
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
-  
-  // ✅ TEST EMAIL FIRST - This will run when the page loads
-  console.log('🧪 Testing email functionality...');
-  try {
-    await sendEmail({
-      to: "sarimslayerali786@gmail.com",
-      subject: "🧪 Nodemailer Test - " + new Date().toLocaleString(),
-      text: "This is a test email to check if nodemailer is working properly. If you receive this, the email configuration is correct!",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h2 style="color: #4CAF50;">✅ Nodemailer Test Successful!</h2>
-          <p>This is a test email sent at: <strong>${new Date().toLocaleString()}</strong></p>
-          <p>If you received this email, your nodemailer configuration is working correctly.</p>
-          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-            <h3>Test Details:</h3>
-            <ul>
-              <li>✅ SMTP connection established</li>
-              <li>✅ Email sent successfully</li>
-              <li>✅ HTML formatting working</li>
-            </ul>
-          </div>
-          <p style="color: #666;">This email was sent from your Shopify orders page loader.</p>
-        </div>
-      `,
-    });
-    console.log('✅ Test email sent successfully to sarimslayerali786@gmail.com');
-  } catch (emailError) {
-    console.error('❌ Test email failed:', emailError.message);
-    console.error('Full error:', emailError);
-  }
-  
   console.log('🔄 Starting to fetch orders...');
   const orderResponse = await admin.graphql(`
     query {
@@ -83,6 +52,9 @@ export const loader = async ({ request }) => {
                       id
                       title
                       metafield(namespace: "custom", key: "product_type") {
+                        value
+                      }
+                      metafield_expiry: metafield(namespace: "custom", key: "expiry_date") {
                         value
                       }
                     }
@@ -178,7 +150,9 @@ export const loader = async ({ request }) => {
             variant: {
               id: edge.node.variant?.id,
               product: {
-                id: edge.node.variant?.product?.id
+                id: edge.node.variant?.product?.id,
+                metafield: {value: edge.node.variant?.product?.metafield?.value ?? null},
+                metafield_expiry: { value: edge.node.variant?.product?.metafield_expiry?.value ?? null },
               }
             }
           }
