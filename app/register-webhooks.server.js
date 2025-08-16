@@ -8,8 +8,9 @@ export async function registerWebhooks(session) {
     { topic: "products/update", address: `${process.env.APP_URL}/webhooks/products`, format: "json" },
     { topic: "products/delete", address: `${process.env.APP_URL}/webhooks/products`, format: "json" },
     { topic: "orders/create", address: `${process.env.APP_URL}/webhooks/orders`, format: "json" },
-    { topic: "orders/update", address: `${process.env.APP_URL}/webhooks/orders`, format: "json" },
+    { topic: "orders/edited", address: `${process.env.APP_URL}/webhooks/orders`, format: "json" },
     { topic: "orders/delete", address: `${process.env.APP_URL}/webhooks/orders`, format: "json" },
+    { topic: "orders/paid", address: `${process.env.APP_URL}/webhooks/orders`, format: "json" },
     { topic: "app/uninstalled", address: `${process.env.APP_URL}/webhooks/app/uninstalled`, format: "json" }
   ];
 
