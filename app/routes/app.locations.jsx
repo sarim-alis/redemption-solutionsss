@@ -191,7 +191,7 @@ useEffect(() => {
         <Page fullWidth>
           {/* Header */}
           <div style={styles.container}>
-           <Text variant="headingXl" as="h1">Locations 🍺📍⭐</Text>
+           <Text variant="headingXl" as="h1">Locations</Text>
             <Button onClick={openDrawer} style={{backgroundColor: '#fff',color: 'black',border: 'none',fontWeight: 'bold',display: 'flex',alignItems: 'center',gap: '6px'}}>Add Location</Button>
           </div>
 
@@ -218,7 +218,7 @@ useEffect(() => {
 
 
           {/* Drawer */}
-        <Drawer title="Add Location 🍺" placement="right" open={drawerVisible} onClose={closeDrawer}>
+        <Drawer title="Add Location" placement="right" open={drawerVisible} onClose={closeDrawer}>
   <form onSubmit={formik.handleSubmit}>
     <div style={{ marginBottom: '20px' }}>
       <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
@@ -250,7 +250,7 @@ useEffect(() => {
 </Drawer>
 
 <Drawer
-  title="Edit Location ✏️"
+  title="Edit Location"
   placement="right"
   open={editDrawerVisible}
   onClose={() => {
