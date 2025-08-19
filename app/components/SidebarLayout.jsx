@@ -124,7 +124,7 @@ export default function SidebarLayout({ children }) {
       minHeight: "100vh",
       width: "calc(100% - 90px)", 
       transition: "none", 
-      // backgroundColor: "#666666", 
+      backgroundColor: "#666666", 
     }
   };
 
