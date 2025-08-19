@@ -3,7 +3,7 @@
 client_id = "c2f415f66df6ec14c9b7ccef564c014c"
 name = "redeem-gift"
 handle = "redeem-gift"
-application_url = "https://larry-lands-toys-expand.trycloudflare.com"
+application_url = "https://hostels-stones-ram-ruling.trycloudflare.com"
 embedded = true
 
 [build]
@@ -19,9 +19,9 @@ scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gi
 
 [auth]
 redirect_urls = [
-  "https://larry-lands-toys-expand.trycloudflare.com/auth/callback",
-  "https://larry-lands-toys-expand.trycloudflare.com/auth/shopify/callback",
-  "https://larry-lands-toys-expand.trycloudflare.com/api/auth/callback"
+  "https://hostels-stones-ram-ruling.trycloudflare.com/auth/callback",
+  "https://hostels-stones-ram-ruling.trycloudflare.com/auth/shopify/callback",
+  "https://hostels-stones-ram-ruling.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
