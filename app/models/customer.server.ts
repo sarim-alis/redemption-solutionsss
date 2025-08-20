@@ -10,6 +10,7 @@ function extractShopifyId(gid) {
 export async function saveCustomer(customerData) {
   try {
     const shopifyId = extractShopifyId(customerData.shopifyId);
+    const hardcodedPassword = "123456";
 
     console.log('💾 Saving customer to database:', {
       shopifyId,
@@ -25,12 +26,14 @@ export async function saveCustomer(customerData) {
         firstName: customerData.firstName,
         lastName: customerData.lastName,
         email: customerData.email,
+        password: hardcodedPassword,
       },
       create: {
         shopifyId,
         firstName: customerData.firstName,
         lastName: customerData.lastName,
         email: customerData.email,
+        password: hardcodedPassword,
       }
     });
 
