@@ -39,7 +39,7 @@ export default function SidebarLayout({ children }) {
       boxShadow: "2px 0 10px rgba(0,0,0,0.3)",
       color: "white",
       fontFamily: "Arial, sans-serif",
-      overflow: "hidden",
+      // overflow: "hidden",
     },
     sidebarOverlay: {
       position: "fixed",
@@ -86,12 +86,12 @@ export default function SidebarLayout({ children }) {
       color: "white",
       fontSize: "24px",
       cursor: "pointer",
-      display: sidebarOpen ? "block" : "none", // Hide close button when closed
+      display: sidebarOpen ? "block" : "none",
     },
     hamburger: {
       position: "fixed",
-      top: "20px",
-      left: sidebarOpen ? "270px" : "20px", // Move hamburger when sidebar is open
+      top: "0",
+      left: sidebarOpen ? "270px" : "50px", 
       display: "flex",
       flexDirection: "column",
       gap: "4px",
@@ -109,7 +109,7 @@ export default function SidebarLayout({ children }) {
     },
     hamburgerLine: {
       width: "25px",
-      height: "3px",
+      height: "2px",
       backgroundColor: "white",
       transition: "all 0.2s ease",
     },
