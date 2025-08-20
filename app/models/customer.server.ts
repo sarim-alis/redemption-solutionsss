@@ -11,6 +11,7 @@ export async function saveCustomer(customerData) {
   try {
     const shopifyId = extractShopifyId(customerData.shopifyId);
     const hardcodedPassword = "123456";
+    const role = "customer";
 
     console.log('💾 Saving customer to database:', {
       shopifyId,
@@ -27,6 +28,7 @@ export async function saveCustomer(customerData) {
         lastName: customerData.lastName,
         email: customerData.email,
         password: hardcodedPassword,
+        role: role,
       },
       create: {
         shopifyId,
@@ -34,6 +36,7 @@ export async function saveCustomer(customerData) {
         lastName: customerData.lastName,
         email: customerData.email,
         password: hardcodedPassword,
+        role: role,
       }
     });
 
