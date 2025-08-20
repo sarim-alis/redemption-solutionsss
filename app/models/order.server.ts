@@ -72,6 +72,7 @@ interface OrderData {
   itemQuantity: number;
   processedAt: Date;
   lineItems: string;
+  type?: string;
 }
 
 interface ProcessResult {
@@ -112,7 +113,11 @@ async function processOrderData(orderData: ShopifyOrder): Promise<ProcessResult>
           quantity: safeParseInt(edge.node.quantity),
           price: safeParseFloat(edge.node.originalUnitPriceSet?.shopMoney?.amount),
           productId: edge.node.variant?.product?.id?.split('/').pop() || null,
-          variantId: edge.node.variant?.id?.split('/').pop() || null
+          variantId: edge.node.variant?.id?.split('/').pop() || null,
+          //@ts-ignore
+          type: edge.node.variant?.product?.metafield?.value || null,
+          //@ts-ignore
+          expire: edge.node.variant?.product?.metafield_expiry?.value || null
         }));
     }
 
@@ -190,7 +195,7 @@ export async function saveOrder(orderData: ShopifyOrder) {
     fulfillmentStatus: info.fulfillmentStatus,
     itemQuantity: info.itemQuantity,
     processedAt: info.processedAt,
-    lineItems: JSON.parse(info.lineItems)
+    lineItems: JSON.parse(info.lineItems),
   };
 
   // Skip creating if order already exists
