@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLoaderData } from "@remix-run/react";
 import { Page, DataTable, Text, BlockStack, Badge, Button } from "@shopify/polaris";
 import SidebarLayout from "../components/SidebarLayout";
 import { authenticate } from "../shopify.server";
 import { saveOrder } from "../models/order.server";
 import prisma from "../db.server";
-import { sendEmail } from "../utils/mail.server";
+// import { sendEmail } from "../utils/mail.server";
 // import { hasCustomerOrderedBefore } from "../models/order.server";
 import { saveCustomer } from "../models/customer.server";
 
@@ -326,7 +326,7 @@ export const loader = async ({ request }) => {
 
 export default function OrdersPage() {
   const { 
-    orders, 
+    orders: initialOrders, 
     hasNextPage, 
     totalOrders, 
     savedCount, 
@@ -335,11 +335,105 @@ export default function OrdersPage() {
     customersSkipped, 
     voucherMap 
   } = useLoaderData();
+  const [orders, setOrders] = useState(initialOrders);
+  const [connectionStatus, setConnectionStatus] = useState('connecting');
+  const [lastUpdate, setLastUpdate] = useState(null);
+
+  // SSE connection for real-time updates
+  useEffect(() => {
+    const eventSource = new EventSource('/webhook-stream');
+    
+    eventSource.onopen = () => {
+      setConnectionStatus('connected');
+      console.log('✅ Real-time connection established');
+    };
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'webhook' && data.topic?.startsWith('ORDERS_')) {
+          console.log('🔄 Received order webhook:', data.topic);
+          setLastUpdate(new Date());
+          
+          setOrders(currentOrders => {
+            switch (data.topic) {
+              case 'ORDERS_CREATE':
+              case 'ORDERS_EDITED':
+              case 'ORDERS_PAID':
+                // Transform webhook payload to match GraphQL structure
+                const updatedOrder = transformWebhookToOrder(data.payload);
+                
+                // Update existing order or add new one
+                const existingIndex = currentOrders.findIndex(o => o.id === updatedOrder.id);
+                if (existingIndex >= 0) {
+                  const updated = [...currentOrders];
+                  updated[existingIndex] = updatedOrder;
+                  return updated;
+                } else {
+                  return [updatedOrder, ...currentOrders];
+                }
+                
+              case 'ORDERS_DELETE':
+                return currentOrders.filter(o => o.id !== data.payload.id);
+                
+              default:
+                return currentOrders;
+            }
+          });
+        }
+      } catch (error) {
+        console.error('❌ Error processing SSE message:', error);
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      setConnectionStatus('disconnected');
+      console.error('❌ SSE connection error:', error);
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, []);
+
+  // Transform webhook payload to match orders GraphQL structure
+  const transformWebhookToOrder = (webhookPayload) => {
+    return {
+      id: webhookPayload.id,
+      name: webhookPayload.name,
+      processedAt: webhookPayload.processedAt,
+      displayFinancialStatus: webhookPayload.displayFinancialStatus,
+      displayFulfillmentStatus: webhookPayload.displayFulfillmentStatus,
+      totalPriceSet: webhookPayload.totalPriceSet,
+      customer: webhookPayload.customer,
+      lineItems: webhookPayload.lineItems
+    };
+  };
 
   return (
     <SidebarLayout>
       <Page fullWidth title={`Orders (${totalOrders} showing${hasNextPage ? ', more available' : ''})`}>
         <BlockStack gap="400">
+          {/* Connection Status Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ 
+                width: '8px', 
+                height: '8px', 
+                borderRadius: '50%', 
+                backgroundColor: connectionStatus === 'connected' ? '#10b981' : connectionStatus === 'connecting' ? '#f59e0b' : '#ef4444' 
+              }}></div>
+              <Text variant="bodyMd" as="span" tone={connectionStatus === 'connected' ? 'success' : connectionStatus === 'connecting' ? 'warning' : 'critical'}>
+                Real-time: {connectionStatus === 'connected' ? 'Connected' : connectionStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
+              </Text>
+            </div>
+            {lastUpdate && (
+              <Text variant="bodySm" as="span" tone="subdued">
+                Last update: {lastUpdate.toLocaleTimeString()}
+              </Text>
+            )}
+          </div>
           <Text variant="bodyMd" tone="success" alignment="center">
             🔄 Orders and customers are automatically saved to database via webhooks and when viewing this page
           </Text>

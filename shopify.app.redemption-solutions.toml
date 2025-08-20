@@ -1,13 +1,14 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "45f507e1809ed0b0a96b6c8eba1e2950"
-name = "redemption-solutions"
+name = "Voucher Redemption App"
 handle = "redemption-solutions"
-application_url = "https://analyze-netherlands-baker-floating.trycloudflare.com"
+application_url = "https://redemption-solution-e005aa12f842.herokuapp.com"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
+include_config_on_deploy = true
 
 [webhooks]
 api_version = "2025-04"
@@ -21,18 +22,22 @@ api_version = "2025-04"
   uri = "/webhooks/app/uninstalled"
 
   [[webhooks.subscriptions]]
-  topics = [ "orders/paid" ]
-  uri = "/webhooks/orders/paid"
+  topics = [ "orders/paid", "orders/create", "orders/delete", "orders/edited" ]
+  uri = "/webhooks/orders"
+
+  [[webhooks.subscriptions]]
+  topics = [ "products/create", "products/delete", "products/update" ]
+  uri = "/webhooks/products"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gift_cards,read_inventory,read_merchant_managed_fulfillment_orders,read_orders,read_third_party_fulfillment_orders,write_assigned_fulfillment_orders,write_discounts,write_gift_cards,write_inventory,write_merchant_managed_fulfillment_orders,write_orders,write_products,write_third_party_fulfillment_orders"
+scopes = "read_products,read_assigned_fulfillment_orders,read_customers,read_discounts,read_gift_cards,read_inventory,read_merchant_managed_fulfillment_orders,read_orders,read_third_party_fulfillment_orders,write_assigned_fulfillment_orders,write_discounts,write_gift_cards,write_inventory,write_merchant_managed_fulfillment_orders,write_orders,write_products,write_third_party_fulfillment_orders"
 
 [auth]
 redirect_urls = [
-  "https://analyze-netherlands-baker-floating.trycloudflare.com/auth/callback",
-  "https://analyze-netherlands-baker-floating.trycloudflare.com/auth/shopify/callback",
-  "https://analyze-netherlands-baker-floating.trycloudflare.com/api/auth/callback"
+  "https://redemption-solution-e005aa12f842.herokuapp.com/auth/callback",
+  "https://redemption-solution-e005aa12f842.herokuapp.com/auth/shopify/callback",
+  "https://redemption-solution-e005aa12f842.herokuapp.com/api/auth/callback"
 ]
 
 [pos]

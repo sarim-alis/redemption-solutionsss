@@ -16,16 +16,13 @@ const navItems = [
   { label: "Login", url: "/app/login", icon: LockFilledIcon },
 ];
 
+
 export default function SidebarLayout({ children }) {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleMouseEnter = () => {
-    setSidebarOpen(true);
-  };
-
-  const handleMouseLeave = () => {
-    setSidebarOpen(false);
+  const toggleSidebar = () => {
+    setSidebarOpen((prev) => !prev);
   };
 
   const styles = {
@@ -130,31 +127,54 @@ export default function SidebarLayout({ children }) {
 
   return (
     <>
-      {/* Overlay when sidebar is open */}
-      <div style={styles.sidebarOverlay} onClick={handleMouseLeave}></div>
-      
-      {/* Custom Sidebar */}
-      <div 
-        style={styles.customSidebar}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
+      {/* Hamburger Button */}
+      <div style={styles.hamburger} onClick={toggleSidebar}>
+        <div
+          style={{
+            ...styles.hamburgerLine,
+            transform: sidebarOpen
+              ? 'translateY(8px) rotate(45deg)'
+              : 'none',
+            marginBottom: '4px',
+          }}
+        ></div>
+        <div
+          style={{
+            ...styles.hamburgerLine,
+            opacity: sidebarOpen ? 0 : 1,
+            transition: 'all 0.3s cubic-bezier(.4,2,.6,1)',
+          }}
+        ></div>
+        <div
+          style={{
+            ...styles.hamburgerLine,
+            transform: sidebarOpen
+              ? 'translateY(-8px) rotate(-45deg)'
+              : 'none',
+            marginTop: '4px',
+          }}
+        ></div>
+      </div>
 
+      {/* Overlay when sidebar is open */}
+      <div style={styles.sidebarOverlay} onClick={() => setSidebarOpen(false)}></div>
+
+      {/* Custom Sidebar */}
+      <div style={styles.customSidebar}>
         <ul style={styles.sidebarMenu}>
           {navItems.map((item, index) => {
             const isSelected = item.url === "/app" 
               ? (location.pathname === "/app" || location.pathname === "/app/")
               : (location.pathname === item.url || location.pathname.startsWith(item.url + "/"));
-            
             return (
               <li 
                 key={index}
                 style={{
                   ...styles.sidebarMenuItem,
                   backgroundColor: isSelected ? "#555555" : "transparent",
-                  fontWeight: isSelected ? "bold" : "normal"
+                  fontWeight: isSelected ? "bold" : "normal",
+                  position: 'relative',
                 }}
-                title={!sidebarOpen ? item.label : ""} // Tooltip when closed
               >
                 <Link 
                   to={item.url} 
@@ -170,9 +190,33 @@ export default function SidebarLayout({ children }) {
                     width: "40px",
                     display: "flex",
                     justifyContent: "center",
-                    alignItems: "center"
+                    alignItems: "center",
+                    position: 'relative',
                   }}>
                     <Icon source={item.icon} color="white" />
+                    {!sidebarOpen && (
+                      <span
+                        style={{
+                          position: 'absolute',
+                          left: '110%',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'rgba(40,40,40,0.95)',
+                          color: 'white',
+                          padding: '4px 12px',
+                          borderRadius: '4px',
+                          whiteSpace: 'nowrap',
+                          fontSize: '14px',
+                          opacity: 0,
+                          pointerEvents: 'none',
+                          transition: 'opacity 0.2s',
+                          zIndex: 2000,
+                        }}
+                        className="sidebar-tooltip"
+                      >
+                        {item.label}
+                      </span>
+                    )}
                   </div>
                   {sidebarOpen && <span style={{ marginLeft: "5px" }}>{item.label}</span>}
                 </Link>
@@ -180,6 +224,15 @@ export default function SidebarLayout({ children }) {
             );
           })}
         </ul>
+        {/* Tooltip CSS for sidebar icon hover */}
+        <style>{`
+          .sidebar-tooltip {
+            opacity: 0;
+          }
+          li:hover .sidebar-tooltip {
+            opacity: 1 !important;
+          }
+        `}</style>
       </div>
 
       {/* Main Content */}
