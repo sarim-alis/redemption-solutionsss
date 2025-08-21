@@ -72,7 +72,6 @@ export const loader = async ({ request }) => {
   `);
   const orderJson = await orderResponse.json();
   const orders = orderJson.data.orders.edges.map((edge) => edge.node);
-  console.log('🟢 DEBUG ALL ORDERS:', JSON.stringify(orders, null, 2));
   const hasNextPage = orderJson.data.orders.pageInfo.hasNextPage;
   const totalOrders = orders.length;
 
@@ -97,6 +96,9 @@ export default function OrdersPage() {
     totalOrders,
     voucherMap
   } = useLoaderData();
+
+  // Debug: print all orders in browser console
+  console.log('🟢 FRONTEND ALL ORDERS:', initialOrders);
   const [orders, setOrders] = useState(initialOrders);
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [lastUpdate, setLastUpdate] = useState(null);
@@ -196,9 +198,7 @@ export default function OrdersPage() {
               </Text>
             )}
           </div>
-          <Text variant="bodyMd" tone="success" alignment="center">
-            🔄 Orders and customers are now saved to database via webhooks only
-          </Text>
+       
           {hasNextPage && (
             <Text variant="bodyMd" tone="subdued" alignment="center">
               Showing first 250 orders. Total orders may be more.
