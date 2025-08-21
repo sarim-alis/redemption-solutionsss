@@ -25,6 +25,12 @@ interface ShopifyLineItem {
     id?: string;
     product?: {
       id?: string;
+      metafield?: {
+        value?: string;
+      };
+      metafield_expiry?: {
+        value?: string;
+      };
     };
   };
 }
@@ -108,17 +114,39 @@ async function processOrderData(orderData: ShopifyOrder): Promise<ProcessResult>
     } else if (orderData.lineItems?.edges) {
       processedLineItems = orderData.lineItems.edges
         .filter(edge => edge && edge.node)
-        .map(edge => ({
-          title: edge.node.title || 'Untitled Product',
-          quantity: safeParseInt(edge.node.quantity),
-          price: safeParseFloat(edge.node.originalUnitPriceSet?.shopMoney?.amount),
-          productId: edge.node.variant?.product?.id?.split('/').pop() || null,
-          variantId: edge.node.variant?.id?.split('/').pop() || null,
-          //@ts-ignore
-          type: edge.node.variant?.product?.metafield?.value || null,
-          //@ts-ignore
-          expire: edge.node.variant?.product?.metafield_expiry?.value || null
-        }));
+        .map(edge => {
+              // Robust metafield parsing for type
+              let typeValue: string | undefined = edge.node.variant?.product?.metafield?.value;
+              if (typeof typeValue === 'string') {
+                try {
+                  if (typeValue.startsWith('[')) {
+                    const arr = JSON.parse(typeValue);
+                    typeValue = arr[0] || undefined;
+                  }
+                } catch (e) { typeValue = undefined; }
+              }
+              // Robust parsing for expire (usually string, but handle array just in case)
+              let expireValue: string | undefined = edge.node.variant?.product?.metafield_expiry?.value;
+              if (typeof expireValue === 'string') {
+                try {
+                  if (expireValue.startsWith('[')) {
+                    const arr = JSON.parse(expireValue);
+                    expireValue = arr[0] || undefined;
+                  }
+                } catch (e) { expireValue = undefined; }
+              }
+              // Debug log
+              console.log('🟢 LineItem metafields:', { typeValue, expireValue });
+              return {
+                title: edge.node.title || 'Untitled Product',
+                quantity: safeParseInt(edge.node.quantity),
+                price: safeParseFloat(edge.node.originalUnitPriceSet?.shopMoney?.amount),
+                productId: edge.node.variant?.product?.id?.split('/').pop() || null,
+                variantId: edge.node.variant?.id?.split('/').pop() || null,
+                type: typeValue,
+                expire: expireValue
+              };
+        });
     }
 
     // @ts-ignore
