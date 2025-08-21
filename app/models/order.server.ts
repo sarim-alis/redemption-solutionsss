@@ -25,6 +25,12 @@ interface ShopifyLineItem {
     id?: string;
     product?: {
       id?: string;
+      metafield?: {
+        value?: string;
+      };
+      metafield_expiry?: {
+        value?: string;
+      };
     };
   };
 }
@@ -108,17 +114,21 @@ async function processOrderData(orderData: ShopifyOrder): Promise<ProcessResult>
     } else if (orderData.lineItems?.edges) {
       processedLineItems = orderData.lineItems.edges
         .filter(edge => edge && edge.node)
-        .map(edge => ({
-          title: edge.node.title || 'Untitled Product',
-          quantity: safeParseInt(edge.node.quantity),
-          price: safeParseFloat(edge.node.originalUnitPriceSet?.shopMoney?.amount),
-          productId: edge.node.variant?.product?.id?.split('/').pop() || null,
-          variantId: edge.node.variant?.id?.split('/').pop() || null,
-          //@ts-ignore
-          type: edge.node.variant?.product?.metafield?.value || null,
-          //@ts-ignore
-          expire: edge.node.variant?.product?.metafield_expiry?.value || null
-        }));
+        .map(edge => {
+          const metafield = edge.node.variant?.product?.metafield;
+          console.log('🟢 DEBUG metafield:', metafield);
+          return {
+            title: edge.node.title || 'Untitled Product',
+            quantity: safeParseInt(edge.node.quantity),
+            price: safeParseFloat(edge.node.originalUnitPriceSet?.shopMoney?.amount),
+            productId: edge.node.variant?.product?.id?.split('/').pop() || null,
+            variantId: edge.node.variant?.id?.split('/').pop() || null,
+            //@ts-ignore
+            type: metafield?.value || null,
+            //@ts-ignore
+            expire: edge.node.variant?.product?.metafield_expiry?.value || null
+          };
+        });
     }
 
     // @ts-ignore
