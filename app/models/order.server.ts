@@ -25,12 +25,6 @@ interface ShopifyLineItem {
     id?: string;
     product?: {
       id?: string;
-      metafield?: {
-        value?: string;
-      };
-      metafield_expiry?: {
-        value?: string;
-      };
     };
   };
 }
@@ -114,31 +108,17 @@ async function processOrderData(orderData: ShopifyOrder): Promise<ProcessResult>
     } else if (orderData.lineItems?.edges) {
       processedLineItems = orderData.lineItems.edges
         .filter(edge => edge && edge.node)
-        .map(edge => {
-          let typeValue = edge.node.variant?.product?.metafield?.value;
-          // Debug log
-          console.log('🟢 DEBUG metafield.value:', typeValue);
-          if (typeValue) {
-            try {
-              // Try to parse as array
-              const arr = JSON.parse(typeValue);
-              if (Array.isArray(arr) && arr.length > 0) {
-                typeValue = arr[0];
-              }
-            } catch (e) {
-              // Not an array, keep as is
-            }
-          }
-          return {
-            title: edge.node.title || 'Untitled Product',
-            quantity: safeParseInt(edge.node.quantity),
-            price: safeParseFloat(edge.node.originalUnitPriceSet?.shopMoney?.amount),
-            productId: edge.node.variant?.product?.id?.split('/').pop() || null,
-            variantId: edge.node.variant?.id?.split('/').pop() || null,
-            type: typeValue || null,
-            expire: edge.node.variant?.product?.metafield_expiry?.value || null
-          };
-        });
+        .map(edge => ({
+          title: edge.node.title || 'Untitled Product',
+          quantity: safeParseInt(edge.node.quantity),
+          price: safeParseFloat(edge.node.originalUnitPriceSet?.shopMoney?.amount),
+          productId: edge.node.variant?.product?.id?.split('/').pop() || null,
+          variantId: edge.node.variant?.id?.split('/').pop() || null,
+          //@ts-ignore
+          type: edge.node.variant?.product?.metafield?.value || null,
+          //@ts-ignore
+          expire: edge.node.variant?.product?.metafield_expiry?.value || null
+        }));
     }
 
     // @ts-ignore

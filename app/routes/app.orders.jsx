@@ -3,10 +3,11 @@ import { useLoaderData } from "@remix-run/react";
 import { Page, DataTable, Text, BlockStack, Badge, Button } from "@shopify/polaris";
 import SidebarLayout from "../components/SidebarLayout";
 import { authenticate } from "../shopify.server";
-// ...existing code...
+import { saveOrder } from "../models/order.server";
+import prisma from "../db.server";
 // import { sendEmail } from "../utils/mail.server";
 // import { hasCustomerOrderedBefore } from "../models/order.server";
-// ...existing code...
+import { saveCustomer } from "../models/customer.server";
 
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
@@ -74,31 +75,266 @@ export const loader = async ({ request }) => {
   const orders = orderJson.data.orders.edges.map((edge) => edge.node);
   const hasNextPage = orderJson.data.orders.pageInfo.hasNextPage;
   const totalOrders = orders.length;
+  
+  // Save each order to database
+  let savedCount = 0;
+  let skippedCount = 0;
+  let customersSaved = 0;
+  let customersSkipped = 0;
+  
+  for (const order of orders) {
+    try {
+      // Convert Shopify order to our database format
+      const numericId = order.id.split('/').pop();
+      
+      console.log('🔄 Processing order:', {
+        orderId: numericId,
+        originalId: order.id,
+        hasCustomer: !!order.customer,
+        customerKeys: Object.keys(order.customer || {}),
+        customerEmail: order.customer?.email
+      });
 
+      // ✅ SAVE CUSTOMER FIRST (if exists)
+      let savedCustomer = null;
+      if (order.customer && order.customer.id) {
+        try {
+          const customerShopifyId = order.customer.id.split('/').pop();
+          
+          console.log('👤 Processing customer:', {
+            customerId: customerShopifyId,
+            email: order.customer.email,
+            name: `${order.customer.firstName || ''} ${order.customer.lastName || ''}`.trim()
+          });
+
+          // Prepare customer data
+          const customerData = {
+            shopifyId: customerShopifyId,
+            firstName: order.customer.firstName,
+            lastName: order.customer.lastName,
+            email: order.customer.email,
+          };
+
+          console.log('💾 Attempting to save customer:', customerShopifyId);
+          savedCustomer = await saveCustomer(customerData);
+          console.log('✅ Customer saved successfully:', {
+            id: savedCustomer.id,
+            shopifyId: savedCustomer.shopifyId,
+            email: savedCustomer.email
+          });
+          customersSaved++;
+        } catch (customerError) {
+          console.error('❌ Failed to save customer:', {
+            customerId: order.customer.id,
+            email: order.customer.email,
+            error: customerError.message
+          });
+          customersSkipped++;
+        }
+      } else {
+        console.log('⚠️ Order has no customer data:', numericId);
+      }
+
+      // Prepare line items data with proper structure
+      const lineItems = {
+        edges: order.lineItems.edges.map((edge) => ({
+          node: {
+            title: edge.node.title,
+            quantity: edge.node.quantity,
+            originalUnitPriceSet: {
+              shopMoney: {
+                amount: edge.node.originalUnitPriceSet.shopMoney.amount,
+                currencyCode: edge.node.originalUnitPriceSet.shopMoney.currencyCode
+              }
+            },
+            variant: {
+              id: edge.node.variant?.id,
+              product: {
+                id: edge.node.variant?.product?.id,
+                metafield: {value: edge.node.variant?.product?.metafield?.value ?? null},
+                metafield_expiry: { value: edge.node.variant?.product?.metafield_expiry?.value ?? null },
+              }
+            }
+          }
+        }))
+      };
+
+      // Create order data matching ShopifyOrder interface
+      const orderData = {
+        id: numericId,
+        shopifyOrderId: numericId,
+        customer: order.customer,
+        customerId: savedCustomer?.id || null, // Link to saved customer
+        displayFinancialStatus: order.displayFinancialStatus,
+        displayFulfillmentStatus: order.displayFulfillmentStatus,
+        totalPriceSet: order.totalPriceSet,
+        processedAt: order.processedAt,
+        lineItems: lineItems
+      };
+
+      console.log('📦 Prepared order data:', {
+        orderId: numericId,
+        customerId: savedCustomer?.id,
+        customerEmail: order.customer?.email,
+        status: order.displayFinancialStatus,
+        lineItems: lineItems.edges.length
+      });
+
+      try {
+        console.log('💾 Attempting to save order:', numericId);
+        const savedOrder = await saveOrder(orderData);
+        console.log('✅ Order saved successfully:', {
+          id: savedOrder.id,
+          shopifyOrderId: savedOrder.shopifyOrderId,
+          customerId: savedOrder.customerId,
+          status: savedOrder.status
+        });
+
+        // ✅ Find Voucher by shopifyOrderId - Fixed to use numericId
+        const voucher = await prisma.voucher.findFirst({
+          where: {
+            shopifyOrderId: numericId, // Use numericId instead of full GraphQL ID
+          },
+        });
+
+        // ✅ Send Email (keeping your original logic but with better error handling)
+        // if (order.customer.email && voucher) {
+        //   try {
+        //     await sendEmail({
+        //       // to: "sarimslayerali786@gmail.com",
+        //       to: order.customer.email,
+        //       subject: `🎟️ Your Voucher Code for Order ${order.name}`,
+        //       text: `Hello ${order.customer.firstName},\n\nThank you for your order ${order.name}.\nHere is your voucher code: ${voucher.code}`,
+        //       html: `
+        //         <p>Hello <strong>${order.customer.firstName}</strong>,</p>
+        //         <p>Thank you for your order <strong>${order.name}</strong>.</p>
+        //         <p>🎁 Here is your voucher code: <strong style="font-size: 18px;">${voucher.code}</strong></p>
+        //       `,
+        //     });
+        //     console.log('📧 Voucher email sent to customer for order:', order.name);
+        //   } catch (emailErr) {
+        //     console.error('❌ Failed to send voucher email:', emailErr.message);
+        //     console.error('Full email error:', emailErr);
+        //   }
+        // } else {
+        //   console.log('⚠️ No email or voucher found for customer/order:', {
+        //     orderId: numericId,
+        //     hasCustomerEmail: !!order.customer?.email,
+        //     hasVoucher: !!voucher,
+        //     voucherCode: voucher?.code
+        //   });
+        // }
+
+// Move this function to top-level scope, outside of loader
+// async function hasCustomerOrderedBefore(customerEmail) {
+//   const existingOrders = await prisma.order.findMany({
+//     where: {
+//       customerEmail: customerEmail,
+//     },
+//   });
+//   return existingOrders.length > 1; // More than one means this isn't their first order
+// }
+
+//         const previousOrders = await asCustomerOrderedBefore(order.customer.id); // You must implement this
+
+// if (order.customer.email && voucher) {
+//   const isNewCustomer = previousOrders.length === 0; // 🔥 New customer check
+
+//   if (isNewCustomer) {
+//     try {
+//       await sendEmail({
+//         to: order.customer.email,
+//         subject: `🎟️ Your Voucher Code for Order ${order.name}`,
+//         text: `Hello ${order.customer.firstName},\n\nThank you for your order ${order.name}.\nHere is your voucher code: ${voucher.code}`,
+//         html: `
+//           <p>Hello <strong>${order.customer.firstName}</strong>,</p>
+//           <p>Thank you for your order <strong>${order.name}</strong>.</p>
+//           <p>🎁 Here is your voucher code: <strong style="font-size: 18px;">${voucher.code}</strong></p>
+//         `,
+//       });
+//       console.log('📧 Voucher email sent to NEW customer for order:', order.name);
+//     } catch (emailErr) {
+//       console.error('❌ Failed to send voucher email:', emailErr.message);
+//     }
+//   } else {
+//     console.log('⚠️ Existing customer – no email sent for order:', order.name);
+//   }
+// }
+
+// if (order.customer?.email && voucher) {
+//   const isReturningCustomer = await hasCustomerOrderedBefore(order.customer.email);
+
+//   if (!isReturningCustomer) {
+//     try {
+//       await sendEmail({
+//         to: order.customer.email,
+//         subject: `🎟️ Your Voucher Code for Order ${order.name}`,
+//         text: `Hello ${order.customer.firstName},\n\nThank you for your order ${order.name}.\nHere is your voucher code: ${voucher.code}`,
+//         html: `
+//           <p>Hello <strong>${order.customer.firstName}</strong>,</p>
+//           <p>Thank you for your order <strong>${order.name}</strong>.</p>
+//           <p>🎁 Here is your voucher code: <strong style="font-size: 18px;">${voucher.code}</strong></p>
+//         `,
+//       });
+//       console.log('📧 Voucher email sent to NEW customer for order:', order.name);
+//     } catch (err) {
+//       console.error("❌ Failed to send email:", err.message);
+//     }
+//   } else {
+//     console.log("⚠️ Existing customer – no email sent for order:", order.name);
+//   }
+// }
+
+        savedCount++;
+      } catch (error) {
+        console.error('❌ Failed to save order:', {
+          orderId: numericId,
+          error: error.message
+        });
+        skippedCount++;
+      }
+    } catch (error) {
+      console.error('❌ Error processing order:', {
+        name: order.name,
+        id: order.id,
+        error: error.message
+      });
+      skippedCount++;
+    }
+  }
+  
+  console.log(`💾 Orders saved: ${savedCount}, skipped: ${skippedCount}`);
+  console.log(`👤 Customers saved: ${customersSaved}, skipped: ${customersSkipped}`);
+  
   // Fetch any existing vouchers for these orders
   const orderIdsList = orders.map(o => o.name.split('/').pop() || o.name);
   const { getVouchersByOrderIds } = await import('../models/voucher.server');
   const vouchers = await getVouchersByOrderIds(orderIdsList);
   const voucherMap = vouchers.reduce((map, v) => ({ ...map, [v.shopifyOrderId]: v.code }), {});
 
-  return {
-    orders,
-    hasNextPage,
-    totalOrders,
-    voucherMap
+  return { 
+    orders, 
+    hasNextPage, 
+    totalOrders, 
+    savedCount, 
+    skippedCount, 
+    customersSaved, 
+    customersSkipped, 
+    voucherMap 
   };
 };
 
 export default function OrdersPage() {
-  const {
-    orders: initialOrders,
-    hasNextPage,
-    totalOrders,
-    voucherMap
+  const { 
+    orders: initialOrders, 
+    hasNextPage, 
+    totalOrders, 
+    savedCount, 
+    skippedCount, 
+    customersSaved, 
+    customersSkipped, 
+    voucherMap 
   } = useLoaderData();
-
-  // Debug: print all orders in browser console
-  // console.log('🟢 FRONTEND ALL ORDERS:', initialOrders);
   const [orders, setOrders] = useState(initialOrders);
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [lastUpdate, setLastUpdate] = useState(null);
@@ -198,7 +434,19 @@ export default function OrdersPage() {
               </Text>
             )}
           </div>
-       
+          <Text variant="bodyMd" tone="success" alignment="center">
+            🔄 Orders and customers are automatically saved to database via webhooks and when viewing this page
+          </Text>
+          {savedCount !== undefined && savedCount > 0 && (
+            <Text variant="bodyMd" tone="success" alignment="center">
+              💾 Just saved {savedCount} orders to database{skippedCount > 0 ? `, skipped ${skippedCount} existing` : ''}
+            </Text>
+          )}
+          {customersSaved !== undefined && customersSaved > 0 && (
+            <Text variant="bodyMd" tone="success" alignment="center">
+              👤 Saved {customersSaved} customers{customersSkipped > 0 ? `, skipped ${customersSkipped} existing` : ''}
+            </Text>
+          )}
           {hasNextPage && (
             <Text variant="bodyMd" tone="subdued" alignment="center">
               Showing first 250 orders. Total orders may be more.
