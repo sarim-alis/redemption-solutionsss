@@ -170,6 +170,11 @@ export default function OrdersPage() {
     };
   };
 
+  // Debug: Console all orders data for metafield troubleshooting
+  useEffect(() => {
+    console.log('🟢 All orders data:', orders);
+  }, [orders]);
+
   return (
     <SidebarLayout>
       <Page fullWidth title={`Orders (${totalOrders} showing${hasNextPage ? ', more available' : ''})`}>
@@ -193,9 +198,7 @@ export default function OrdersPage() {
               </Text>
             )}
           </div>
-          <Text variant="bodyMd" tone="success" alignment="center">
-            🔄 Orders aur customers ab sirf webhook ke zariye database me save hotay hain. Loader se save nahi hota.
-          </Text>
+  
           {/* Loader ab save nahi karta, isliye yeh messages hata diye */}
           {hasNextPage && (
             <Text variant="bodyMd" tone="subdued" alignment="center">
