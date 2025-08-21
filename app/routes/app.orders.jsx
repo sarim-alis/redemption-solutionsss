@@ -72,6 +72,7 @@ export const loader = async ({ request }) => {
   `);
   const orderJson = await orderResponse.json();
   const orders = orderJson.data.orders.edges.map((edge) => edge.node);
+  console.log('🟢 DEBUG ALL ORDERS:', JSON.stringify(orders, null, 2));
   const hasNextPage = orderJson.data.orders.pageInfo.hasNextPage;
   const totalOrders = orders.length;
 
