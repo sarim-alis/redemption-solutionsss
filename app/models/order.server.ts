@@ -195,7 +195,7 @@ export async function saveOrder(orderData: ShopifyOrder) {
     fulfillmentStatus: info.fulfillmentStatus,
     itemQuantity: info.itemQuantity,
     processedAt: info.processedAt,
-    lineItems: JSON.parse(info.lineItems),
+    lineItems: info.lineItems, // Save as string
   };
 
   // Skip creating if order already exists

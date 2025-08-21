@@ -144,6 +144,9 @@ export const loader = async ({ request }) => {
                     product {
                       id
                       title
+                      metafield(namespace: "custom", key: "product_type") {
+                        value
+                      }
                     }
                   }
                 }
@@ -195,9 +198,11 @@ export const loader = async ({ request }) => {
             variant: {
               id: edge.node.variant?.id,
               product: {
-                id: edge.node.variant?.product?.id
+                id: edge.node.variant?.product?.id,
+                metafield: { value: edge.node.variant?.product?.metafield?.value ?? null }
               }
-            }
+            },
+            type: edge.node.variant?.product?.metafield?.value ?? null
           }
         }))
       };
