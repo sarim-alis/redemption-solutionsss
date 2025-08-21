@@ -98,28 +98,6 @@ export default function OrdersPage() {
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [lastUpdate, setLastUpdate] = useState(null);
 
-  function mergeOrders(oldOrder, updated) {
-    if (!oldOrder) return updated;
-    const merged = { ...oldOrder, ...updated };
-
-    merged.lineItems = {
-      edges: updated.lineItems?.edges.map((edge, idx) => {
-        const prev = oldOrder.lineItems?.edges[idx];
-        if (prev?.node?.variant?.product) {
-          if (!edge.node.variant.product.metafield) {
-            edge.node.variant.product.metafield = prev.node.variant.product.metafield;
-          }
-          if (!edge.node.variant.product.metafield_expiry) {
-            edge.node.variant.product.metafield_expiry = prev.node.variant.product.metafield_expiry;
-          }
-        }
-        return edge;
-      }) || []
-    };
-
-    return merged;
-  }
-
   // SSE connection for real-time updates
   useEffect(() => {
     const eventSource = new EventSource('/webhook-stream');
@@ -147,13 +125,13 @@ export default function OrdersPage() {
                 
                 // Update existing order or add new one
                 const existingIndex = currentOrders.findIndex(o => o.id === updatedOrder.id);
-               if (existingIndex >= 0) {
-                const updated = [...currentOrders];
-                updated[existingIndex] = mergeOrders(currentOrders[existingIndex], updatedOrder);
-                return updated;
-              } else {
-                return [updatedOrder, ...currentOrders];
-              }
+                if (existingIndex >= 0) {
+                  const updated = [...currentOrders];
+                  updated[existingIndex] = updatedOrder;
+                  return updated;
+                } else {
+                  return [updatedOrder, ...currentOrders];
+                }
                 
               case 'ORDERS_DELETE':
                 return currentOrders.filter(o => o.id !== data.payload.id);
@@ -173,9 +151,6 @@ export default function OrdersPage() {
       console.error('❌ SSE connection error:', error);
     };
 
-
-
-
     return () => {
       eventSource.close();
     };
@@ -194,11 +169,6 @@ export default function OrdersPage() {
       lineItems: webhookPayload.lineItems
     };
   };
-
-  // Debug: Console all orders data for metafield troubleshooting
-  useEffect(() => {
-    console.log('🟢 All orders data:', orders);
-  }, [orders]);
 
   return (
     <SidebarLayout>

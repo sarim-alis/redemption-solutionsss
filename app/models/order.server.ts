@@ -25,12 +25,6 @@ interface ShopifyLineItem {
     id?: string;
     product?: {
       id?: string;
-      metafield?: {
-        value?: string;
-      };
-      metafield_expiry?: {
-        value?: string;
-      };
     };
   };
 }
@@ -114,35 +108,17 @@ async function processOrderData(orderData: ShopifyOrder): Promise<ProcessResult>
     } else if (orderData.lineItems?.edges) {
       processedLineItems = orderData.lineItems.edges
         .filter(edge => edge && edge.node)
-        .map(edge => {
-          // Robust metafield parsing
-          let typeValue: string | undefined = edge.node.variant?.product?.metafield?.value;
-          let expireValue: string | undefined = edge.node.variant?.product?.metafield_expiry?.value;
-          // Try to parse JSON if value is stringified array
-          try {
-            if (typeof typeValue === 'string' && typeValue.startsWith('[')) {
-              const arr = JSON.parse(typeValue);
-              typeValue = arr[0] || undefined;
-            }
-          } catch (e) { typeValue = typeValue || undefined; }
-          try {
-            if (typeof expireValue === 'string' && expireValue.startsWith('[')) {
-              const arr = JSON.parse(expireValue);
-              expireValue = arr[0] || undefined;
-            }
-          } catch (e) { expireValue = expireValue || undefined; }
-          // Debug log
-          console.log('🟢 LineItem metafields:', { typeValue, expireValue });
-          return {
-            title: edge.node.title || 'Untitled Product',
-            quantity: safeParseInt(edge.node.quantity),
-            price: safeParseFloat(edge.node.originalUnitPriceSet?.shopMoney?.amount),
-            productId: edge.node.variant?.product?.id?.split('/').pop() || null,
-            variantId: edge.node.variant?.id?.split('/').pop() || null,
-            type: typeValue || null,
-            expire: expireValue || null
-          };
-        });
+        .map(edge => ({
+          title: edge.node.title || 'Untitled Product',
+          quantity: safeParseInt(edge.node.quantity),
+          price: safeParseFloat(edge.node.originalUnitPriceSet?.shopMoney?.amount),
+          productId: edge.node.variant?.product?.id?.split('/').pop() || null,
+          variantId: edge.node.variant?.id?.split('/').pop() || null,
+          //@ts-ignore
+          type: edge.node.variant?.product?.metafield?.value || null,
+          //@ts-ignore
+          expire: edge.node.variant?.product?.metafield_expiry?.value || null
+        }));
     }
 
     // @ts-ignore
