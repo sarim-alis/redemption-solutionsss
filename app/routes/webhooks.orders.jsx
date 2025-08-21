@@ -3,7 +3,6 @@ import { authenticate } from "../shopify.server";
 import { broadcastToClients } from "./webhook-stream";
 import { saveOrder } from "../models/order.server";
 import { saveCustomer } from "../models/customer.server";
-import shopify from "../shopify.server";
 
 export const action = async ({ request }) => {
   const { shop, session, topic, payload } = await authenticate.webhook(request);
@@ -61,10 +60,6 @@ async function processWebhook({ shop, session, topic, payload }) {
         return;
     }
 
-      if (dataToSend?.lineItems?.edges?.length) {
-    dataToSend = await hydrateLineItemMetafields(session, dataToSend);
-  } 
-
     // 🔹 Broadcast to all SSE clients
     broadcastToClients({
       type: 'webhook',
@@ -78,10 +73,6 @@ async function processWebhook({ shop, session, topic, payload }) {
   } catch (error) {
     console.error(`❌ Error processing ${topic} webhook:`, error);
   }
-
-
-
-
 }
 
 // Helper to match Shopify GraphQL style
@@ -126,44 +117,6 @@ function transformOrderPayload(payload) {
       })) || []
     }
   };
-}
-
-
-async function hydrateLineItemMetafields(session, orderLike) {
-  const edges = orderLike?.lineItems?.edges || [];
-  const productIds = [...new Set(edges.map(e => e?.node?.variant?.product?.id).filter(Boolean))];
-
-  console.log('🟢 hydrateLineItemMetafields: productIds', productIds);
-  if (productIds.length === 0) return orderLike;
-
-  const gql = new shopify.api.clients.Graphql({ session });
-  const query = `
-    query($ids: [ID!]!) {
-      nodes(ids: $ids) {
-        ... on Product {
-          id
-          metafield(namespace: "custom", key: "product_type") { value }
-          metafield_expiry: metafield(namespace: "custom", key: "expiry_date") { value }
-        }
-      }
-    }
-  `;
-  const resp = await gql.query({ data: { query, variables: { ids: productIds } } });
-  console.log('🟢 Shopify API nodes response:', JSON.stringify(resp.body?.data?.nodes, null, 2));
-  const nodes = resp.body?.data?.nodes || [];
-  const byId = Object.fromEntries(nodes.map(p => [p.id, p]));
-  console.log('🟢 byId mapping:', byId);
-
-  orderLike.lineItems.edges = edges.map(edge => {
-    const pid = edge?.node?.variant?.product?.id;
-    if (pid && byId[pid]) {
-      edge.node.variant.product.metafield = byId[pid].metafield || null;
-      edge.node.variant.product.metafield_expiry = byId[pid].metafield_expiry || null;
-    }
-    return edge;
-  });
-
-  return orderLike;
 }
 
 // Helper function to save order to database
