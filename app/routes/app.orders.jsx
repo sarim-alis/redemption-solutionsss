@@ -98,7 +98,7 @@ export default function OrdersPage() {
   } = useLoaderData();
 
   // Debug: print all orders in browser console
-  console.log('🟢 FRONTEND ALL ORDERS:', initialOrders);
+  // console.log('🟢 FRONTEND ALL ORDERS:', initialOrders);
   const [orders, setOrders] = useState(initialOrders);
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [lastUpdate, setLastUpdate] = useState(null);

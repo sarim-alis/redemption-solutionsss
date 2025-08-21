@@ -115,13 +115,19 @@ async function processOrderData(orderData: ShopifyOrder): Promise<ProcessResult>
       processedLineItems = orderData.lineItems.edges
         .filter(edge => edge && edge.node)
         .map(edge => {
-          // metafield.value is a stringified array, so parse it if needed
           let typeValue = edge.node.variant?.product?.metafield?.value;
-          if (typeValue && typeValue.startsWith('[')) {
+          // Debug log
+          console.log('🟢 DEBUG metafield.value:', typeValue);
+          if (typeValue) {
             try {
+              // Try to parse as array
               const arr = JSON.parse(typeValue);
-              typeValue = Array.isArray(arr) ? arr[0] : typeValue;
-            } catch (e) {}
+              if (Array.isArray(arr) && arr.length > 0) {
+                typeValue = arr[0];
+              }
+            } catch (e) {
+              // Not an array, keep as is
+            }
           }
           return {
             title: edge.node.title || 'Untitled Product',
