@@ -1,14 +1,61 @@
 // Imports.
 import SidebarLayout from "../components/SidebarLayout";
 import styles from "../styles/voucher.js";
-import { sendEmail } from "../utils/mail.server.js";
+import { json } from "@remix-run/node";
+import { Form, useActionData } from "@remix-run/react";
+
+
+// Action.
+export async function action({ request }) {
+  const formData = await request.formData();
+  const email = formData.get("email");
+
+  if (!email) {
+    return json({ success: false, error: "No email provided" }, { status: 400 });
+  }
+
+  // Import inside server-only function.
+  const { sendEmail, getVoucherHTML } = await import("../utils/mail.server.js");
+
+  await sendEmail({
+    to: email,
+    subject: "Your Oil Change Voucher",
+    html: await getVoucherHTML(),
+  });
+
+  return json({ success: true });
+}
 
 
 // Frontend.
 export default function VoucherPage() {
+  const actionData = useActionData();
+
   return (
     <SidebarLayout>
       <div style={styles.wrapper}>
+        <Form method="post">
+          <div style={{display: "flex", flexDirection: "column", marginTop: "15px", marginBottom: "15px" }}>
+          <input type="email" name="email" placeholder="Enter your email" required style={{ padding: "10px", border: "1px solid #ccc", borderRadius: "6px", marginRight: "10px", marginTop: "6px"}} /><br></br>
+          <button type="submit" style={{ padding: "10px 20px", border: "none", borderRadius: "8px", backgroundColor: "#3182ce", color: "white", fontWeight: "bold", cursor: "pointer"}}>
+            Send Voucher 📧
+          </button>
+          </div>
+        </Form>
+
+        {actionData?.success && (
+          <p style={{ color: "white", marginTop: "15px" }}>
+            ✅ Voucher sent successfully!
+          </p>
+        )}
+
+        {actionData?.error && (
+          <p style={{ color: "red", marginTop: "15px" }}>
+            ❌ {actionData.error}
+          </p>
+        )}
+
+
           <div style={styles.card}>
             <h1 style={styles.title}>Oil Change Voucher</h1>
             <p style={styles.subTitle}>
