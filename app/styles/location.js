@@ -6,9 +6,9 @@ const styles = {
     gap: '8rem',
     marginTop: '1rem',
     marginBottom: '1rem',
-    color: 'white',
+    color: 'black',
     paddingBottom: '20px',
-    borderBottom: '2px solid white',
+    borderBottom: '2px solid #333',
   },
   button: {
     backgroundColor: 'rgba(0, 0, 0, 0.45)',

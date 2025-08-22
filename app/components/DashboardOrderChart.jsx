@@ -139,8 +139,8 @@ export default function DashboardOrderChart({ paidOrders, unpaidOrders, analytic
   // STYLES.
   const styles = {
     container: {
-      backgroundColor: "#666666",
-      color: "white",
+git   backgroundColor: "white",
+      color: "black",
       fontFamily: "Arial, sans-serif",
       padding: "20px",
       minHeight: "100vh",
@@ -150,7 +150,8 @@ export default function DashboardOrderChart({ paidOrders, unpaidOrders, analytic
       display: "flex",
       alignItems: "center",
       marginBottom: "20px",
-      border: "2px solid white",
+      border: "2px solid black",
+      borderRadius: "10px",
       padding: "15px",
     },
     title: {
@@ -175,9 +176,10 @@ filterSection: {
       fontWeight: "bold",
     },
     select: {
-      backgroundColor: "#666666",
-      color: "white",
-      border: "2px solid white",
+      backgroundColor: "white",
+      color: "black",
+      border: "2px solid black",
+      borderRadius: "10px",
       padding: "8px 28px",
       fontSize: "14px",
       width: "250px",
@@ -185,7 +187,8 @@ filterSection: {
    button: {
   backgroundColor: "#4a7c59",
   color: "white",
-  border: "2px solid white",
+  border: "2px solid black",
+  borderRadius: "10px",
   padding: "10px 24px",           // slightly taller and wider
   cursor: "pointer",
   fontSize: "14px",
@@ -197,7 +200,8 @@ filterSection: {
 resetButton: {
   backgroundColor: "#8b2e2e",     // slightly more red tone
   color: "white",
-  border: "2px solid white",
+  border: "2px solid black",
+  borderRadius: "10px",
   padding: "10px 24px",           // same padding as Apply
   cursor: "pointer",
   fontSize: "14px",
@@ -213,7 +217,8 @@ resetButton: {
       marginBottom: "20px",
     },
     metricCard: {
-      border: "2px solid white",
+      border: "2px solid black",
+      borderRadius: "10px",
       padding: "15px",
       textAlign: "center",
     },
@@ -233,7 +238,8 @@ resetButton: {
       marginBottom: "20px",
     },
     chartContainer: {
-      border: "2px solid white",
+      border: "2px solid black",
+      borderRadius: "10px",
       padding: "15px",
       minHeight: "200px",
     },
@@ -249,7 +255,7 @@ resetButton: {
       position: "relative",
     },
     chartLine: {
-      stroke: "white",
+      stroke: "black",
       strokeWidth: "2",
       fill: "none",
     },
@@ -284,15 +290,15 @@ resetButton: {
       borderCollapse: "collapse",
     },
     tableHeader: {
-      backgroundColor: "#555555",
+      backgroundColor: "#f0f0f0",
       padding: "8px",
-      border: "1px solid white",
+      border: "1px solid black",
       fontSize: "12px",
       fontWeight: "bold",
     },
     tableCell: {
       padding: "8px",
-      border: "1px solid white",
+      border: "1px solid black",
       fontSize: "12px",
     },
     tablesGrid: {
@@ -302,7 +308,8 @@ resetButton: {
       marginBottom: "20px",
     },
     tableContainer: {
-      border: "2px solid white",
+      border: "2px solid black",
+      borderRadius: "10px",
       padding: "15px",
     },
     tableTitle: {
@@ -314,7 +321,8 @@ resetButton: {
     exportButton: {
       backgroundColor: "#4a7c59",
       color: "white",
-      border: "2px solid white",
+      border: "2px solid black",
+      borderRadius: "10px",
       padding: "12px 24px",
       cursor: "pointer",
       fontSize: "16px",

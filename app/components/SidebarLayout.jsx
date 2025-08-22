@@ -88,7 +88,7 @@ export default function SidebarLayout({ children }) {
     },
     hamburger: {
       position: "fixed",
-      top: "0",
+      top: "3px",
       left: sidebarOpen ? "270px" : "7px",
       display: "flex",
       flexDirection: "column",
