@@ -187,7 +187,7 @@ useEffect(() => {
 
   return (
     <SidebarLayout>
-      <div style={{ color: "white" }}>
+      <div style={{ color: "black" }}>
         <Page fullWidth>
           {/* Header */}
           <div style={styles.container}>
@@ -196,7 +196,7 @@ useEffect(() => {
           </div>
 
         <div style={{ marginTop: "40px" }}>
-          <div style={{display: 'flex',justifyContent: 'flex-start',fontWeight: 'bold',paddingBottom: '12px',borderBottom: '2px solid white',gap: '250px',color: 'white'}}>
+          <div style={{display: 'flex',justifyContent: 'flex-start',fontWeight: 'bold',paddingBottom: '12px',borderBottom: '2px solid #333',gap: '250px',color: 'black'}}>
             <Text variant="headingMd" as="h2">Location Name</Text>
             <Text variant="headingMd" as="h2">Actions</Text>
           </div>
@@ -204,7 +204,7 @@ useEffect(() => {
   {locations.map((loc) => (
     <div
       key={loc.id}
-      style={{display: 'flex',justifyContent: 'flex-start',alignItems: 'center',padding: '12px 0',gap: '250px',color: 'white'}}
+      style={{display: 'flex',justifyContent: 'flex-start',alignItems: 'center',padding: '12px 0',gap: '250px',color: 'black'}}
     >
       <span style={{minWidth: "120px"}}>{loc.name}</span>
       <Dropdown overlay={actionMenu(loc.id)} trigger={['click']} placement="bottomRight" arrow>

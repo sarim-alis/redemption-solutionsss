@@ -1,15 +1,13 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "@remix-run/react";
 import { Frame, Navigation, Icon } from "@shopify/polaris";
-import { ChartVerticalFilledIcon, ProductIcon, OrderIcon, ReceiptIcon, EmailIcon, LocationIcon, PersonFilledIcon, LockFilledIcon, ProfileIcon } from "@shopify/polaris-icons";
+import { ChartVerticalFilledIcon, ProductIcon, OrderIcon, ReceiptIcon, LocationIcon, PersonFilledIcon, LockFilledIcon, ProfileIcon } from "@shopify/polaris-icons";
 
 const navItems = [
   { label: "Report", url: "/app", icon: ChartVerticalFilledIcon },
   { label: "Products", url: "/app/products", icon: ProductIcon },
   { label: "Orders", url: "/app/orders", icon: OrderIcon },
   { label: "Vouchers", url: "/app/vouchers", icon: ReceiptIcon },
-  // { label: "Customers", url: "/app/customers", icon: CustomersIcon },
-  { label: "Emails", url: "/app/emails", icon: EmailIcon },
   { label: "Locations", url: "/app/locations", icon: LocationIcon },
   { label: "Customers", url: "/app/customers", icon: ProfileIcon },
   { label: "Employees", url: "/app/users", icon: PersonFilledIcon },
@@ -67,7 +65,7 @@ export default function SidebarLayout({ children }) {
     sidebarMenu: {
       listStyle: "none",
       padding: 0,
-      margin: 0,
+      marginTop: "45px",
     },
     sidebarMenuItem: {
       padding: sidebarOpen ? "12px 0" : "12px 5px",
@@ -91,7 +89,7 @@ export default function SidebarLayout({ children }) {
     hamburger: {
       position: "fixed",
       top: "0",
-      left: sidebarOpen ? "270px" : "50px", 
+      left: sidebarOpen ? "270px" : "7px",
       display: "flex",
       flexDirection: "column",
       gap: "4px",
@@ -122,6 +120,7 @@ export default function SidebarLayout({ children }) {
       width: "calc(100% - 90px)", 
       transition: "none", 
       backgroundColor: "white", // Updated to white
+      color: "black", // Ensure text color is black
     }
   };
 

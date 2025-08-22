@@ -69,7 +69,7 @@ const Users = () => {
 
   return (
     <SidebarLayout>
-     <div style={{ color: "white" }}>
+     <div style={{ color: "black" }}>
       <Page fullWidth>
         {/* Header */}
         <div style={styles.container}>
@@ -86,9 +86,9 @@ const Users = () => {
             justifyContent: 'flex-start',
             fontWeight: 'bold',
             paddingBottom: '12px',
-            borderBottom: '2px solid white',
+            borderBottom: '2px solid #333',
             gap: '450px',
-            color: 'white'
+            color: 'black'
           }}>
             <Text variant="headingMd" as="h2">Name</Text>
             <Text variant="headingMd" as="h2">Email</Text>
@@ -105,7 +105,7 @@ const Users = () => {
                 alignItems: 'center',
                 padding: '12px 0',
                 gap: '310px',
-                color: 'white'
+                color: 'black'
               }}
             >
               <span style={{ minWidth: "170px" }}>{emp.username}</span>
