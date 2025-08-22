@@ -29,7 +29,7 @@ export default function GiftPage() {
             <div style={styles.row}>
               <span style={styles.label}>Used on:</span>
               <span style={styles.value}>
-                ---
+                  —  —  —
               </span>
             </div>
 
