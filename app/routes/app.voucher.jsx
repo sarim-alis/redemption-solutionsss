@@ -1,6 +1,7 @@
 // Imports.
 import SidebarLayout from "../components/SidebarLayout";
 import styles from "../styles/voucher.js";
+import { sendEmail } from "../utils/mail.server.js";
 
 
 // Frontend.
