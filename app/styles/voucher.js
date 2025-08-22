@@ -1,0 +1,76 @@
+const styles = {
+  wrapper: {
+    maxWidth: "600px",
+    margin: "20px auto 40px auto",
+    fontFamily: "Arial, sans-serif",
+  },
+  card: {
+    border: "2px solid #4a5568",
+    background: "#862633",
+    padding: "40px 30px",
+    borderRadius: "0 8px 8px 8px",
+    textAlign: "center",
+  },
+  title: {
+    fontSize: "32px",
+    fontWeight: "bold",
+    color: "white",
+    marginBottom: "16px",
+    letterSpacing: "0.5px",
+  },
+  subTitle: {
+    fontSize: "18px",
+    color: "white",
+    marginBottom: "40px",
+    lineHeight: "2.5",
+  },
+  row: {
+    width: "100%",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "30px 0",
+    borderBottom: "1px solid #e2e8f0",
+  },
+  label: {
+    fontSize: "24px",
+    color: "white",
+    fontWeight: 500,
+  },
+  value: {
+    fontSize: "24px",
+    color: "white",
+    fontWeight: 500,
+  },
+  codeBox: {
+    width: "100%",
+    borderRadius: "12px",
+    padding: "30px",
+    margin: "30px 0",
+    background: "#edf2f7",
+    display: "flex",
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+  codeLabel: {
+    fontSize: "32px",
+    color: "#862633",
+    fontWeight: 600,
+    marginRight: "10px",
+  },
+  codeValue: {
+    fontSize: "32px",
+    fontWeight: "bold",
+    color: "black",
+    letterSpacing: "2px",
+  },
+  terms: {
+    fontSize: "18px",
+    color: "white",
+    lineHeight: "2.5",
+    textAlign: "left",
+    marginTop: "20px",
+  },
+};
+
+export default styles;

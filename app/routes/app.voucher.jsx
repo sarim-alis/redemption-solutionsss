@@ -1,10 +1,10 @@
 // Imports.
 import SidebarLayout from "../components/SidebarLayout";
-import styles from "../styles/gift.js";
+import styles from "../styles/voucher.js";
 
 
 // Frontend.
-export default function GiftPage() {
+export default function VoucherPage() {
   return (
     <SidebarLayout>
       <div style={styles.wrapper}>
