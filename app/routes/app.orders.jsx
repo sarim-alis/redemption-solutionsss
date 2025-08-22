@@ -194,12 +194,7 @@ export default function OrdersPage() {
             )}
           </div>
   
-          {/* Loader ab save nahi karta, isliye yeh messages hata diye */}
-          {hasNextPage && (
-            <Text variant="bodyMd" tone="subdued" alignment="center">
-              Showing first 250 orders. Total orders may be more.
-            </Text>
-          )}
+          
           {orders.length > 0 ? (
             <DataTable
               columnContentTypes={[

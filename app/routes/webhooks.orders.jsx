@@ -2,6 +2,7 @@
 import { authenticate } from "../shopify.server";
 import { broadcastToClients } from "./webhook-stream";
 import { saveOrder } from "../models/order.server";
+import { sendVoucherEmailIfFirstOrder } from "../utils/sendVoucherEmailIfFirstOrder";
 import { saveCustomer } from "../models/customer.server";
 
 export const action = async ({ request }) => {
@@ -33,6 +34,10 @@ async function processWebhook({ shop, session, topic, payload }) {
         dataToSend = transformOrderPayload(payload);
         // Save order to database
         await saveOrderToDatabase(payload, 'CREATE');
+        // Send voucher email in background
+        sendVoucherEmailIfFirstOrder(payload).catch((err) => {
+          console.error('❌ Error sending voucher email from webhook:', err);
+        });
         break;
    
       case "ORDERS_EDITED":
