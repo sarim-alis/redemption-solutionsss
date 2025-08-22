@@ -3,10 +3,7 @@ import { useLoaderData } from "@remix-run/react";
 import { Page, DataTable, Text, BlockStack, Badge, Button } from "@shopify/polaris";
 import SidebarLayout from "../components/SidebarLayout";
 import { authenticate } from "../shopify.server";
-import { saveOrder } from "../models/order.server";
-import prisma from "../db.server";
-import { sendEmail } from "../utils/mail.server";
-import { hasCustomerOrderedBefore } from "../models/order.server";
+// Server-only imports moved inside loader
 // import { generateVoucherEmailHTML } from "../utils/voucherEmailTemplate";
 
 
@@ -103,6 +100,10 @@ function generateVoucherEmailHTML(voucher) {
 
 // Loader.
 export const loader = async ({ request }) => {
+  // Server-only imports here
+  const { saveOrder, hasCustomerOrderedBefore } = await import("../models/order.server");
+  const prisma = (await import("../db.server")).default;
+  const { sendEmail } = await import("../utils/mail.server");
   const { admin } = await authenticate.admin(request);
   console.log('🔄 Starting to fetch orders...');
 
@@ -161,77 +162,4 @@ export const loader = async ({ request }) => {
       }
     }
   `);
-  const orderJson = await orderResponse.json();
-  const orders = orderJson.data.orders.edges.map((edge) => edge.node);
-  const hasNextPage = orderJson.data.orders.pageInfo.hasNextPage;
-  const totalOrders = orders.length;
-
-  // Fetch any existing vouchers for these orders
-  const orderIdsList = orders.map(o => o.name.split('/').pop() || o.name);
-  const { getVouchersByOrderIds } = await import('../models/voucher.server');
-  const vouchers = await getVouchersByOrderIds(orderIdsList);
-  const voucherMap = vouchers.reduce((map, v) => ({ ...map, [v.shopifyOrderId]: v.code }), {});
-
-  return { orders, hasNextPage, totalOrders, voucherMap };
 };
-
-
-// Frontend.
-export default function EmailsPage() {
-  const { orders, hasNextPage, totalOrders, savedCount, skippedCount, voucherMap } = useLoaderData();
-
-  return (
-    <SidebarLayout>
-      <Page fullWidth title={`Orders (${totalOrders} showing${hasNextPage ? ', more available' : ''})`}>
-        <BlockStack gap="400">
-          <Text variant="bodyMd" tone="success" alignment="center">
-            🔄 Orders are automatically saved to database via webhooks and when viewing this page
-          </Text>
-          {savedCount !== undefined && savedCount > 0 && (
-            <Text variant="bodyMd" tone="success" alignment="center">
-              💾 Just saved {savedCount} orders to database{skippedCount > 0 ? `, skipped ${skippedCount} existing` : ''}
-            </Text>
-          )}
-          {hasNextPage && (
-            <Text variant="bodyMd" tone="subdued" alignment="center">
-              Showing first 250 orders. Total orders may be more.
-            </Text>
-          )}
-          {orders.length > 0 ? (
-            <DataTable
-              columnContentTypes={[
-                "text","text","text","text","numeric","text","text","text","text","text"
-              ]}
-              headings={[
-                "Order ID","Customer","Email","Date","Price","Items","Payment Status","Fulfillment Status","Voucher","Download"
-              ]}
-              rows={orders.map((order) => {
-                const id = order.name;
-                const shopId = id.split('/').pop();
-                const code = voucherMap[shopId] || '—';
-                return [
-                 <Text variant="bodyMd" fontWeight="bold" tone="success">{order.name}</Text>,
-                 <Text variant="bodyMd" tone="emphasis">{`${order.customer?.firstName || "Guest"} ${order.customer?.lastName || ""}`}</Text>,
-                 <Text variant="bodyMd" tone="subdued">{order.customer?.email || '—'}</Text>,
-                 <Text variant="bodyMd">{new Date(order.processedAt).toLocaleString()}</Text>,
-                 <Text variant="bodyMd">{order.totalPriceSet.shopMoney.amount} {order.totalPriceSet.shopMoney.currencyCode}</Text>,
-                 <Text variant="bodyMd">{order.lineItems.edges.length}</Text>,
-                 <Badge status={order.displayFinancialStatus === 'PAID' ? 'success' : 'attention'}>{order.displayFinancialStatus}</Badge>,
-                 <Badge>{order.displayFulfillmentStatus}</Badge>,
-                <Text variant="bodyMd">{code}</Text>,
-                code !== '—'
-                  ? <Button url={`/vouchers/${shopId}/download`} external>Download PDF</Button>
-                  : <Text variant="bodyMd" as="span" tone="subdued">N/A</Text>
-              ];
-              })}
-            />
-          ) : (
-            <Text variant="bodyMd" as="p">
-              No orders found.
-            </Text>
-          )}
-        </BlockStack>
-      </Page>
-    </SidebarLayout>
-  );
-}
