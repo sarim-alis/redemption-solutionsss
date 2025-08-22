@@ -14,7 +14,7 @@ const navItems = [
   { label: "Customers", url: "/app/customers", icon: ProfileIcon },
   { label: "Employees", url: "/app/users", icon: PersonFilledIcon },
   { label: "Login", url: "/app/login", icon: LockFilledIcon },
-  { label: "Gifts", url: "/app/gift", icon: GiftCardFilledIcon },
+  { label: "Gift", url: "/app/gift", icon: GiftCardFilledIcon },
 ];
 
 export default function SidebarLayout({ children }) {
