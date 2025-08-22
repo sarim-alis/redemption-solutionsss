@@ -258,10 +258,10 @@ export const loader = async ({ request }) => {
 
         if (!voucher.emailSent) {
         // Send email logic
-        await prisma.voucher.update({
-            where: { code },
-            data: { emailSent: true },
-        });
+    await prisma.voucher.update({
+      where: { code: voucher.code },
+      data: { emailSent: true },
+    });
         }
       } catch (emailErr) {
       console.error('❌ Failed to send voucher email:', emailErr.message);
