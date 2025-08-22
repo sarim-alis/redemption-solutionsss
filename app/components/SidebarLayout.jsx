@@ -32,7 +32,7 @@ export default function SidebarLayout({ children }) {
       left: 0, // Always visible
       width: sidebarOpen ? "300px" : "60px", // 60px for icons only, 300px for full
       height: "100vh",
-      backgroundColor: "#666666",
+      backgroundColor: "#862633", // Updated to dark red
       transition: "width 0.3s ease-in-out",
       zIndex: 1000,
       padding: sidebarOpen ? "20px" : "10px",
@@ -71,7 +71,7 @@ export default function SidebarLayout({ children }) {
     },
     sidebarMenuItem: {
       padding: sidebarOpen ? "12px 0" : "12px 5px",
-      borderBottom: sidebarOpen ? "1px solid #666666" : "none",
+      borderBottom: sidebarOpen ? "1px solid #a13a4a" : "none", // Lighter red border
       cursor: "pointer",
       transition: "background-color 0.2s ease",
       textAlign: sidebarOpen ? "left" : "center",
@@ -98,10 +98,10 @@ export default function SidebarLayout({ children }) {
       cursor: "pointer",
       zIndex: 1001,
       padding: "10px",
-      backgroundColor: "#666666",
+      backgroundColor: "#862633", // Updated to dark red
       borderRadius: "5px",
       transition: "all 0.3s ease",
-      border: "2px solid #888888",
+      border: "2px solid #a13a4a", // Lighter red border
       boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
     },
     hamburgerActive: {
@@ -121,7 +121,7 @@ export default function SidebarLayout({ children }) {
       minHeight: "100vh",
       width: "calc(100% - 90px)", 
       transition: "none", 
-      backgroundColor: "#666666", 
+      backgroundColor: "white", // Updated to white
     }
   };
 
@@ -171,7 +171,7 @@ export default function SidebarLayout({ children }) {
                 key={index}
                 style={{
                   ...styles.sidebarMenuItem,
-                  backgroundColor: isSelected ? "#555555" : "transparent",
+                  backgroundColor: isSelected ? "#a13a4a" : "transparent", // Lighter red for active state
                   fontWeight: isSelected ? "bold" : "normal",
                   position: 'relative',
                 }}
@@ -201,8 +201,8 @@ export default function SidebarLayout({ children }) {
                           left: '110%',
                           top: '50%',
                           transform: 'translateY(-50%)',
-                          background: 'rgba(40,40,40,0.95)',
-                          color: 'white',
+                          background: '#862633', // Match sidebar background color
+                          color: 'white', // White text color
                           padding: '4px 12px',
                           borderRadius: '4px',
                           whiteSpace: 'nowrap',
@@ -211,6 +211,7 @@ export default function SidebarLayout({ children }) {
                           pointerEvents: 'none',
                           transition: 'opacity 0.2s',
                           zIndex: 2000,
+                          border: '1px solid #a13a4a', // Add subtle border for definition
                         }}
                         className="sidebar-tooltip"
                       >

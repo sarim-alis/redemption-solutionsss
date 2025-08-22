@@ -39,7 +39,7 @@ const transporter = nodemailer.createTransport({
     rateDelta: 1000,          // Per second
 });
 
-// Verify connection on startupg
+// Verify connection on startup
 async function verifyConnection() {
     try {
         console.log("📧 [MailServer] Verifying SMTP connection...");

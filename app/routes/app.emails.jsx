@@ -35,65 +35,244 @@ function formatCustomerName(email) {
 function generateVoucherEmailHTML(voucher) {
   const validThrough = voucher?.createdAt
     ? formatDate(addMonths(voucher.createdAt, 3))
-    : "N/A";
+    : "08/16/2026";
   const issuedOn = voucher?.createdAt
     ? formatDate(voucher.createdAt)
-    : "N/A";
+    : "03/16/2025";
   const name = formatCustomerName(voucher.customerEmail);
 
   return `
-    <div style="max-width:600px;margin:20px auto;font-family:Arial,sans-serif;margin-bottom:40px;">
-      <div style="border:2px solid #4a5568;background:#f7fafc;padding:40px 30px;border-radius:0 8px 8px 8px;text-align:left;margin-bottom:20px;">
-        <p style="font-size:18px;font-weight:500;margin-bottom:15px;">Hey ${name},</p>
-        <p style="font-size:18px;font-weight:500;margin-bottom:15px;">Thank you for your purchase of the Oil Change Vouchers/ Gift Cards. Use the Vouchers below to redeem at participating locations. See below for terms and details.</p>
-      </div>
-
-      <div style="border:2px solid #4a5568;background:#f7fafc;padding:40px 30px;border-radius:0 8px 8px 8px;text-align:center;margin-bottom:20px;">
-        <h1 style="font-size:28px;font-weight:bold;color:#2d3748;margin-bottom:16px;letter-spacing:0.5px;">Jiffy Lube Oil Change Voucher</h1>
-        <p style="font-size:16px;color:#718096;margin-bottom:40px;line-height:1.5;">
-          Present this at participating locations<br />to redeem.
-        </p>
-        <div style="width: 100%; display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #e2e8f0;">
-          <span style="font-size:16px;color:#4299e1;font-weight:500;">Valid through:</span>
-          <span style="font-size:16px;color:#4299e1;font-weight:500;">${validThrough}</span>
-        </div>
-        <div style="width: 100%; display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #e2e8f0;">
-          <span style="font-size:16px;color:#4299e1;font-weight:500;">Issued on:</span>
-          <span style="font-size:16px;color:#4299e1;font-weight:500;">${issuedOn}</span>
-        </div>
-        <div style="width: 100%; display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #e2e8f0;">
-          <span style="font-size:16px;color:#4299e1;font-weight:500;">Used on:</span>
-          <span style="font-size:16px;color:#4299e1;font-weight:500;">---</span>
-        </div>
-        <div style="width: 100%; border:3px solid #2d3748;border-radius:8px;padding:20px;margin:30px 0;background:#edf2f7;display:flex;justify-content:space-around;">
-          <div style="font-size:24px;color:#2d3748;font-weight:600;margin-bottom:8px;">Voucher Code</div>
-          <div style="font-size:24px;font-weight:bold;color:#2d3748;letter-spacing:2px;">${voucher.code}</div>
-        </div>
-        <div style="font-size:14px;color:#4299e1;line-height:1.4;text-align:left;margin-top:20px;">
-          * Must be used at participating locations<br />
-          ** Term 2<br />
-          *** Term 3
-        </div>
-      </div>
-
-      <div style="border:2px solid #4a5568;background:#f7fafc;padding:40px 30px;border-radius:0 8px 8px 8px;text-align:left;margin-bottom:20px;">
-        <p style="font-size:18px;font-weight:500;margin-bottom:15px;">Terms and Conditions</p>
-        <p style="font-size:18px;font-weight:500;margin-bottom:15px;">Details of Terms. Locations available to redeem. How to redeem.</p>
-      </div>
-
-      <div style="padding:40px;border-radius:8px;max-width:480px;margin:0 auto;font-family:Arial,sans-serif;">
-        <div style="background:#fff;border:2px solid black;border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:32px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <img src="/logo.svg" alt="Logo" style="width:40px;height:40px;" />
-            <span style="font-weight:500;color:#2d3748;font-size:16px;">${voucher.code}</span>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Jiffy Lube Voucher</title>
+      <style>
+        body { 
+          margin: 0; 
+          padding: 0; 
+          font-family: Arial, sans-serif; 
+          background-color: #f5f5f5;
+        }
+        .email-container {
+          max-width: 600px;
+          margin: 0 auto;
+          background-color: #ffffff;
+        }
+        .header {
+          background-color: #862633;
+          padding: 20px;
+          text-align: center;
+        }
+        .logo {
+          color: white;
+          font-size: 24px;
+          font-weight: bold;
+        }
+        .logo-circle {
+          display: inline-block;
+          width: 30px;
+          height: 30px;
+          background-color: white;
+          color: #862633;
+          border-radius: 50%;
+          text-align: center;
+          line-height: 30px;
+          font-weight: bold;
+          margin-right: 10px;
+        }
+        .main-content {
+          padding: 40px 30px;
+          background-color: white;
+        }
+        .thank-you {
+          color: #862633;
+          font-size: 28px;
+          font-weight: bold;
+          text-align: center;
+          margin-bottom: 20px;
+        }
+        .subtitle {
+          color: #333333;
+          font-size: 18px;
+          text-align: center;
+          margin-bottom: 30px;
+        }
+        .instructions {
+          color: #666666;
+          font-size: 16px;
+          text-align: center;
+          margin-bottom: 40px;
+          line-height: 1.5;
+        }
+        .voucher-container {
+          background-color: #862633;
+          border: 2px dashed white;
+          border-radius: 8px;
+          padding: 30px;
+          margin: 30px 0;
+          text-align: center;
+          position: relative;
+        }
+        .voucher-title {
+          color: white;
+          font-size: 22px;
+          font-weight: bold;
+          margin-bottom: 20px;
+        }
+        .voucher-subtitle {
+          color: white;
+          font-size: 16px;
+          margin-bottom: 30px;
+        }
+        .voucher-details {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 30px;
+          color: white;
+          font-size: 16px;
+        }
+        .voucher-detail {
+          text-align: center;
+        }
+        .voucher-detail-label {
+          font-size: 14px;
+          opacity: 0.9;
+        }
+        .voucher-detail-value {
+          font-weight: bold;
+          font-size: 18px;
+        }
+        .voucher-code-container {
+          background-color: white;
+          border-radius: 8px;
+          padding: 20px;
+          margin: 30px 0;
+          display: inline-block;
+          min-width: 300px;
+        }
+        .voucher-code-label {
+          color: #333333;
+          font-size: 16px;
+          margin-bottom: 10px;
+        }
+        .voucher-code {
+          color: #333333;
+          font-size: 28px;
+          font-weight: bold;
+          letter-spacing: 2px;
+        }
+        .terms {
+          color: white;
+          font-size: 14px;
+          text-align: left;
+          margin-top: 20px;
+          line-height: 1.4;
+        }
+        .small-logo {
+          position: absolute;
+          bottom: 15px;
+          right: 15px;
+          color: white;
+          font-size: 16px;
+          font-weight: bold;
+        }
+        .footer {
+          background-color: #f8f8f8;
+          padding: 30px;
+          text-align: center;
+          border-top: 1px solid #e0e0e0;
+        }
+        .footer-logo {
+          color: #862633;
+          font-size: 20px;
+          font-weight: bold;
+          margin-bottom: 15px;
+        }
+        .disclaimer {
+          color: #666666;
+          font-size: 12px;
+          line-height: 1.4;
+          max-width: 500px;
+          margin: 0 auto;
+        }
+        @media only screen and (max-width: 600px) {
+          .main-content { padding: 20px 15px; }
+          .voucher-container { padding: 20px; }
+          .voucher-details { flex-direction: column; gap: 15px; }
+          .voucher-code { font-size: 24px; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+          <div class="logo">
+            <span class="logo-circle">J</span>
+            jiffy lube
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:18px;color:#2d3748;font-weight:500;">Balance:</span>
-            <span style="font-size:28px;color:#2d3748;font-weight:700;">$50.00</span>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+          <div class="thank-you">Thank you for your purchase!</div>
+          <div class="subtitle">Your Jiffy Lube® Oil Change Pack is ready to use.</div>
+          <div class="instructions">
+            You'll find your voucher(s) below—just bring a voucher number with you on your next visit to a participating location.
+          </div>
+
+          <!-- Voucher Section -->
+          <div class="voucher-container">
+            <div class="voucher-title">Jiffy Lube Synthetic Blend Oil Change Voucher</div>
+            <div class="voucher-subtitle">Present this at participating locations to redeem.</div>
+            
+            <div class="voucher-details">
+              <div class="voucher-detail">
+                <div class="voucher-detail-label">Valid through:</div>
+                <div class="voucher-detail-value">${validThrough}</div>
+              </div>
+              <div class="voucher-detail">
+                <div class="voucher-detail-label">Issued on:</div>
+                <div class="voucher-detail-value">${issuedOn}</div>
+              </div>
+              <div class="voucher-detail">
+                <div class="voucher-detail-label">Used on:</div>
+                <div class="voucher-detail-value">---</div>
+              </div>
+            </div>
+
+            <div class="voucher-code-container">
+              <div class="voucher-code-label">Voucher Code:</div>
+              <div class="voucher-code">${voucher.code}</div>
+            </div>
+
+            <div class="terms">
+              *Only valid at participating ACE Jiffy Lube locations.<br>
+              **Term 2<br>
+              ***Term 3
+            </div>
+
+            <div class="small-logo">
+              <span style="background: white; color: #862633; padding: 5px 8px; border-radius: 50%; font-weight: bold;">J</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+          <div class="footer-logo">
+            <span style="background: #862633; color: white; padding: 5px 8px; border-radius: 50%; margin-right: 10px;">J</span>
+            jiffy lube
+          </div>
+          <div class="disclaimer">
+            *Valid for up to 5 quarts of oil, extra fee for additional quarts. Not valid with any other offer for same service. Only valid at participating ACE Jiffy Lube locations. Shop supply fees and applicable taxes are not included and must be paid at time of service.
           </div>
         </div>
       </div>
-    </div>
+    </body>
+    </html>
   `;
 }
 
