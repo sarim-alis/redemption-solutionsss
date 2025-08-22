@@ -86,8 +86,7 @@ export async function sendVoucherEmailIfFirstOrder(order, voucher, retryCount = 
         await tx.voucher.update({
           where: { code: voucherCode },
           data: { 
-            emailSent: true,
-            updatedAt: new Date()
+            emailSent: true
           },
         });
         

@@ -231,18 +231,9 @@ export async function saveOrder(orderData: ShopifyOrder) {
   try {
     const saved = await prisma.order.create({ data: dbData });
     console.log('✅ Order created in DB:', saved.shopifyOrderId);
-    // Create a voucher for this order
-    let voucher = null;
-    try {
-      voucher = await createVoucher({
-        shopifyOrderId: saved.shopifyOrderId,
-        customerEmail: saved.customerEmail || ''
-      });
-      console.log('🎟️ Voucher created for order:', voucher.code);
-    } catch (voucherError: any) {
-      console.error('❌ Failed to create voucher:', voucherError);
-    }
-    return { order: saved, voucher };
+    // Don't create voucher yet - wait for payment
+    console.log('⏳ Voucher will be created when order is paid');
+    return { order: saved, voucher: null };
   } catch (dbError: any) {
     console.error('❌ DB create failed:', dbError);
     throw new Error(`Failed to save order ${info.shopifyOrderId}: ${dbError.message}`);

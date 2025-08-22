@@ -33,25 +33,9 @@ async function processWebhook({ shop, session, topic, payload }) {
       case "ORDERS_CREATE":
         console.log(`✅ New order created: ${payload.name} (ID: ${payload.id})`);
         dataToSend = transformOrderPayload(payload);
-        // Save order to database
-        const { order: savedOrder, voucher } = await saveOrderToDatabase(payload, 'CREATE');
-        // Send voucher email in background, only if order and voucher were saved
-        if (savedOrder && voucher) {
-          console.log(`📧 [Webhook] Sending voucher email for new order: ${savedOrder.shopifyOrderId}`);
-          sendVoucherEmailIfFirstOrder(savedOrder, voucher)
-            .then((result) => {
-              if (result.success) {
-                console.log(`✅ [Webhook] Email sent successfully for voucher: ${result.voucherCode}`);
-              } else {
-                console.error(`❌ [Webhook] Email failed for voucher: ${result.voucherCode}: ${result.message}`);
-              }
-            })
-            .catch((err) => {
-              console.error('❌ [Webhook] Error sending voucher email from webhook:', err);
-            });
-        } else {
-          console.log(`⚠️ [Webhook] Skipping email send - missing order or voucher for order: ${payload.id}`);
-        }
+        // Save order to database but DON'T create voucher or send email yet
+        const { order: savedOrder } = await saveOrderToDatabase(payload, 'CREATE');
+        console.log(`📦 Order saved for future payment processing: ${savedOrder?.shopifyOrderId}`);
         break;
    
       case "ORDERS_EDITED":
@@ -263,6 +247,11 @@ async function saveOrderToDatabase(payload, action) {
         } catch (voucherError) {
           console.error('❌ Failed to create voucher for paid order:', voucherError);
         }
+      }
+      
+      // For CREATE action, return order without voucher
+      if (action === 'CREATE') {
+        return { order: savedOrder, voucher: null };
       }
     }
     return { order: savedOrder, voucher };
