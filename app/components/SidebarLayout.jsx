@@ -34,7 +34,7 @@ export default function SidebarLayout({ children }) {
       left: 0, // Always visible
       width: sidebarOpen ? "300px" : "60px", // 60px for icons only, 300px for full
       height: "100vh",
-      backgroundColor: "#666666",
+      backgroundColor: "#862633",
       transition: "width 0.3s ease-in-out",
       zIndex: 1000,
       padding: sidebarOpen ? "20px" : "10px",
@@ -123,7 +123,7 @@ export default function SidebarLayout({ children }) {
       minHeight: "100vh",
       width: "calc(100% - 90px)", 
       transition: "none", 
-      backgroundColor: "#666666", 
+      backgroundColor: "white", 
     }
   };
 
@@ -173,7 +173,7 @@ export default function SidebarLayout({ children }) {
                 key={index}
                 style={{
                   ...styles.sidebarMenuItem,
-                  backgroundColor: isSelected ? "#555555" : "transparent",
+                  backgroundColor: isSelected ? "#c23b4c" : "transparent",
                   fontWeight: isSelected ? "bold" : "normal",
                   position: 'relative',
                 }}
