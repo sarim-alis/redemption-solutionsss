@@ -3,7 +3,7 @@
 client_id = "c2f415f66df6ec14c9b7ccef564c014c"
 name = "redeem-gift"
 handle = "redeem-gift"
-application_url = "https://looking-frank-cet-tions.trycloudflare.com"
+application_url = "https://montreal-interior-adapted-serving.trycloudflare.com"
 embedded = true
 
 [build]
@@ -19,9 +19,9 @@ scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gi
 
 [auth]
 redirect_urls = [
-  "https://looking-frank-cet-tions.trycloudflare.com/auth/callback",
-  "https://looking-frank-cet-tions.trycloudflare.com/auth/shopify/callback",
-  "https://looking-frank-cet-tions.trycloudflare.com/api/auth/callback"
+  "https://montreal-interior-adapted-serving.trycloudflare.com/auth/callback",
+  "https://montreal-interior-adapted-serving.trycloudflare.com/auth/shopify/callback",
+  "https://montreal-interior-adapted-serving.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
