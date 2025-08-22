@@ -130,3 +130,45 @@ export function getVoucherHTML() {
   </table>
   `;
 }
+
+export function getGiftHTML() {
+  return `
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" style="font-family:Arial, sans-serif; background-color:#f9f9f9; padding:20px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="border-radius:12px; background:#862633; padding:30px; color:#ffffff;">
+          <!-- Top Row -->
+          <tr>
+            <td align="left" style="width:60px;">
+              <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1755837350/lxkizea7xfe7omtekg5r.png"
+                   width="60" height="60" style="border-radius:50%; object-fit:contain;" />
+            </td>
+            <td align="right" style="font-size:24px; font-weight:bold; color:#ffffff;">
+              #293A-29CB
+            </td>
+          </tr>
+
+          <!-- Spacer -->
+          <tr><td colspan="2" height="40"></td></tr>
+
+<!-- Balance Row -->
+<tr>
+  <td colspan="2" style="padding:10px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td align="left" style="font-size:24px; font-weight:600; color:#ffffff; white-space:nowrap;">
+          Current Balance:
+        </td>
+        <td align="right" style="font-size:40px; font-weight:bold; color:#ffffff; white-space:nowrap;">
+          $50.00
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  `;
+}
