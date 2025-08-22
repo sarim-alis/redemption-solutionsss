@@ -369,7 +369,6 @@ export default function Index() {
         minHeight: "100vh",
         border: "2px solid black",
         borderRadius: "10px",
-        margin: "20px",
         padding: "20px"
       }}>
         <DashboardOrderChart 

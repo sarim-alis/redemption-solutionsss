@@ -139,7 +139,7 @@ export default function DashboardOrderChart({ paidOrders, unpaidOrders, analytic
   // STYLES.
   const styles = {
     container: {
-git   backgroundColor: "white",
+      backgroundColor: "white",
       color: "black",
       fontFamily: "Arial, sans-serif",
       padding: "20px",
