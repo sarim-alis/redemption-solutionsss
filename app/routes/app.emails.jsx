@@ -7,7 +7,6 @@ import { saveOrder } from "../models/order.server";
 import prisma from "../db.server";
 import { sendEmail } from "../utils/mail.server";
 import { hasCustomerOrderedBefore } from "../models/order.server";
-// import { generateVoucherEmailHTML } from "../utils/voucherEmailTemplate";
 
 
 // Format date.
