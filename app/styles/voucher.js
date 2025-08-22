@@ -71,6 +71,22 @@ const styles = {
     textAlign: "left",
     marginTop: "20px",
   },
+  termRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  logo: {
+    width: "60px",
+    height: "60px",
+    borderRadius: "50%",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    fontSize: "28px",
+    fontWeight: "bold",
+    objectFit: "contain",
+  },
 };
 
 export default styles;

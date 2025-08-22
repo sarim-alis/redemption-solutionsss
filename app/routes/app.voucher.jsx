@@ -43,7 +43,10 @@ export default function VoucherPage() {
             <div style={styles.terms}>
               *Only valid at participating ACE Jiffy Lube Locations. <br />
               ** Term 2 <br />
+              <div style={styles.termRow}>
               *** Term 3
+              <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1755837350/lxkizea7xfe7omtekg5r.png" style={styles.logo} />
+              </div>
             </div>
           </div>
       </div>
