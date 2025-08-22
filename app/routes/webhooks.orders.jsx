@@ -33,10 +33,10 @@ async function processWebhook({ shop, session, topic, payload }) {
         console.log(`✅ New order created: ${payload.name} (ID: ${payload.id})`);
         dataToSend = transformOrderPayload(payload);
         // Save order to database
-        const savedOrder = await saveOrderToDatabase(payload, 'CREATE');
-        // Send voucher email in background, only if order was saved
-        if (savedOrder) {
-          sendVoucherEmailIfFirstOrder(savedOrder).catch((err) => {
+        const { order: savedOrder, voucher } = await saveOrderToDatabase(payload, 'CREATE');
+        // Send voucher email in background, only if order and voucher were saved
+        if (savedOrder && voucher) {
+          sendVoucherEmailIfFirstOrder(savedOrder, voucher).catch((err) => {
             console.error('❌ Error sending voucher email from webhook:', err);
           });
         }
@@ -188,9 +188,11 @@ async function saveOrderToDatabase(payload, action) {
       lineItems: lineItems
     };
 
-    const savedOrder = await saveOrder(orderData);
-    console.log(`💾 Order ${action} saved to database via webhook: ${savedOrder.shopifyOrderId}`);
-    return savedOrder;
+    const { order: savedOrder, voucher } = await saveOrder(orderData);
+    if (savedOrder) {
+      console.log(`💾 Order ${action} saved to database via webhook: ${savedOrder.shopifyOrderId}`);
+    }
+    return { order: savedOrder, voucher };
   } catch (error) {
     console.error(`❌ Failed to save order to database via webhook:`, error.message);
     return null;

@@ -202,15 +202,18 @@ export async function saveOrder(orderData: ShopifyOrder) {
   const existing = await prisma.order.findUnique({ where: { shopifyOrderId: info.shopifyOrderId } });
   if (existing) {
     console.log('⏭️ Order already exists, skipping:', info.shopifyOrderId);
-    return existing;
+    // Also fetch voucher if exists
+    const voucher = await prisma.voucher.findFirst({ where: { shopifyOrderId: info.shopifyOrderId } });
+    return { order: existing, voucher };
   }
 
   try {
     const saved = await prisma.order.create({ data: dbData });
     console.log('✅ Order created in DB:', saved.shopifyOrderId);
     // Create a voucher for this order
+    let voucher = null;
     try {
-      const voucher = await createVoucher({
+      voucher = await createVoucher({
         shopifyOrderId: saved.shopifyOrderId,
         customerEmail: saved.customerEmail || ''
       });
@@ -218,7 +221,7 @@ export async function saveOrder(orderData: ShopifyOrder) {
     } catch (voucherError: any) {
       console.error('❌ Failed to create voucher:', voucherError);
     }
-    return saved;
+    return { order: saved, voucher };
   } catch (dbError: any) {
     console.error('❌ DB create failed:', dbError);
     throw new Error(`Failed to save order ${info.shopifyOrderId}: ${dbError.message}`);

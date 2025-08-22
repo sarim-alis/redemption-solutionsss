@@ -8,14 +8,8 @@ import { hasCustomerOrderedBefore } from "../models/order.server";
  * @param {object} order - Order object (must have customer.email, name, etc)
  * @returns {Promise<void>}
  */
-export async function sendVoucherEmailIfFirstOrder(order) {
-  if (!order?.customer?.email) return;
-  const numericId = order.shopifyOrderId || order.id;
-  const shopifyOrderIdStr = String(numericId);
-  const voucher = await prisma.voucher.findFirst({
-    where: { shopifyOrderId: shopifyOrderIdStr }
-  });
-  if (!voucher) return;
+export async function sendVoucherEmailIfFirstOrder(order, voucher) {
+  if (!order?.customer?.email || !voucher) return;
   const isFirstOrder = await hasCustomerOrderedBefore(order.customer.email);
   if (isFirstOrder && !voucher.emailSent) {
     try {
