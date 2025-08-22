@@ -1,7 +1,6 @@
 import { sendEmail } from "../utils/mail.server";
 import { generateVoucherEmailHTML } from "../utils/voucherEmailTemplateShared";
 import prisma from "../db.server";
-import { hasCustomerOrderedBefore } from "../models/order.server";
 
 /**
  * Send voucher email to customer if first order and not already sent.
