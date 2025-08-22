@@ -9,10 +9,13 @@ import { hasCustomerOrderedBefore } from "../models/order.server";
  * @returns {Promise<void>}
  */
 export async function sendVoucherEmailIfFirstOrder(order, voucher) {
-  if (!order?.customer?.email || !voucher) return;
-  const isFirstOrder = await hasCustomerOrderedBefore(order.customer.email);
-  if (isFirstOrder && !voucher.emailSent) {
+  if (!order?.customer?.email || !voucher) {
+    console.log('[VoucherEmail] Missing order.customer.email or voucher, skipping email send.');
+    return;
+  }
+  if (!voucher.emailSent) {
     try {
+      console.log(`[VoucherEmail] Sending voucher email to: ${order.customer.email} for voucher: ${voucher.code}`);
       await sendEmail({
         to: order.customer.email,
         subject: `Here are your Oil Change Vouchers! Where to Redeem... 🎟️`,
@@ -23,9 +26,12 @@ export async function sendVoucherEmailIfFirstOrder(order, voucher) {
         where: { code: voucher.code },
         data: { emailSent: true },
       });
+      console.log(`[VoucherEmail] Email sent and voucher marked as sent for: ${voucher.code}`);
     } catch (emailErr) {
       console.error('❌ Failed to send voucher email:', emailErr.message);
       console.error('Full email error:', emailErr);
     }
+  } else {
+    console.log(`[VoucherEmail] Voucher email already sent for: ${voucher.code}`);
   }
 }
