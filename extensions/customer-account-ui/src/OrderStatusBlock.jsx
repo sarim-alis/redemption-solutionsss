@@ -16,6 +16,8 @@ export default reactExtension(
   "customer-account.order-status.block.render",
   () => {
     console.log('🚀 Extension is loading!');
+    console.error('🔥 EXTENSION DEBUG: This should appear in console!');
+    alert('Extension is loading - you should see this popup!');
     return <VoucherDisplay />;
   }
 );
