@@ -23,6 +23,7 @@ function VoucherDisplay() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Always show the extension, even if no vouchers
   useEffect(() => {
     fetchVouchers();
   }, [order]);
@@ -83,55 +84,41 @@ function VoucherDisplay() {
     return <Badge tone="success">Valid</Badge>;
   };
 
-  if (loading) {
-    return (
-      <BlockStack spacing="base">
-        <Text size="large" emphasis="bold">Your Vouchers</Text>
+  // Always render the extension to debug
+  return (
+    <BlockStack spacing="base">
+      <Text size="large" emphasis="bold">Your Vouchers</Text>
+      <Banner status="info">
+        Extension is working! Debug info below:
+      </Banner>
+      
+      {loading && (
         <InlineStack spacing="tight" blockAlignment="center">
           <Spinner size="small" />
           <Text>Loading vouchers...</Text>
         </InlineStack>
-      </BlockStack>
-    );
-  }
+      )}
 
-  if (error) {
-    return (
-      <BlockStack spacing="base">
-        <Text size="large" emphasis="bold">Your Vouchers</Text>
+      {error && (
         <Banner status="critical">
-          {error}
+          Error: {error}
         </Banner>
-      </BlockStack>
-    );
-  }
+      )}
 
-  if (vouchers.length === 0) {
-    return (
-      <BlockStack spacing="base">
-        <Text size="large" emphasis="bold">Your Vouchers</Text>
+      {!loading && !error && vouchers.length === 0 && (
         <Banner status="info">
           No vouchers found for your account.
         </Banner>
-      </BlockStack>
-    );
-  }
+      )}
 
-  return (
-    <BlockStack spacing="base">
-      <Text size="large" emphasis="bold">Your Vouchers</Text>
-      <Text size="small" appearance="subdued">
-        Present these voucher codes at participating locations to redeem your services.
-      </Text>
-      
-      {vouchers.map((voucher) => (
+      {vouchers.length > 0 && vouchers.map((voucher) => (
         <Card key={voucher.id} padding="base">
           <BlockStack spacing="tight">
             <InlineStack spacing="base" blockAlignment="center">
               <Text size="medium" emphasis="bold">
                 {voucher.code}
               </Text>
-              {getStatusBadge(voucher)}
+              {voucher.used ? <Badge tone="critical">Invalid</Badge> : <Badge tone="success">Valid</Badge>}
             </InlineStack>
             
             <Text size="small" appearance="subdued">
