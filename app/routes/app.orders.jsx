@@ -1,3 +1,4 @@
+// Imports.
 import React, { useState, useEffect } from "react";
 import { useLoaderData } from "@remix-run/react";
 import { Page, DataTable, Text, BlockStack, Badge, Button } from "@shopify/polaris";
@@ -5,10 +6,12 @@ import SidebarLayout from "../components/SidebarLayout";
 import { authenticate } from "../shopify.server";
 import { saveOrder } from "../models/order.server";
 import prisma from "../db.server";
+import { saveCustomer } from "../models/customer.server";
 // import { sendEmail } from "../utils/mail.server";
 // import { hasCustomerOrderedBefore } from "../models/order.server";
-import { saveCustomer } from "../models/customer.server";
 
+
+// Frontend.
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
   console.log('🔄 Starting to fetch orders...');
@@ -76,7 +79,7 @@ export const loader = async ({ request }) => {
   const hasNextPage = orderJson.data.orders.pageInfo.hasNextPage;
   const totalOrders = orders.length;
   
-  // Save each order to database
+  // Save order to database.
   let savedCount = 0;
   let skippedCount = 0;
   let customersSaved = 0;
@@ -84,30 +87,15 @@ export const loader = async ({ request }) => {
   
   for (const order of orders) {
     try {
-      // Convert Shopify order to our database format
       const numericId = order.id.split('/').pop();
       
-      console.log('🔄 Processing order:', {
-        orderId: numericId,
-        originalId: order.id,
-        hasCustomer: !!order.customer,
-        customerKeys: Object.keys(order.customer || {}),
-        customerEmail: order.customer?.email
-      });
-
-      // ✅ SAVE CUSTOMER FIRST (if exists)
+      // Save customer.
       let savedCustomer = null;
       if (order.customer && order.customer.id) {
         try {
           const customerShopifyId = order.customer.id.split('/').pop();
-          
-          console.log('👤 Processing customer:', {
-            customerId: customerShopifyId,
-            email: order.customer.email,
-            name: `${order.customer.firstName || ''} ${order.customer.lastName || ''}`.trim()
-          });
 
-          // Prepare customer data
+          // Prepare customer data.
           const customerData = {
             shopifyId: customerShopifyId,
             firstName: order.customer.firstName,
@@ -115,13 +103,7 @@ export const loader = async ({ request }) => {
             email: order.customer.email,
           };
 
-          console.log('💾 Attempting to save customer:', customerShopifyId);
           savedCustomer = await saveCustomer(customerData);
-          console.log('✅ Customer saved successfully:', {
-            id: savedCustomer.id,
-            shopifyId: savedCustomer.shopifyId,
-            email: savedCustomer.email
-          });
           customersSaved++;
         } catch (customerError) {
           console.error('❌ Failed to save customer:', {
@@ -135,7 +117,7 @@ export const loader = async ({ request }) => {
         console.log('⚠️ Order has no customer data:', numericId);
       }
 
-      // Prepare line items data with proper structure
+      // Line items data.
       const lineItems = {
         edges: order.lineItems.edges.map((edge) => ({
           node: {
@@ -159,12 +141,12 @@ export const loader = async ({ request }) => {
         }))
       };
 
-      // Create order data matching ShopifyOrder interface
+      // Order data.
       const orderData = {
         id: numericId,
         shopifyOrderId: numericId,
         customer: order.customer,
-        customerId: savedCustomer?.id || null, // Link to saved customer
+        customerId: savedCustomer?.id || null,
         displayFinancialStatus: order.displayFinancialStatus,
         displayFulfillmentStatus: order.displayFulfillmentStatus,
         totalPriceSet: order.totalPriceSet,
@@ -172,118 +154,15 @@ export const loader = async ({ request }) => {
         lineItems: lineItems
       };
 
-      console.log('📦 Prepared order data:', {
-        orderId: numericId,
-        customerId: savedCustomer?.id,
-        customerEmail: order.customer?.email,
-        status: order.displayFinancialStatus,
-        lineItems: lineItems.edges.length
-      });
-
       try {
         console.log('💾 Attempting to save order:', numericId);
         const savedOrder = await saveOrder(orderData);
-        console.log('✅ Order saved successfully:', {
-          id: savedOrder.id,
-          shopifyOrderId: savedOrder.shopifyOrderId,
-          customerId: savedOrder.customerId,
-          status: savedOrder.status
-        });
 
-        // ✅ Find Voucher by shopifyOrderId - Fixed to use numericId
         const voucher = await prisma.voucher.findFirst({
           where: {
-            shopifyOrderId: numericId, // Use numericId instead of full GraphQL ID
+            shopifyOrderId: numericId,
           },
         });
-
-        // ✅ Send Email (keeping your original logic but with better error handling)
-        // if (order.customer.email && voucher) {
-        //   try {
-        //     await sendEmail({
-        //       // to: "sarimslayerali786@gmail.com",
-        //       to: order.customer.email,
-        //       subject: `🎟️ Your Voucher Code for Order ${order.name}`,
-        //       text: `Hello ${order.customer.firstName},\n\nThank you for your order ${order.name}.\nHere is your voucher code: ${voucher.code}`,
-        //       html: `
-        //         <p>Hello <strong>${order.customer.firstName}</strong>,</p>
-        //         <p>Thank you for your order <strong>${order.name}</strong>.</p>
-        //         <p>🎁 Here is your voucher code: <strong style="font-size: 18px;">${voucher.code}</strong></p>
-        //       `,
-        //     });
-        //     console.log('📧 Voucher email sent to customer for order:', order.name);
-        //   } catch (emailErr) {
-        //     console.error('❌ Failed to send voucher email:', emailErr.message);
-        //     console.error('Full email error:', emailErr);
-        //   }
-        // } else {
-        //   console.log('⚠️ No email or voucher found for customer/order:', {
-        //     orderId: numericId,
-        //     hasCustomerEmail: !!order.customer?.email,
-        //     hasVoucher: !!voucher,
-        //     voucherCode: voucher?.code
-        //   });
-        // }
-
-// Move this function to top-level scope, outside of loader
-// async function hasCustomerOrderedBefore(customerEmail) {
-//   const existingOrders = await prisma.order.findMany({
-//     where: {
-//       customerEmail: customerEmail,
-//     },
-//   });
-//   return existingOrders.length > 1; // More than one means this isn't their first order
-// }
-
-//         const previousOrders = await asCustomerOrderedBefore(order.customer.id); // You must implement this
-
-// if (order.customer.email && voucher) {
-//   const isNewCustomer = previousOrders.length === 0; // 🔥 New customer check
-
-//   if (isNewCustomer) {
-//     try {
-//       await sendEmail({
-//         to: order.customer.email,
-//         subject: `🎟️ Your Voucher Code for Order ${order.name}`,
-//         text: `Hello ${order.customer.firstName},\n\nThank you for your order ${order.name}.\nHere is your voucher code: ${voucher.code}`,
-//         html: `
-//           <p>Hello <strong>${order.customer.firstName}</strong>,</p>
-//           <p>Thank you for your order <strong>${order.name}</strong>.</p>
-//           <p>🎁 Here is your voucher code: <strong style="font-size: 18px;">${voucher.code}</strong></p>
-//         `,
-//       });
-//       console.log('📧 Voucher email sent to NEW customer for order:', order.name);
-//     } catch (emailErr) {
-//       console.error('❌ Failed to send voucher email:', emailErr.message);
-//     }
-//   } else {
-//     console.log('⚠️ Existing customer – no email sent for order:', order.name);
-//   }
-// }
-
-// if (order.customer?.email && voucher) {
-//   const isReturningCustomer = await hasCustomerOrderedBefore(order.customer.email);
-
-//   if (!isReturningCustomer) {
-//     try {
-//       await sendEmail({
-//         to: order.customer.email,
-//         subject: `🎟️ Your Voucher Code for Order ${order.name}`,
-//         text: `Hello ${order.customer.firstName},\n\nThank you for your order ${order.name}.\nHere is your voucher code: ${voucher.code}`,
-//         html: `
-//           <p>Hello <strong>${order.customer.firstName}</strong>,</p>
-//           <p>Thank you for your order <strong>${order.name}</strong>.</p>
-//           <p>🎁 Here is your voucher code: <strong style="font-size: 18px;">${voucher.code}</strong></p>
-//         `,
-//       });
-//       console.log('📧 Voucher email sent to NEW customer for order:', order.name);
-//     } catch (err) {
-//       console.error("❌ Failed to send email:", err.message);
-//     }
-//   } else {
-//     console.log("⚠️ Existing customer – no email sent for order:", order.name);
-//   }
-// }
 
         savedCount++;
       } catch (error) {
@@ -306,7 +185,7 @@ export const loader = async ({ request }) => {
   console.log(`💾 Orders saved: ${savedCount}, skipped: ${skippedCount}`);
   console.log(`👤 Customers saved: ${customersSaved}, skipped: ${customersSkipped}`);
   
-  // Fetch any existing vouchers for these orders
+  // Fetch any existing vouchers for these orders.
   const orderIdsList = orders.map(o => o.name.split('/').pop() || o.name);
   const { getVouchersByOrderIds } = await import('../models/voucher.server');
   const vouchers = await getVouchersByOrderIds(orderIdsList);
@@ -339,7 +218,7 @@ export default function OrdersPage() {
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [lastUpdate, setLastUpdate] = useState(null);
 
-  // SSE connection for real-time updates
+  // SSE connection for real-time updates.
   useEffect(() => {
     const eventSource = new EventSource('/webhook-stream');
     
@@ -361,10 +240,10 @@ export default function OrdersPage() {
               case 'ORDERS_CREATE':
               case 'ORDERS_EDITED':
               case 'ORDERS_PAID':
-                // Transform webhook payload to match GraphQL structure
+                // Transform webhook payload to match GraphQL structure.
                 const updatedOrder = transformWebhookToOrder(data.payload);
                 
-                // Update existing order or add new one
+                // Update existing order or add new one.
                 const existingIndex = currentOrders.findIndex(o => o.id === updatedOrder.id);
                 if (existingIndex >= 0) {
                   const updated = [...currentOrders];
@@ -397,7 +276,7 @@ export default function OrdersPage() {
     };
   }, []);
 
-  // Transform webhook payload to match orders GraphQL structure
+  // Transform webhook payload to match orders GraphQL structure.
   const transformWebhookToOrder = (webhookPayload) => {
     return {
       id: webhookPayload.id,
