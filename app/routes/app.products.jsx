@@ -8,7 +8,7 @@ export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
   const response = await admin.graphql(`
     query {
-      products(first: 30) {
+      products(first: 250) {
         edges {
           node {
             id
@@ -16,7 +16,7 @@ export const loader = async ({ request }) => {
             description
             vendor
             status
-            media(first: 30) {
+            media(first: 250) {
               edges {
                 node {
                   __typename
@@ -57,6 +57,14 @@ export default function ProductsPage() {
   const [products, setProducts] = useState(initialProducts);
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [lastUpdate, setLastUpdate] = useState(null);
+  const [sortedProducts, setSortedProducts] = useState(initialProducts);
+  const [sortIndex, setSortIndex] = useState(null);
+  const [sortDirection, setSortDirection] = useState('ascending');
+
+  // Update sorted products.
+  useEffect(() => {
+    setSortedProducts(products);
+  }, [products]);
 
   // SSE connection for real-time updates
   useEffect(() => {
@@ -145,9 +153,66 @@ export default function ProductsPage() {
     return null;
   };
 
-  const productRows = products.map(product => {
-  const image = getProductImage(product);
-  let productType = "—";
+  // Handle sort.
+  const handleSort = (index) => {
+    const newDirection = sortIndex === index && sortDirection === 'ascending' ? 'descending' : 'ascending';
+    setSortIndex(index);
+    setSortDirection(newDirection);
+
+    const sorted = [...sortedProducts].sort((a, b) => {
+      let aValue, bValue;
+
+      switch (index) {
+        case 0: // Title
+          aValue = a.title.toLowerCase();
+          bValue = b.title.toLowerCase();
+          break;
+        case 2: // Status
+          aValue = a.status === "ACTIVE" ? 1 : 0;
+          bValue = b.status === "ACTIVE" ? 1 : 0;
+          break;
+        case 3: // Inventory
+          aValue = a.totalInventory || 0;
+          bValue = b.totalInventory || 0;
+          break;
+        case 4: // Category
+          aValue = (a.category?.name || "Uncategorized").toLowerCase();
+          bValue = (b.category?.name || "Uncategorized").toLowerCase();
+          break;
+        case 5: // Type
+          const getProductTypeValue = (product) => {
+            if (!product.productType?.value) return "—";
+            const value = product.productType.value.replace(/[\[\]"]/g, '');
+            if (value === "voucher") return "Voucher";
+            else if (value === "gift") return "Gift";
+            return value;
+          };
+          aValue = getProductTypeValue(a).toLowerCase();
+          bValue = getProductTypeValue(b).toLowerCase();
+          break;
+        case 6: // Expiry Date
+          const getExpiryValue = (product) => {
+            if (!product.expiryDate?.value) return new Date('1900-01-01');
+            return new Date(product.expiryDate.value);
+          };
+          aValue = getExpiryValue(a);
+          bValue = getExpiryValue(b);
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return newDirection === 'ascending' ? -1 : 1;
+      if (aValue > bValue) return newDirection === 'ascending' ? 1 : -1;
+      return 0;
+    });
+
+    setSortedProducts(sorted);
+  };
+
+  const productRows = sortedProducts.map(product => {
+    const image = getProductImage(product);
+    let productType = "—";
     if (product.productType?.value) {
       const value = product.productType.value.replace(/[\[\]"]/g, '');
     if (value === "voucher") productType = "Voucher";
@@ -214,6 +279,10 @@ export default function ProductsPage() {
               columnContentTypes={['text', 'text', 'text', 'text', 'text', 'text', 'text']}
               headings={productTableHeaders}
               rows={productRows}
+              sortable={[true, false, true, true, true, true, true]}
+              defaultSortDirection="ascending"
+              initialSortColumnIndex={sortIndex}
+              onSort={handleSort}
             />
           ) : (
             <Text variant="bodyMd" as="p">No products found.</Text>
