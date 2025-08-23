@@ -3,7 +3,7 @@
 
 # The version of APIs your extension will receive. Learn more:
 # https://shopify.dev/docs/api/usage/versioning
-api_version = "2025-07"
+api_version = "2025-04"
 
 [[extensions]]
 name = "customer-account-ui"
@@ -18,6 +18,10 @@ type = "ui_extension"
 [[extensions.targeting]]
 module = "./src/OrderStatusBlock.jsx"
 target = "customer-account.order-status.block.render"
+
+[[extensions.targeting]]
+module = "./src/OrderStatusBlock.jsx"
+target = "customer-account.order.action.render"
 
 [extensions.capabilities]
 # Gives your extension access to directly query Shopify’s storefront API.
