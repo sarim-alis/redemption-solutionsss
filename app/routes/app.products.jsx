@@ -211,7 +211,7 @@ export default function ProductsPage() {
           </div>
           {products.length > 0 ? (
             <DataTable
-              columnContentTypes={['text', 'text', 'text', 'numeric', 'text', 'text', 'text']}
+              columnContentTypes={['text', 'text', 'text', 'text', 'text', 'text', 'text']}
               headings={productTableHeaders}
               rows={productRows}
             />
