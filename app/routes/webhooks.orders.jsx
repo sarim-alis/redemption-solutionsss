@@ -132,7 +132,7 @@ async function transformOrderPayload(payload, session = null) {
   // Fetch metafields if session is available and we have product IDs
   let metafieldsMap = {};
   if (session && productIds.length > 0) {
-    metafieldsMap = await fetchProductMetafields(session, productIds);
+    metafieldsMap = await fetchProductMetafields(session.shop, session, productIds);
   }
 
   return {
@@ -183,42 +183,41 @@ async function transformOrderPayload(payload, session = null) {
   };
 }
 
-// Helper function to fetch product metafields
-async function fetchProductMetafields(session, productIds) {
+// Helper function to fetch product metafields using REST API
+async function fetchProductMetafields(shop, session, productIds) {
   if (!productIds || productIds.length === 0) return {};
   
   try {
-    const { admin } = session;
-    const productIdsQuery = productIds.map(id => `"gid://shopify/Product/${id}"`).join(' OR ');
-    
-    const response = await admin.graphql(`
-      query {
-        products(first: 250, query: "id:(${productIdsQuery})") {
-          edges {
-            node {
-              id
-              metafield_type: metafield(namespace: "custom", key: "product_type") {
-                value
-              }
-              metafield_expiry: metafield(namespace: "custom", key: "expiry_date") {
-                value
-              }
-            }
-          }
-        }
-      }
-    `);
-    
-    const result = await response.json();
     const metafieldsMap = {};
     
-    result.data?.products?.edges?.forEach(edge => {
-      const productId = edge.node.id.split('/').pop();
-      metafieldsMap[productId] = {
-        type: edge.node.metafield_type?.value || null,
-        expire: edge.node.metafield_expiry?.value || null
-      };
-    });
+    // Fetch metafields for each product using REST API
+    for (const productId of productIds) {
+      try {
+        const url = `https://${shop}/admin/api/2023-10/products/${productId}/metafields.json`;
+        const response = await fetch(url, {
+          headers: {
+            'X-Shopify-Access-Token': session.accessToken,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const metafields = data.metafields || [];
+          
+          metafieldsMap[productId] = {
+            type: metafields.find(m => m.namespace === 'custom' && m.key === 'product_type')?.value || null,
+            expire: metafields.find(m => m.namespace === 'custom' && m.key === 'expiry_date')?.value || null
+          };
+        } else {
+          console.log(`⚠️ Failed to fetch metafields for product ${productId}: ${response.status}`);
+          metafieldsMap[productId] = { type: null, expire: null };
+        }
+      } catch (productError) {
+        console.error(`❌ Error fetching metafields for product ${productId}:`, productError.message);
+        metafieldsMap[productId] = { type: null, expire: null };
+      }
+    }
     
     console.log(`📋 Fetched metafields for ${Object.keys(metafieldsMap).length} products`);
     return metafieldsMap;
@@ -256,7 +255,7 @@ async function saveOrderToDatabase(payload, action, session = null) {
     // Fetch metafields if session is available and we have product IDs
     let metafieldsMap = {};
     if (session && productIds.length > 0) {
-      metafieldsMap = await fetchProductMetafields(session, productIds);
+      metafieldsMap = await fetchProductMetafields(session.shop, session, productIds);
     }
 
     // Prepare line items data with metafields
