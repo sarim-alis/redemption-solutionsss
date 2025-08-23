@@ -34,28 +34,43 @@ function VoucherDisplay() {
 
       // Get customer email from the order
       const customerEmail = order?.customer?.email;
+      console.log('🔍 Customer Email:', customerEmail);
+      console.log('🔍 Order Object:', order);
+      
       if (!customerEmail) {
+        console.log('❌ No customer email found');
         setLoading(false);
         return;
       }
 
       // Fetch vouchers from your app's API using customer email
-      const response = await fetch(`/api/customer/vouchers?customerEmail=${encodeURIComponent(customerEmail)}`, {
+      const appUrl = 'https://redemption-solution-e005aa12f842.herokuapp.com';
+      const apiUrl = `${appUrl}/api/customer/vouchers?customerEmail=${encodeURIComponent(customerEmail)}`;
+      console.log('🌐 Fetching from:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response ok:', response.ok);
+
       if (!response.ok) {
-        throw new Error(`Failed to fetch vouchers: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ API Error:', errorText);
+        throw new Error(`Failed to fetch vouchers: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('✅ Vouchers data:', data);
+      
       setVouchers(data.vouchers || []);
     } catch (err) {
-      console.error('Error fetching vouchers:', err);
-      setError('Failed to load vouchers');
+      console.error('❌ Error fetching vouchers:', err);
+      setError(`Failed to load vouchers: ${err.message}`);
     } finally {
       setLoading(false);
     }

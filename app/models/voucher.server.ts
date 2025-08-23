@@ -43,3 +43,11 @@ export async function getVoucherByCode(code: string) {
 export async function getVouchersByOrderIds(orderIds: string[]) {
   return prisma.voucher.findMany({ where: { shopifyOrderId: { in: orderIds } } });
 }
+
+// Fetch vouchers by customer email
+export async function getVouchersByCustomerEmail(customerEmail: string) {
+  return prisma.voucher.findMany({ 
+    where: { customerEmail },
+    orderBy: { createdAt: "desc" }
+  });
+}
