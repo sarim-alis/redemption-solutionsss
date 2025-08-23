@@ -215,9 +215,7 @@ function generateVoucherEmailHTML(voucher) {
           </div>
         </div>
 
-      
-
-
+    
         <table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" style="font-family:Arial, sans-serif; background-color:#f9f9f9; padding:20px 0;">
           <tr>
             <td align="center">
