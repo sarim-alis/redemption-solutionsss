@@ -38,7 +38,7 @@ export default function GiftPage() {
           <div style={{display: "flex", flexDirection: "column", marginTop: "15px", marginBottom: "15px" }}>
             <input type="email" name="email" placeholder="Enter your email" required style={{ padding: "10px", border: "1px solid #ccc", borderRadius: "6px", marginRight: "10px", marginTop: "6px"}} /><br></br>
             <button type="submit" style={{ padding: "10px 20px", border: "none", borderRadius: "8px", backgroundColor: "#3182ce", color: "white", fontWeight: "bold", cursor: "pointer"}}>
-              Send Gift 🎁
+              Send Gift
             </button>
           </div>
         </Form>
