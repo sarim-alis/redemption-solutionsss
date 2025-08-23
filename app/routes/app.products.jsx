@@ -146,15 +146,20 @@ export default function ProductsPage() {
   };
 
   const productRows = products.map(product => {
-    const image = getProductImage(product);
-    let productType = "—";
+  const image = getProductImage(product);
+  let productType = "—";
     if (product.productType?.value) {
       const value = product.productType.value.replace(/[\[\]"]/g, '');
     if (value === "voucher") productType = "Voucher";
       else if (value === "gift") productType = "Gift";
     else productType = value;
     }
-    const expiryDate = product.expiryDate?.value || "—";
+  let expiryDate = "—";
+    if (product.expiryDate?.value) {
+      const date = new Date(product.expiryDate.value);
+    expiryDate = date.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit",});
+  }
+
 
   return [
       product.title,
