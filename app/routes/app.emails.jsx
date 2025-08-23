@@ -7,6 +7,8 @@ import { saveOrder } from "../models/order.server";
 import prisma from "../db.server";
 import { sendEmail } from "../utils/mail.server";
 import { hasCustomerOrderedBefore } from "../models/order.server";
+// Server-only imports moved inside loader
+// import { generateVoucherEmailHTML } from "../utils/voucherEmailTemplate";
 
 
 // Format date.
@@ -37,75 +39,303 @@ function formatCustomerName(email) {
 function generateVoucherEmailHTML(voucher) {
   const validThrough = voucher?.createdAt
     ? formatDate(addMonths(voucher.createdAt, 3))
-    : "N/A";
+    : "08/16/2026";
   const issuedOn = voucher?.createdAt
     ? formatDate(voucher.createdAt)
-    : "N/A";
+    : "03/16/2025";
   const name = formatCustomerName(voucher.customerEmail);
 
   return `
-    <div style="max-width:600px;margin:20px auto;font-family:Arial,sans-serif;margin-bottom:40px;">
-      <div style="border:2px solid #4a5568;background:#f7fafc;padding:40px 30px;border-radius:0 8px 8px 8px;text-align:left;margin-bottom:20px;">
-        <p style="font-size:18px;font-weight:500;margin-bottom:15px;">Hey ${name},</p>
-        <p style="font-size:18px;font-weight:500;margin-bottom:15px;">Thank you for your purchase of the Oil Change Vouchers/ Gift Cards. Use the Vouchers below to redeem at participating locations. See below for terms and details.</p>
-      </div>
-
-      <div style="border:2px solid #4a5568;background:#f7fafc;padding:40px 30px;border-radius:0 8px 8px 8px;text-align:center;margin-bottom:20px;">
-        <h1 style="font-size:28px;font-weight:bold;color:#2d3748;margin-bottom:16px;letter-spacing:0.5px;">Jiffy Lube Oil Change Voucher</h1>
-        <p style="font-size:16px;color:#718096;margin-bottom:40px;line-height:1.5;">
-          Present this at participating locations<br />to redeem.
-        </p>
-        <div style="width: 100%; display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #e2e8f0;">
-          <span style="font-size:16px;color:#4299e1;font-weight:500;">Valid through:</span>
-          <span style="font-size:16px;color:#4299e1;font-weight:500;">${validThrough}</span>
-        </div>
-        <div style="width: 100%; display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #e2e8f0;">
-          <span style="font-size:16px;color:#4299e1;font-weight:500;">Issued on:</span>
-          <span style="font-size:16px;color:#4299e1;font-weight:500;">${issuedOn}</span>
-        </div>
-        <div style="width: 100%; display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #e2e8f0;">
-          <span style="font-size:16px;color:#4299e1;font-weight:500;">Used on:</span>
-          <span style="font-size:16px;color:#4299e1;font-weight:500;">---</span>
-        </div>
-        <div style="width: 100%; border:3px solid #2d3748;border-radius:8px;padding:20px;margin:30px 0;background:#edf2f7;display:flex;justify-content:space-around;">
-          <div style="font-size:24px;color:#2d3748;font-weight:600;margin-bottom:8px;">Voucher Code</div>
-          <div style="font-size:24px;font-weight:bold;color:#2d3748;letter-spacing:2px;">${voucher.code}</div>
-        </div>
-        <div style="font-size:14px;color:#4299e1;line-height:1.4;text-align:left;margin-top:20px;">
-          * Must be used at participating locations<br />
-          ** Term 2<br />
-          *** Term 3
-        </div>
-      </div>
-
-      <div style="border:2px solid #4a5568;background:#f7fafc;padding:40px 30px;border-radius:0 8px 8px 8px;text-align:left;margin-bottom:20px;">
-        <p style="font-size:18px;font-weight:500;margin-bottom:15px;">Terms and Conditions</p>
-        <p style="font-size:18px;font-weight:500;margin-bottom:15px;">Details of Terms. Locations available to redeem. How to redeem.</p>
-      </div>
-
-      <div style="padding:40px;border-radius:8px;max-width:480px;margin:0 auto;font-family:Arial,sans-serif;">
-        <div style="background:#fff;border:2px solid black;border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:32px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <img src="/logo.svg" alt="Logo" style="width:40px;height:40px;" />
-            <span style="font-weight:500;color:#2d3748;font-size:16px;">${voucher.code}</span>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Jiffy Lube Voucher</title>
+      <style>
+        body { 
+          margin: 0; 
+          padding: 0; 
+          font-family: Arial, sans-serif; 
+          background-color: #f5f5f5;
+        }
+        .email-container {
+          max-width: 600px;
+          margin: 0 auto;
+          background-color: #ffffff;
+        }
+        .header {
+          background-color: #862633;
+          padding: 20px;
+          text-align: center;
+        }
+        .logo {
+          color: white;
+          font-size: 24px;
+          font-weight: bold;
+        }
+        .logo-circle {
+          display: inline-block;
+          width: 30px;
+          height: 30px;
+          background-color: white;
+          color: #862633;
+          border-radius: 50%;
+          text-align: center;
+          line-height: 30px;
+          font-weight: bold;
+          margin-right: 10px;
+        }
+        .main-content {
+          padding: 40px 30px;
+          background-color: white;
+        }
+        .thank-you {
+          color: #862633;
+          font-size: 28px;
+          font-weight: bold;
+          text-align: center;
+          margin-bottom: 20px;
+        }
+        .subtitle {
+          color: #333333;
+          font-size: 18px;
+          text-align: center;
+          margin-bottom: 30px;
+        }
+        .instructions {
+          color: #666666;
+          font-size: 16px;
+          text-align: center;
+          margin-bottom: 40px;
+          line-height: 1.5;
+        }
+        .voucher-container {
+          background-color: #862633;
+          border: 2px dashed white;
+          border-radius: 8px;
+          padding: 30px;
+          margin: 30px 0;
+          text-align: center;
+          position: relative;
+        }
+        .voucher-title {
+          color: white;
+          font-size: 22px;
+          font-weight: bold;
+          margin-bottom: 20px;
+        }
+        .voucher-subtitle {
+          color: white;
+          font-size: 16px;
+          margin-bottom: 30px;
+        }
+        .voucher-details {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 30px;
+          color: white;
+          font-size: 16px;
+        }
+        .voucher-detail {
+          text-align: center;
+        }
+        .voucher-detail-label {
+          font-size: 14px;
+          opacity: 0.9;
+        }
+        .voucher-detail-value {
+          font-weight: bold;
+          font-size: 18px;
+        }
+        .voucher-code-container {
+          background-color: white;
+          border-radius: 8px;
+          padding: 20px;
+          margin: 30px 0;
+          display: inline-block;
+          min-width: 300px;
+        }
+        .voucher-code-label {
+          color: #333333;
+          font-size: 16px;
+          margin-bottom: 10px;
+        }
+        .voucher-code {
+          color: #333333;
+          font-size: 28px;
+          font-weight: bold;
+          letter-spacing: 2px;
+        }
+        .terms {
+          color: white;
+          font-size: 14px;
+          text-align: left;
+          margin-top: 20px;
+          line-height: 1.4;
+        }
+        .small-logo {
+          position: absolute;
+          bottom: 15px;
+          right: 15px;
+          color: white;
+          font-size: 16px;
+          font-weight: bold;
+        }
+        .footer {
+          background-color: #f8f8f8;
+          padding: 30px;
+          text-align: center;
+          border-top: 1px solid #e0e0e0;
+        }
+        .footer-logo {
+          color: #862633;
+          font-size: 20px;
+          font-weight: bold;
+          margin-bottom: 15px;
+        }
+        .disclaimer {
+          color: #666666;
+          font-size: 12px;
+          line-height: 1.4;
+          max-width: 500px;
+          margin: 0 auto;
+        }
+        @media only screen and (max-width: 600px) {
+          .main-content { padding: 20px 15px; }
+          .voucher-container { padding: 20px; }
+          .voucher-details { flex-direction: column; gap: 15px; }
+          .voucher-code { font-size: 24px; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+          <div class="logo">
+            <span class="logo-circle">J</span>
+            jiffy lube
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:18px;color:#2d3748;font-weight:500;">Balance:</span>
-            <span style="font-size:28px;color:#2d3748;font-weight:700;">$50.00</span>
+        </div>
+
+      
+
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" style="font-family:Arial, sans-serif; background-color:#f9f9f9; padding:20px 0;">
+          <tr>
+            <td align="center">
+              <table width="600" cellpadding="0" cellspacing="0" border="0" style="border:2px solid #4A5568; background:#862633; padding:30px; border-radius:0 8px 8px 8px;">
+                <tr>
+                  <td align="center" style="padding-bottom:20px;">
+                    <h1 style="font-size:32px; font-weight:bold; color:#ffffff; margin:0;">Oil Change Voucher</h1>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-bottom:30px;">
+                    <p style="font-size:18px; color:#ffffff; margin:0; line-height:1.6;">
+                      Present this at participating locations to redeem.
+                    </p>
+                  </td>
+                </tr>
+                <!-- Valid through -->
+                <tr>
+                  <td style="border-bottom:1px solid #E2E8F0; padding:20px 0;">
+                    <table width="100%">
+                      <tr>
+                        <td align="left" style="font-size:20px; color:#ffffff; font-weight:500;">Valid through:</td>
+                        <td align="right" style="font-size:20px; color:#ffffff; font-weight:500;">${validThrough}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <!-- Issued on -->
+                <tr>
+                  <td style="border-bottom:1px solid #E2E8F0; padding:20px 0;">
+                    <table width="100%">
+                      <tr>
+                        <td align="left" style="font-size:20px; color:#ffffff; font-weight:500;">Issued on:</td>
+                        <td align="right" style="font-size:20px; color:#ffffff; font-weight:500;">${issuedOn}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <!-- Used on -->
+                <tr>
+                  <td style="border-bottom:1px solid #E2E8F0; padding:20px 0;">
+                    <table width="100%">
+                      <tr>
+                        <td align="left" style="font-size:20px; color:#ffffff; font-weight:500;">Used on:</td>
+                        <td align="right" style="font-size:20px; color:#ffffff; font-weight:500;">— — —</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+      <!-- Voucher Code -->
+      <tr>
+      <td height="30" style="line-height:30px; font-size:0;">&nbsp;</td>
+      </tr>
+      <tr>
+        <td align="center" style="background:#edf2f7; border-radius:12px; padding:20px; margin:30px 0;">
+          <table width="100%">
+            <tr>
+              <td align="left" style="font-size:24px; color:#862633; font-weight:bold; padding-right:10px;">
+                Voucher Code:
+              </td>
+              <td align="right" style="font-size:32px; font-weight:bold; color:#000000; letter-spacing:2px;">
+                ${voucher.code}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+                <!-- Terms -->
+                <tr>
+                  <td style="font-size:16px; color:#ffffff; line-height:1.8; text-align:left; padding-top:20px;">
+                    *Only valid at participating ACE Jiffy Lube Locations. <br />
+                    ** Term 2 <br />
+                    <table width="100%" style="margin-top:10px;">
+                      <tr>
+                        <td style="font-size:16px; color:#ffffff;">*** Term 3</td>
+                        <td align="right">
+                          <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1755837350/lxkizea7xfe7omtekg5r.png" width="60" height="60" style="display:block;" />
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+  </table>
+
+        <!-- Footer -->
+        <div class="footer">
+          <div class="footer-logo">
+            <span style="background: #862633; color: white; padding: 5px 8px; border-radius: 50%; margin-right: 10px;">J</span>
+            jiffy lube
+          </div>
+          <div class="disclaimer">
+            *Valid for up to 5 quarts of oil, extra fee for additional quarts. Not valid with any other offer for same service. Only valid at participating ACE Jiffy Lube locations. Shop supply fees and applicable taxes are not included and must be paid at time of service.
           </div>
         </div>
       </div>
-    </div>
+    </body>
+    </html>
   `;
 }
 
 
 // Loader.
 export const loader = async ({ request }) => {
+  // Server-only imports here
+  const { saveOrder, hasCustomerOrderedBefore } = await import("../models/order.server");
+  const prisma = (await import("../db.server")).default;
+  const { sendEmail } = await import("../utils/mail.server");
   const { admin } = await authenticate.admin(request);
   console.log('🔄 Starting to fetch orders...');
 
-  // Order data.
+  // Only fetch orders from Shopify, do not save or send emails here
   const orderResponse = await admin.graphql(`
     query {
       orders(first: 250, reverse: true) {
@@ -143,6 +373,9 @@ export const loader = async ({ request }) => {
                     product {
                       id
                       title
+                      metafield(namespace: "custom", key: "product_type") {
+                        value
+                      }
                     }
                   }
                 }
@@ -157,201 +390,4 @@ export const loader = async ({ request }) => {
       }
     }
   `);
-  const orderJson = await orderResponse.json();
-  const orders = orderJson.data.orders.edges.map((edge) => edge.node);
-  const hasNextPage = orderJson.data.orders.pageInfo.hasNextPage;
-  const totalOrders = orders.length;
-  
-  // Save each order to database
-  let savedCount = 0;
-  let skippedCount = 0;
-  
-  for (const order of orders) {
-    try {
-      // Convert Shopify order to our database format
-      const numericId = order.id.split('/').pop();
-      
-      console.log('🔄 Processing order:', {
-        orderId: numericId,
-        originalId: order.id,
-        hasCustomer: !!order.customer,
-        customerKeys: Object.keys(order.customer || {}),
-        customerEmail: order.customer?.email
-      });
-
-      // Prepare line items data with proper structure
-      const lineItems = {
-        edges: order.lineItems.edges.map((edge) => ({
-          node: {
-            title: edge.node.title,
-            quantity: edge.node.quantity,
-            originalUnitPriceSet: {
-              shopMoney: {
-                amount: edge.node.originalUnitPriceSet.shopMoney.amount,
-                currencyCode: edge.node.originalUnitPriceSet.shopMoney.currencyCode
-              }
-            },
-            variant: {
-              id: edge.node.variant?.id,
-              product: {
-                id: edge.node.variant?.product?.id
-              }
-            }
-          }
-        }))
-      };
-
-      // Create order data matching ShopifyOrder interface
-      const orderData = {
-        id: numericId,
-        shopifyOrderId: numericId,
-        customer: order.customer,
-        displayFinancialStatus: order.displayFinancialStatus,
-        displayFulfillmentStatus: order.displayFulfillmentStatus,
-        totalPriceSet: order.totalPriceSet,
-        processedAt: order.processedAt,
-        lineItems: lineItems
-      };
-
-      console.log('📦 Prepared order data:', {
-        orderId: numericId,
-        customerEmail: order.customer?.email,
-        status: order.displayFinancialStatus,
-        lineItems: lineItems.edges.length
-      });
-
-      let savedOrder;
-      try {
-        console.log('💾 Attempting to save order:', numericId);
-        const savedOrder = await saveOrder(orderData);
-        console.log('✅ Order saved successfully:', {
-          id: savedOrder.id,
-          shopifyOrderId: savedOrder.shopifyOrderId,
-          status: savedOrder.status
-        });
-
-        // Find Voucher by shopifyOrderId.
-        const voucher = await prisma.voucher.findFirst({
-          where: {
-            shopifyOrderId: numericId
-          },
-        });
-
-      if (order.customer.email && voucher) {
-        const isFirstOrder = await hasCustomerOrderedBefore(order.customer.email);
-
-      if (isFirstOrder && !voucher.emailSent) {
-        try {
-          await sendEmail({
-           to: order.customer.email,
-           subject: `Here are your Oil Change Vouchers! Where to Redeem... 🎟️`,
-           text: `Hello ${order.customer.firstName},\n\nThank you for your order ${order.name}.\nHere is your voucher code: ${voucher.code}`,
-           html: generateVoucherEmailHTML(voucher),
-        });
-
-
-        if (!voucher.emailSent) {
-        // Send email logic
-        await prisma.voucher.update({
-            where: { code },
-            data: { emailSent: true },
-        });
-        }
-      } catch (emailErr) {
-      console.error('❌ Failed to send voucher email:', emailErr.message);
-      console.error('Full email error:', emailErr);
-      }
-    }
-    }
-        savedCount++;
-      } catch (error) {
-        console.error('❌ Failed to save order:', {
-          orderId: numericId,
-          error: error.message
-        });
-        skippedCount++;
-        continue;
-      }
-
-      
-    } catch (error) {
-      console.error('❌ Error processing order:', {
-        name: order.name,
-        id: order.id,
-        error: error.message
-      });
-      skippedCount++;
-    }
-  }
-  
-  console.log(`💾 Orders saved: ${savedCount}, skipped: ${skippedCount}`);
-  
-  // Fetch any existing vouchers for these orders
-  const orderIdsList = orders.map(o => o.name.split('/').pop() || o.name);
-  const { getVouchersByOrderIds } = await import('../models/voucher.server');
-  const vouchers = await getVouchersByOrderIds(orderIdsList);
-  const voucherMap = vouchers.reduce((map, v) => ({ ...map, [v.shopifyOrderId]: v.code }), {});
-
-  return { orders, hasNextPage, totalOrders, savedCount, skippedCount, voucherMap };
 };
-
-
-// Frontend.
-export default function EmailsPage() {
-  const { orders, hasNextPage, totalOrders, savedCount, skippedCount, voucherMap } = useLoaderData();
-
-  return (
-    <SidebarLayout>
-      <Page fullWidth title={`Orders (${totalOrders} showing${hasNextPage ? ', more available' : ''})`}>
-        <BlockStack gap="400">
-          <Text variant="bodyMd" tone="success" alignment="center">
-            🔄 Orders are automatically saved to database via webhooks and when viewing this page
-          </Text>
-          {savedCount !== undefined && savedCount > 0 && (
-            <Text variant="bodyMd" tone="success" alignment="center">
-              💾 Just saved {savedCount} orders to database{skippedCount > 0 ? `, skipped ${skippedCount} existing` : ''}
-            </Text>
-          )}
-          {hasNextPage && (
-            <Text variant="bodyMd" tone="subdued" alignment="center">
-              Showing first 250 orders. Total orders may be more.
-            </Text>
-          )}
-          {orders.length > 0 ? (
-            <DataTable
-              columnContentTypes={[
-                "text","text","text","text","numeric","text","text","text","text","text"
-              ]}
-              headings={[
-                "Order ID","Customer","Email","Date","Price","Items","Payment Status","Fulfillment Status","Voucher","Download"
-              ]}
-              rows={orders.map((order) => {
-                const id = order.name;
-                const shopId = id.split('/').pop();
-                const code = voucherMap[shopId] || '—';
-                return [
-                 <Text variant="bodyMd" fontWeight="bold" tone="success">{order.name}</Text>,
-                 <Text variant="bodyMd" tone="emphasis">{`${order.customer?.firstName || "Guest"} ${order.customer?.lastName || ""}`}</Text>,
-                 <Text variant="bodyMd" tone="subdued">{order.customer?.email || '—'}</Text>,
-                 <Text variant="bodyMd">{new Date(order.processedAt).toLocaleString()}</Text>,
-                 <Text variant="bodyMd">{order.totalPriceSet.shopMoney.amount} {order.totalPriceSet.shopMoney.currencyCode}</Text>,
-                 <Text variant="bodyMd">{order.lineItems.edges.length}</Text>,
-                 <Badge status={order.displayFinancialStatus === 'PAID' ? 'success' : 'attention'}>{order.displayFinancialStatus}</Badge>,
-                 <Badge>{order.displayFulfillmentStatus}</Badge>,
-                <Text variant="bodyMd">{code}</Text>,
-                code !== '—'
-                  ? <Button url={`/vouchers/${shopId}/download`} external>Download PDF</Button>
-                  : <Text variant="bodyMd" as="span" tone="subdued">N/A</Text>
-              ];
-              })}
-            />
-          ) : (
-            <Text variant="bodyMd" as="p">
-              No orders found.
-            </Text>
-          )}
-        </BlockStack>
-      </Page>
-    </SidebarLayout>
-  );
-}

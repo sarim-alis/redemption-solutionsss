@@ -35,10 +35,9 @@ scopes = "read_products,read_assigned_fulfillment_orders,read_customers,read_dis
 
 [auth]
 redirect_urls = [
-  "https://redemption-solution-e005aa12f842.herokuapp.com/auth/callback",
-  "https://redemption-solution-e005aa12f842.herokuapp.com/auth/shopify/callback",
-  "https://redemption-solution-e005aa12f842.herokuapp.com/api/auth/callback"
-]
+  "https://redemption-solution-e005aa12f842.herokuapp.com/auth/callback", 
+"https://redemption-solution-e005aa12f842.herokuapp.com/auth/shopify/callback", 
+"https://redemption-solution-e005aa12f842.herokuapp.com/api/auth/callback"]
 
 [pos]
 embedded = false

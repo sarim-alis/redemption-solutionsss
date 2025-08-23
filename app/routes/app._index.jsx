@@ -364,8 +364,12 @@ export default function Index() {
       <div style={{ 
         margin: 0, 
         padding: 0, 
-        backgroundColor: "#666666",
-        minHeight: "100vh"
+        backgroundColor: "white",
+        color: "black",
+        minHeight: "100vh",
+        border: "2px solid black",
+        borderRadius: "10px"
+       
       }}>
         <DashboardOrderChart 
           paidOrders={paidOrders} 

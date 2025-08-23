@@ -198,30 +198,81 @@ export async function saveOrder(orderData: ShopifyOrder) {
     lineItems: JSON.parse(info.lineItems),
   };
 
-  // Skip creating if order already exists
+  // Check if order already exists
   const existing = await prisma.order.findUnique({ where: { shopifyOrderId: info.shopifyOrderId } });
   if (existing) {
-    console.log('⏭️ Order already exists, skipping:', info.shopifyOrderId);
-    return existing;
+    console.log('⏭️ Order already exists, updating:', info.shopifyOrderId);
+    
+    // Update the existing order
+    const updated = await prisma.order.update({
+      where: { shopifyOrderId: info.shopifyOrderId },
+      data: dbData
+    });
+    
+    // Check if voucher exists
+    let voucher = await prisma.voucher.findFirst({ where: { shopifyOrderId: info.shopifyOrderId } });
+    
+    // If order is now PAID and no voucher exists, create one
+    if (info.status === 'PAID' && !voucher) {
+      try {
+        voucher = await createVoucher({
+          shopifyOrderId: updated.shopifyOrderId,
+          customerEmail: updated.customerEmail || ''
+        });
+        console.log('🎟️ Voucher created for paid order:', voucher.code);
+      } catch (voucherError: any) {
+        console.error('❌ Failed to create voucher for paid order:', voucherError);
+      }
+    }
+    
+    return { order: updated, voucher };
   }
 
   try {
     const saved = await prisma.order.create({ data: dbData });
     console.log('✅ Order created in DB:', saved.shopifyOrderId);
-    // Create a voucher for this order
-    try {
-      const voucher = await createVoucher({
-        shopifyOrderId: saved.shopifyOrderId,
-        customerEmail: saved.customerEmail || ''
-      });
-      console.log('🎟️ Voucher created for order:', voucher.code);
-    } catch (voucherError: any) {
-      console.error('❌ Failed to create voucher:', voucherError);
-    }
-    return saved;
+    // Don't create voucher yet - wait for payment
+    console.log('⏳ Voucher will be created when order is paid');
+    return { order: saved, voucher: null };
   } catch (dbError: any) {
     console.error('❌ DB create failed:', dbError);
     throw new Error(`Failed to save order ${info.shopifyOrderId}: ${dbError.message}`);
+  }
+}
+
+// New function to update order status and handle voucher creation
+export async function updateOrderStatus(shopifyOrderId: string, newStatus: string) {
+  try {
+    console.log(`🔄 Updating order status: ${shopifyOrderId} to ${newStatus}`);
+    
+    const updated = await prisma.order.update({
+      where: { shopifyOrderId },
+      data: { status: newStatus }
+    });
+    
+    // If order is now PAID, check if voucher exists and create if needed
+    if (newStatus === 'PAID') {
+      let voucher = await prisma.voucher.findFirst({ where: { shopifyOrderId } });
+      
+      if (!voucher) {
+        try {
+          voucher = await createVoucher({
+            shopifyOrderId,
+            customerEmail: updated.customerEmail || ''
+          });
+          console.log('🎟️ Voucher created for paid order:', voucher.code);
+        } catch (voucherError: any) {
+          console.error('❌ Failed to create voucher for paid order:', voucherError);
+        }
+      }
+      
+      return { order: updated, voucher };
+    }
+    
+    return { order: updated, voucher: null };
+  } catch (error: any) {
+    console.error('❌ Failed to update order status:', error);
+    throw error;
   }
 }
 

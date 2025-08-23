@@ -6,7 +6,7 @@ const styles = {
       gap: '8rem',
       marginTop: '1rem',
       marginBottom: '1rem',
-      color: 'white',
+      color: 'black',
       paddingBottom: '20px',
   },
     form: {

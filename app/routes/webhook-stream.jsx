@@ -6,7 +6,7 @@ export const loader = async ({ request }) => {
   const stream = new ReadableStream({
     start(controller) {
       const clientId = Date.now();
-      
+
       const client = {
         id: clientId,
         controller,
@@ -32,8 +32,16 @@ export const loader = async ({ request }) => {
         timestamp: new Date().toISOString()
       });
 
+      // Heartbeat every 2 seconds to keep connection alive
+      const heartbeatInterval = setInterval(() => {
+        try {
+          controller.enqueue(new TextEncoder().encode(':heartbeat\n\n'));
+        } catch (e) {}
+      }, 2000);
+
       // Handle client disconnect
       request.signal.addEventListener('abort', () => {
+        clearInterval(heartbeatInterval);
         clients.delete(client);
         console.log(`📡 Client disconnected. Total clients: ${clients.size}`);
         controller.close();

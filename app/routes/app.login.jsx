@@ -32,7 +32,7 @@ const Login = () => {
 
   return (
     <SidebarLayout>
-    <div style={{ color: "white" }}>
+    <div style={{ color: "black" }}>
     <Page fullWidth title="Login 🔒⭐🌱">
          <div style={styles.container}>
           <form style={styles.form} onSubmit={handleSubmit}>

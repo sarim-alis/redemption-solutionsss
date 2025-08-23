@@ -22,20 +22,20 @@ const Customers = () => {
 
   return (
     <SidebarLayout>
-     <div style={{ color: "white" }}>
+     <div style={{ color: "black" }}>
       <Page fullWidth>
         {/* Header */}
         <Text variant="headingXl" as="h1">Customers 🙍🏻‍♂️⭐🌱</Text>
 
         {/* Customer List */}
         <div style={{ marginTop: "40px" }}>
-          <div style={{display: 'flex',justifyContent: 'flex-start',fontWeight: 'bold',paddingBottom: '12px',borderBottom: '2px solid white',gap: '450px',color: 'white'}}>
+          <div style={{display: 'flex',justifyContent: 'flex-start',fontWeight: 'bold',paddingBottom: '12px',borderBottom: '2px solid #333',gap: '450px',color: 'black'}}>
             <Text variant="headingMd" as="h2">Name</Text>
             <Text variant="headingMd" as="h2">Email</Text>
           </div>
 
           {customers.map(customer => (
-            <div key={customer.id} style={{display: 'flex',justifyContent: 'flex-start',alignItems: 'center',padding: '12px 0',gap: '310px',color: 'white'}}>
+            <div key={customer.id} style={{display: 'flex',justifyContent: 'flex-start',alignItems: 'center',padding: '12px 0',gap: '310px',color: 'black'}}>
               <span style={{ minWidth: "170px" }}>{customer.firstName} {customer.lastName}</span>
               <span style={{ minWidth: "170px" }}>{customer.email}</span>
             </div>

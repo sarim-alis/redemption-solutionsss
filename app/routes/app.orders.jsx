@@ -186,33 +186,26 @@ export const loader = async ({ request }) => {
   console.log(`👤 Customers saved: ${customersSaved}, skipped: ${customersSkipped}`);
   
   // Fetch any existing vouchers for these orders.
+  // Ab sirf orders fetch kar rahe hain, save karna webhook pe hota hai
   const orderIdsList = orders.map(o => o.name.split('/').pop() || o.name);
   const { getVouchersByOrderIds } = await import('../models/voucher.server');
   const vouchers = await getVouchersByOrderIds(orderIdsList);
   const voucherMap = vouchers.reduce((map, v) => ({ ...map, [v.shopifyOrderId]: v.code }), {});
 
-  return { 
-    orders, 
-    hasNextPage, 
-    totalOrders, 
-    savedCount, 
-    skippedCount, 
-    customersSaved, 
-    customersSkipped, 
-    voucherMap 
+  return {
+    orders,
+    hasNextPage,
+    totalOrders,
+    voucherMap
   };
 };
 
 export default function OrdersPage() {
-  const { 
-    orders: initialOrders, 
-    hasNextPage, 
-    totalOrders, 
-    savedCount, 
-    skippedCount, 
-    customersSaved, 
-    customersSkipped, 
-    voucherMap 
+  const {
+    orders: initialOrders,
+    hasNextPage,
+    totalOrders,
+    voucherMap
   } = useLoaderData();
   const [orders, setOrders] = useState(initialOrders);
   const [connectionStatus, setConnectionStatus] = useState('connecting');
@@ -313,24 +306,8 @@ export default function OrdersPage() {
               </Text>
             )}
           </div>
-          <Text variant="bodyMd" tone="success" alignment="center">
-            🔄 Orders and customers are automatically saved to database via webhooks and when viewing this page
-          </Text>
-          {savedCount !== undefined && savedCount > 0 && (
-            <Text variant="bodyMd" tone="success" alignment="center">
-              💾 Just saved {savedCount} orders to database{skippedCount > 0 ? `, skipped ${skippedCount} existing` : ''}
-            </Text>
-          )}
-          {customersSaved !== undefined && customersSaved > 0 && (
-            <Text variant="bodyMd" tone="success" alignment="center">
-              👤 Saved {customersSaved} customers{customersSkipped > 0 ? `, skipped ${customersSkipped} existing` : ''}
-            </Text>
-          )}
-          {hasNextPage && (
-            <Text variant="bodyMd" tone="subdued" alignment="center">
-              Showing first 250 orders. Total orders may be more.
-            </Text>
-          )}
+  
+          
           {orders.length > 0 ? (
             <DataTable
               columnContentTypes={[
