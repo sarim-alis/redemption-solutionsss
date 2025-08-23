@@ -147,7 +147,13 @@ export default function ProductsPage() {
 
   const productRows = products.map(product => {
     const image = getProductImage(product);
-    const productType = product.productType?.value || "—";
+    let productType = "—";
+    if (product.productType?.value) {
+      const value = product.productType.value.replace(/[\[\]"]/g, '');
+    if (value === "voucher") productType = "Voucher";
+      else if (value === "gift") productType = "Gift";
+    else productType = value;
+    }
     const expiryDate = product.expiryDate?.value || "—";
 
   return [
