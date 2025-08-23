@@ -1,47 +1,18 @@
-
-// import React from "react";
-// import { Doughnut } from "react-chartjs-2";
-// import { Chart, ArcElement, Tooltip, Legend, Title } from "chart.js";
-
-// Chart.register(ArcElement, Tooltip, Legend, Title);
-
-// export default function DashboardOrderChart({ paidOrders, unpaidOrders }) {
-//   const data = {
-//     labels: ["Paid Orders", "Unpaid Orders"],
-//     datasets: [
-//       {
-//         data: [paidOrders, unpaidOrders],
-//         backgroundColor: ["#36a2eb", "#ff6384"],
-//         borderWidth: 2,
-//       },
-//     ],
-//   };
-//   const options = {
-//     plugins: {
-//       legend: { display: true, position: "bottom" },
-//       title: { display: true, text: "Order Payment Status" },
-//     },
-//     cutout: "70%",
-//     responsive: true,
-//     maintainAspectRatio: false,
-//   };
-
 // Imports.
 import { useState } from "react"
-
-
-// Frontend.
 import { useLoaderData } from "@remix-run/react";
 
 
-export default function DashboardOrderChart({ paidOrders, unpaidOrders, analytics }) {
-  // Filters state
+// Frontend.
+export default function DashboardOrderChart({ analytics }) {
+  // Filters.
   const [filters, setFilters] = useState({
     date: "All",
     products: "All Products",
     locations: "All Locations",
   });
-  // Show reset button only if any filter is not default
+  
+  // Show reset button only if any filter is not default.
   const isFilterActive = filters.date !== "All" || filters.products !== "All Products" || filters.locations !== "All Locations";
 
   // Get dynamic product sales and voucher redemptions from loader
