@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLoaderData } from "@remix-run/react";
-import { Page, DataTable, Text, Thumbnail, Badge, BlockStack } from "@shopify/polaris";
+import { Page, DataTable, Text, Thumbnail, Badge, BlockStack, Modal } from "@shopify/polaris";
 import SidebarLayout from "../components/SidebarLayout";
 import { authenticate } from "../shopify.server";
 
@@ -60,6 +60,18 @@ export default function ProductsPage() {
   const [sortedProducts, setSortedProducts] = useState(initialProducts);
   const [sortIndex, setSortIndex] = useState(null);
   const [sortDirection, setSortDirection] = useState('ascending');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const handleImageClick = (image) => {
+    setSelectedImage(image);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedImage(null);
+  };
 
   // Update sorted products.
   useEffect(() => {
@@ -229,7 +241,9 @@ export default function ProductsPage() {
   return [
       product.title,
       image ? (
+      <button onClick={() => handleImageClick(image)} style={{ border: "none", background: "none", padding: 0, cursor: "pointer" }}>
         <Thumbnail source={image.url} alt={image.altText || product.title} size="small" />
+      </button>
       ) : (
         <Text variant="bodyMd" as="span" tone="subdued">No image</Text>
       ),
@@ -288,6 +302,15 @@ export default function ProductsPage() {
             <Text variant="bodyMd" as="p">No products found.</Text>
           )}
         </BlockStack>
+
+        {/* Image Modal */}
+        {selectedImage && (
+          <Modal open={isModalOpen} onClose={handleModalClose} title="Product Image" large>
+            <div style={{ textAlign: "center", padding: "20px" }}>
+              <img src={selectedImage.url} alt={selectedImage.altText || "Product image"} style={{ maxWidth: "100%", maxHeight: "70vh", borderRadius: "8px" }} />
+            </div>
+          </Modal>
+        )}
       </Page>
     </SidebarLayout>
   );
