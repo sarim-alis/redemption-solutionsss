@@ -208,7 +208,7 @@ useEffect(() => {
     >
       <span style={{minWidth: "120px"}}>{loc.name}</span>
       <Dropdown overlay={actionMenu(loc.id)} trigger={['click']} placement="bottomRight" arrow>
-        <MoreOutlined style={{ fontSize: 20, cursor: 'pointer' }} />
+        <MoreOutlined style={{ fontSize: 30, cursor: 'pointer' }} />
       </Dropdown>
     </div>
   ))}
