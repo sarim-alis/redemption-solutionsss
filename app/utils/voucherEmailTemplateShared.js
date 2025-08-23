@@ -212,41 +212,129 @@ export function generateVoucherEmailHTML(voucher) {
           </div>
 
           <!-- Voucher Section -->
-          <div class="voucher-container">
-            <div class="voucher-title">Jiffy Lube Synthetic Blend Oil Change Voucher</div>
-            <div class="voucher-subtitle">Present this at participating locations to redeem.</div>
+        //   <div class="voucher-container">
+        //     <div class="voucher-title">Jiffy Lube Synthetic Blend Oil Change Voucher</div>
+        //     <div class="voucher-subtitle">Present this at participating locations to redeem.</div>
             
-            <div class="voucher-details">
-              <div class="voucher-detail">
-                <div class="voucher-detail-label">Valid through:</div>
-                <div class="voucher-detail-value">${validThrough}</div>
-              </div>
-              <div class="voucher-detail">
-                <div class="voucher-detail-label">Issued on:</div>
-                <div class="voucher-detail-value">${issuedOn}</div>
-              </div>
-              <div class="voucher-detail">
-                <div class="voucher-detail-label">Used on:</div>
-                <div class="voucher-detail-value">---</div>
-              </div>
-            </div>
+        //     <div class="voucher-details">
+        //       <div class="voucher-detail">
+        //         <div class="voucher-detail-label">Valid through:</div>
+        //         <div class="voucher-detail-value">${validThrough}</div>
+        //       </div>
+        //       <div class="voucher-detail">
+        //         <div class="voucher-detail-label">Issued on:</div>
+        //         <div class="voucher-detail-value">${issuedOn}</div>
+        //       </div>
+        //       <div class="voucher-detail">
+        //         <div class="voucher-detail-label">Used on:</div>
+        //         <div class="voucher-detail-value">---</div>
+        //       </div>
+        //     </div>
 
-            <div class="voucher-code-container">
-              <div class="voucher-code-label">Voucher Code:</div>
-              <div class="voucher-code">${voucher.code}</div>
-            </div>
+        //     <div class="voucher-code-container">
+        //       <div class="voucher-code-label">Voucher Code:</div>
+        //       <div class="voucher-code">${voucher.code}</div>
+        //     </div>
 
-            <div class="terms">
-              *Only valid at participating ACE Jiffy Lube locations.<br>
-              **Term 2<br>
-              ***Term 3
-            </div>
+        //     <div class="terms">
+        //       *Only valid at participating ACE Jiffy Lube locations.<br>
+        //       **Term 2<br>
+        //       ***Term 3
+        //     </div>
 
-            <div class="small-logo">
-              <span style="background: white; color: #862633; padding: 5px 8px; border-radius: 50%; font-weight: bold;">J</span>
-            </div>
-          </div>
-        </div>
+        //     <div class="small-logo">
+        //       <span style="background: white; color: #862633; padding: 5px 8px; border-radius: 50%; font-weight: bold;">J</span>
+        //     </div>
+        //   </div>
+        // </div>
+
+// Sarim
+<table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" style="font-family:Arial, sans-serif; background-color:#f9f9f9; padding:20px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="border:2px solid #4A5568; background:#862633; padding:30px; border-radius:0 8px 8px 8px;">
+          <tr>
+            <td align="center" style="padding-bottom:20px;">
+              <h1 style="font-size:32px; font-weight:bold; color:#ffffff; margin:0;">Oil Change Voucher</h1>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding-bottom:30px;">
+              <p style="font-size:18px; color:#ffffff; margin:0; line-height:1.6;">
+                Present this at participating locations to redeem.
+              </p>
+            </td>
+          </tr>
+          <!-- Valid through -->
+          <tr>
+            <td style="border-bottom:1px solid #E2E8F0; padding:20px 0;">
+              <table width="100%">
+                <tr>
+                  <td align="left" style="font-size:20px; color:#ffffff; font-weight:500;">Valid through:</td>
+                  <td align="right" style="font-size:20px; color:#ffffff; font-weight:500;">${validThrough}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Issued on -->
+          <tr>
+            <td style="border-bottom:1px solid #E2E8F0; padding:20px 0;">
+              <table width="100%">
+                <tr>
+                  <td align="left" style="font-size:20px; color:#ffffff; font-weight:500;">Issued on:</td>
+                  <td align="right" style="font-size:20px; color:#ffffff; font-weight:500;">${issuedOn}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Used on -->
+          <tr>
+            <td style="border-bottom:1px solid #E2E8F0; padding:20px 0;">
+              <table width="100%">
+                <tr>
+                  <td align="left" style="font-size:20px; color:#ffffff; font-weight:500;">Used on:</td>
+                  <td align="right" style="font-size:20px; color:#ffffff; font-weight:500;">— — —</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+<!-- Voucher Code -->
+<tr>
+<td height="30" style="line-height:30px; font-size:0;">&nbsp;</td>
+</tr>
+<tr>
+  <td align="center" style="background:#edf2f7; border-radius:12px; padding:20px; margin:30px 0;">
+    <table width="100%">
+      <tr>
+        <td align="left" style="font-size:24px; color:#862633; font-weight:bold; padding-right:10px;">
+          Voucher Code:
+        </td>
+        <td align="right" style="font-size:32px; font-weight:bold; color:#000000; letter-spacing:2px;">
+          ${voucher.code}
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
+          <!-- Terms -->
+          <tr>
+            <td style="font-size:16px; color:#ffffff; line-height:1.8; text-align:left; padding-top:20px;">
+              *Only valid at participating ACE Jiffy Lube Locations. <br />
+              ** Term 2 <br />
+              <table width="100%" style="margin-top:10px;">
+                <tr>
+                  <td style="font-size:16px; color:#ffffff;">*** Term 3</td>
+                  <td align="right">
+                    <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1755837350/lxkizea7xfe7omtekg5r.png" width="60" height="60" style="display:block;" />
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 
         <!-- Footer -->
         <div class="footer">

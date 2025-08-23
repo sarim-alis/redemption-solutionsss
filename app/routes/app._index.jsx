@@ -368,8 +368,8 @@ export default function Index() {
         color: "black",
         minHeight: "100vh",
         border: "2px solid black",
-        borderRadius: "10px",
-        padding: "20px"
+        borderRadius: "10px"
+       
       }}>
         <DashboardOrderChart 
           paidOrders={paidOrders} 
