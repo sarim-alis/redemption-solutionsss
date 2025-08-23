@@ -3,7 +3,7 @@
 client_id = "c2f415f66df6ec14c9b7ccef564c014c"
 name = "redeem-gift"
 handle = "redeem-gift"
-application_url = "https://significance-going-drilling-be.trycloudflare.com"
+application_url = "https://inspiration-wood-literature-example.trycloudflare.com"
 embedded = true
 
 [build]
@@ -19,9 +19,9 @@ scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gi
 
 [auth]
 redirect_urls = [
-  "https://significance-going-drilling-be.trycloudflare.com/auth/callback",
-  "https://significance-going-drilling-be.trycloudflare.com/auth/shopify/callback",
-  "https://significance-going-drilling-be.trycloudflare.com/api/auth/callback"
+  "https://inspiration-wood-literature-example.trycloudflare.com/auth/callback",
+  "https://inspiration-wood-literature-example.trycloudflare.com/auth/shopify/callback",
+  "https://inspiration-wood-literature-example.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
