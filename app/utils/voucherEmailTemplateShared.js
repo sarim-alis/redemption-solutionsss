@@ -198,7 +198,7 @@ export function generateVoucherEmailHTML(voucher) {
         <!-- Header -->
         <div class="header">
           <div class="logo">
-            <span class="logo-circle">J</span>
+           <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1755837350/lxkizea7xfe7omtekg5r.png" width="60" height="60" style="display:block;" />
             jiffy lube
           </div>
         </div>
@@ -211,44 +211,7 @@ export function generateVoucherEmailHTML(voucher) {
             You'll find your voucher(s) below—just bring a voucher number with you on your next visit to a participating location.
           </div>
 
-          <!-- Voucher Section -->
-        //   <div class="voucher-container">
-        //     <div class="voucher-title">Jiffy Lube Synthetic Blend Oil Change Voucher</div>
-        //     <div class="voucher-subtitle">Present this at participating locations to redeem.</div>
-            
-        //     <div class="voucher-details">
-        //       <div class="voucher-detail">
-        //         <div class="voucher-detail-label">Valid through:</div>
-        //         <div class="voucher-detail-value">${validThrough}</div>
-        //       </div>
-        //       <div class="voucher-detail">
-        //         <div class="voucher-detail-label">Issued on:</div>
-        //         <div class="voucher-detail-value">${issuedOn}</div>
-        //       </div>
-        //       <div class="voucher-detail">
-        //         <div class="voucher-detail-label">Used on:</div>
-        //         <div class="voucher-detail-value">---</div>
-        //       </div>
-        //     </div>
-
-        //     <div class="voucher-code-container">
-        //       <div class="voucher-code-label">Voucher Code:</div>
-        //       <div class="voucher-code">${voucher.code}</div>
-        //     </div>
-
-        //     <div class="terms">
-        //       *Only valid at participating ACE Jiffy Lube locations.<br>
-        //       **Term 2<br>
-        //       ***Term 3
-        //     </div>
-
-        //     <div class="small-logo">
-        //       <span style="background: white; color: #862633; padding: 5px 8px; border-radius: 50%; font-weight: bold;">J</span>
-        //     </div>
-        //   </div>
-        // </div>
-
-// Sarim
+      
 <table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" style="font-family:Arial, sans-serif; background-color:#f9f9f9; padding:20px 0;">
     <tr>
       <td align="center">
