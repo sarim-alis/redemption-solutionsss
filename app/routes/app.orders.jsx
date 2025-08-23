@@ -32,7 +32,7 @@ export const loader = async ({ request }) => {
               email
               createdAt
             }
-            lineItems(first: 10) {
+            lineItems(first: 250) {
               edges {
                 node {
                   title

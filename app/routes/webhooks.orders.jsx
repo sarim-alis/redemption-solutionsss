@@ -32,17 +32,17 @@ async function processWebhook({ shop, session, topic, payload }) {
     switch (topic) {
       case "ORDERS_CREATE":
         console.log(`✅ New order created: ${payload.name} (ID: ${payload.id})`);
-        dataToSend = transformOrderPayload(payload);
+        dataToSend = await transformOrderPayload(payload, session);
         // Save order to database but DON'T create voucher or send email yet
-        const { order: savedOrder } = await saveOrderToDatabase(payload, 'CREATE');
+        const { order: savedOrder } = await saveOrderToDatabase(payload, 'CREATE', session);
         console.log(`📦 Order saved for future payment processing: ${savedOrder?.shopifyOrderId}`);
         break;
    
       case "ORDERS_EDITED":
         console.log(`🔄 Order edited: ${payload.name} (ID: ${payload.id})`);
-        dataToSend = transformOrderPayload(payload);
+        dataToSend = await transformOrderPayload(payload, session);
         // Update order in database
-        await saveOrderToDatabase(payload, 'UPDATE');
+        await saveOrderToDatabase(payload, 'UPDATE', session);
         break; 
 
       case "ORDERS_DELETE":
@@ -53,9 +53,9 @@ async function processWebhook({ shop, session, topic, payload }) {
 
       case "ORDERS_PAID":
         console.log(`💰 Order paid: ${payload.name} (ID: ${payload.id})`);
-        dataToSend = transformOrderPayload(payload);
+        dataToSend = await transformOrderPayload(payload, session);
         // Update order payment status in database and create voucher if not exists
-        const { order: paidOrder, voucher: paidVoucher } = await saveOrderToDatabase(payload, 'PAID');
+        const { order: paidOrder, voucher: paidVoucher } = await saveOrderToDatabase(payload, 'PAID', session);
         
         // If order was paid but no voucher exists, create one and send email
         if (paidOrder && !paidVoucher) {
@@ -125,7 +125,16 @@ async function processWebhook({ shop, session, topic, payload }) {
 }
 
 // Helper to match Shopify GraphQL style
-function transformOrderPayload(payload) {
+async function transformOrderPayload(payload, session = null) {
+  // Extract product IDs for metafield fetching
+  const productIds = payload.line_items?.map(item => item.product_id).filter(Boolean) || [];
+  
+  // Fetch metafields if session is available and we have product IDs
+  let metafieldsMap = {};
+  if (session && productIds.length > 0) {
+    metafieldsMap = await fetchProductMetafields(session, productIds);
+  }
+
   return {
     id: `gid://shopify/Order/${payload.id}`,
     name: payload.name,
@@ -159,7 +168,13 @@ function transformOrderPayload(payload) {
           variant: item.variant_id ? {
             id: `gid://shopify/ProductVariant/${item.variant_id}`,
             product: {
-              id: `gid://shopify/Product/${item.product_id}`
+              id: `gid://shopify/Product/${item.product_id}`,
+              metafield: metafieldsMap[item.product_id] ? {
+                value: metafieldsMap[item.product_id].type
+              } : null,
+              metafield_expiry: metafieldsMap[item.product_id] ? {
+                value: metafieldsMap[item.product_id].expire
+              } : null
             }
           } : null
         }
@@ -168,8 +183,53 @@ function transformOrderPayload(payload) {
   };
 }
 
+// Helper function to fetch product metafields
+async function fetchProductMetafields(session, productIds) {
+  if (!productIds || productIds.length === 0) return {};
+  
+  try {
+    const { admin } = session;
+    const productIdsQuery = productIds.map(id => `"gid://shopify/Product/${id}"`).join(' OR ');
+    
+    const response = await admin.graphql(`
+      query {
+        products(first: 250, query: "id:(${productIdsQuery})") {
+          edges {
+            node {
+              id
+              metafield_type: metafield(namespace: "custom", key: "product_type") {
+                value
+              }
+              metafield_expiry: metafield(namespace: "custom", key: "expiry_date") {
+                value
+              }
+            }
+          }
+        }
+      }
+    `);
+    
+    const result = await response.json();
+    const metafieldsMap = {};
+    
+    result.data?.products?.edges?.forEach(edge => {
+      const productId = edge.node.id.split('/').pop();
+      metafieldsMap[productId] = {
+        type: edge.node.metafield_type?.value || null,
+        expire: edge.node.metafield_expiry?.value || null
+      };
+    });
+    
+    console.log(`📋 Fetched metafields for ${Object.keys(metafieldsMap).length} products`);
+    return metafieldsMap;
+  } catch (error) {
+    console.error('❌ Failed to fetch product metafields:', error);
+    return {};
+  }
+}
+
 // Helper function to save order to database
-async function saveOrderToDatabase(payload, action) {
+async function saveOrderToDatabase(payload, action, session = null) {
   try {
     const numericId = payload.id.toString();
     
@@ -190,7 +250,16 @@ async function saveOrderToDatabase(payload, action) {
       }
     }
 
-    // Prepare line items data
+    // Extract product IDs for metafield fetching
+    const productIds = payload.line_items?.map(item => item.product_id).filter(Boolean) || [];
+    
+    // Fetch metafields if session is available and we have product IDs
+    let metafieldsMap = {};
+    if (session && productIds.length > 0) {
+      metafieldsMap = await fetchProductMetafields(session, productIds);
+    }
+
+    // Prepare line items data with metafields
     const lineItems = {
       edges: payload.line_items?.map((item) => ({
         node: {
@@ -205,7 +274,13 @@ async function saveOrderToDatabase(payload, action) {
           variant: item.variant_id ? {
             id: `gid://shopify/ProductVariant/${item.variant_id}`,
             product: {
-              id: `gid://shopify/Product/${item.product_id}`
+              id: `gid://shopify/Product/${item.product_id}`,
+              metafield: metafieldsMap[item.product_id] ? {
+                value: metafieldsMap[item.product_id].type
+              } : null,
+              metafield_expiry: metafieldsMap[item.product_id] ? {
+                value: metafieldsMap[item.product_id].expire
+              } : null
             }
           } : null
         }
