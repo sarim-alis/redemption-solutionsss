@@ -46,7 +46,13 @@ function VoucherListByOrder() {
   }, [email]);
 
   if (!email) {
-    return <TextBlock>No customer email found for this order.</TextBlock>;
+    return (
+      <BlockStack>
+        <TextBlock>No customer email found for this order.</TextBlock>
+        <TextBlock>Order object:</TextBlock>
+        <TextBlock>{JSON.stringify(order)}</TextBlock>
+      </BlockStack>
+    );
   }
   if (loading) {
     return <Spinner />;
