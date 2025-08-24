@@ -21,15 +21,16 @@ export default reactExtension(
 
 function VoucherListByOrder() {
   const order = useOrder();
-  const email = order?.customer?.email;
+  // Extract the numeric order ID from Shopify's global ID
+  const orderId = order?.id ? order.id.split("/").pop() : null;
   const [loading, setLoading] = React.useState(true);
   const [vouchers, setVouchers] = React.useState([]);
   const [error, setError] = React.useState(null);
 
   React.useEffect(() => {
-    if (!email) return;
+    if (!orderId) return;
     setLoading(true);
-    fetch(`/api.customer.vouchers?customerEmail=${encodeURIComponent(email)}`)
+    fetch(`/api.customer.vouchers?orderId=${encodeURIComponent(orderId)}`)
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -43,12 +44,12 @@ function VoucherListByOrder() {
         setError('Failed to load vouchers');
         setLoading(false);
       });
-  }, [email]);
+  }, [orderId]);
 
-  if (!email) {
+  if (!orderId) {
     return (
       <BlockStack>
-        <TextBlock>No customer email found for this order.</TextBlock>
+        <TextBlock>No order ID found for this order.</TextBlock>
         <TextBlock>Order object:</TextBlock>
         <TextBlock>{JSON.stringify(order)}</TextBlock>
       </BlockStack>
@@ -61,12 +62,12 @@ function VoucherListByOrder() {
     return <Banner status="critical">{error}</Banner>;
   }
   if (!vouchers.length) {
-    return <Banner>No vouchers found for this customer.</Banner>;
+    return <Banner>No vouchers found for this order.</Banner>;
   }
 
   return (
     <BlockStack spacing="base">
-      <TextBlock size="large" emphasis="bold">Vouchers for this Customer</TextBlock>
+      <TextBlock size="large" emphasis="bold">Vouchers for this Order</TextBlock>
       {vouchers.map((v) => (
         <Banner key={v.id} status={v.used ? 'success' : 'info'}>
           <BlockStack>
