@@ -1,21 +1,23 @@
+
 import { json } from "@remix-run/node";
-import { getVouchersByCustomerEmail } from "../models/voucher.server";
+import { getVouchersByCustomerEmail, getVoucherByOrderId } from "../models/voucher.server";
 
 export const loader = async ({ request }) => {
   try {
     const url = new URL(request.url);
     const customerEmail = url.searchParams.get('customerEmail');
+    const orderId = url.searchParams.get('orderId');
 
-    if (!customerEmail) {
-      return json({ error: 'Customer email is required' }, { status: 400 });
+    let vouchers = [];
+    if (orderId) {
+      // Fetch voucher by orderId
+      const voucher = await getVoucherByOrderId(orderId);
+      if (voucher) vouchers = [voucher];
+    } else if (customerEmail) {
+      vouchers = await getVouchersByCustomerEmail(customerEmail);
+    } else {
+      return json({ error: 'orderId or customerEmail is required' }, { status: 400 });
     }
-
-    console.log('🔍 Fetching vouchers for customer:', customerEmail);
-
-    // Fetch vouchers by customer email using the voucher.server function
-    const vouchers = await getVouchersByCustomerEmail(customerEmail);
-
-    console.log('✅ Found vouchers:', vouchers.length);
 
     // Transform the data for the frontend
     const transformedVouchers = vouchers.map(voucher => ({
