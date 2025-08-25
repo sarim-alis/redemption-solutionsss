@@ -190,29 +190,36 @@ useEffect(() => {
       <div style={{ color: "black" }}>
         <Page fullWidth>
           {/* Header */}
-          <div style={styles.container}>
-           <Text variant="headingXl" as="h1">Locations</Text>
-            <Button onClick={openDrawer} style={{backgroundColor: 'rgba(0, 0, 0, 0.45)', color: 'white', border: 'none', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px'}}>Add Location</Button>
+          <div style={{ ...styles.container, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text variant="headingXl" as="h1">Locations</Text>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', flex: 1 }}>
+              <Button onClick={openDrawer} style={{backgroundColor: 'rgb(134, 38, 51)', color: 'white', border: 'none', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', marginLeft: 'auto'}}>Add Location</Button>
+            </div>
           </div>
 
         <div style={{ marginTop: "40px" }}>
-          <div style={{display: 'flex',justifyContent: 'flex-start',fontWeight: 'bold',paddingBottom: '12px',borderBottom: '2px solid #333',gap: '250px',color: 'black'}}>
-            <Text variant="headingMd" as="h2">Location Name</Text>
-            <Text variant="headingMd" as="h2">Actions</Text>
+          <div style={{display: 'flex',fontWeight: 'bold',paddingBottom: '12px',borderBottom: '2px solid #333',color: 'black'}}>
+            <div style={{ flex: 1, textAlign: 'left' }}>
+              <Text variant="headingMd" as="h2">Location Name</Text>
+            </div>
+            <div style={{ width: 200, textAlign: 'right' }}>
+              <Text variant="headingMd" as="h2">Actions</Text>
+            </div>
           </div>
 
-  {locations.map((loc) => (
-    <div
-      key={loc.id}
-      style={{display: 'flex',justifyContent: 'flex-start',alignItems: 'center',padding: '12px 0',gap: '250px',color: 'black'}}
-    >
-      <span style={{minWidth: "120px"}}>{loc.name}</span>
-      <Dropdown overlay={actionMenu(loc.id)} trigger={['click']} placement="bottomRight" arrow>
-        <MoreOutlined style={{ fontSize: 30, cursor: 'pointer' }} />
-      </Dropdown>
-    </div>
-  ))}
-</div>
+          {locations.map((loc) => (
+            <div
+              key={loc.id}
+              style={{display: 'flex',alignItems: 'center',padding: '12px 0',color: 'black'}}>
+              <span style={{ flex: 1, minWidth: "120px", textAlign: 'left' }}>{loc.name}</span>
+              <div style={{ width: 200, textAlign: 'right' }}>
+                <Dropdown overlay={actionMenu(loc.id)} trigger={['click']} placement="bottomRight" arrow>
+                  <MoreOutlined style={{ fontSize: 30, cursor: 'pointer' }} />
+                </Dropdown>
+              </div>
+            </div>
+          ))}
+        </div>
 
         
 
