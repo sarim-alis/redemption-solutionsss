@@ -1,11 +1,17 @@
+// Imports.
 import React, { useState, useEffect } from "react";
 import { useLoaderData } from "@remix-run/react";
 import { Page, DataTable, Text, BlockStack, Badge, Button } from "@shopify/polaris";
 import SidebarLayout from "../components/SidebarLayout";
 import { authenticate } from "../shopify.server";
+import { saveOrder } from "../models/order.server";
+import prisma from "../db.server";
+import { saveCustomer } from "../models/customer.server";
 // import { sendEmail } from "../utils/mail.server";
 // import { hasCustomerOrderedBefore } from "../models/order.server";
 
+
+// Frontend.
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
   console.log('🔄 Starting to fetch orders...');
@@ -98,7 +104,7 @@ export default function OrdersPage() {
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [lastUpdate, setLastUpdate] = useState(null);
 
-  // SSE connection for real-time updates
+  // SSE connection for real-time updates.
   useEffect(() => {
     const eventSource = new EventSource('/webhook-stream');
     
@@ -120,10 +126,10 @@ export default function OrdersPage() {
               case 'ORDERS_CREATE':
               case 'ORDERS_EDITED':
               case 'ORDERS_PAID':
-                // Transform webhook payload to match GraphQL structure
+                // Transform webhook payload to match GraphQL structure.
                 const updatedOrder = transformWebhookToOrder(data.payload);
                 
-                // Update existing order or add new one
+                // Update existing order or add new one.
                 const existingIndex = currentOrders.findIndex(o => o.id === updatedOrder.id);
                 if (existingIndex >= 0) {
                   const updated = [...currentOrders];
@@ -156,7 +162,7 @@ export default function OrdersPage() {
     };
   }, []);
 
-  // Transform webhook payload to match orders GraphQL structure
+  // Transform webhook payload to match orders GraphQL structure.
   const transformWebhookToOrder = (webhookPayload) => {
     return {
       id: webhookPayload.id,

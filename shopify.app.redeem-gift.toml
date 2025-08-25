@@ -3,7 +3,7 @@
 client_id = "c2f415f66df6ec14c9b7ccef564c014c"
 name = "redeem-gift"
 handle = "redeem-gift"
-application_url = "https://diagram-lovely-halloween-republicans.trycloudflare.com"
+application_url = "https://revenue-e-broad-fifteen.trycloudflare.com"
 embedded = true
 
 [build]
@@ -19,9 +19,9 @@ scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gi
 
 [auth]
 redirect_urls = [
-  "https://diagram-lovely-halloween-republicans.trycloudflare.com/auth/callback",
-  "https://diagram-lovely-halloween-republicans.trycloudflare.com/auth/shopify/callback",
-  "https://diagram-lovely-halloween-republicans.trycloudflare.com/api/auth/callback"
+  "https://revenue-e-broad-fifteen.trycloudflare.com/auth/callback",
+  "https://revenue-e-broad-fifteen.trycloudflare.com/auth/shopify/callback",
+  "https://revenue-e-broad-fifteen.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
