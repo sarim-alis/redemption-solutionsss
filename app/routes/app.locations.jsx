@@ -192,7 +192,7 @@ useEffect(() => {
           {/* Header */}
           <div style={styles.container}>
            <Text variant="headingXl" as="h1">Locations</Text>
-            <Button onClick={openDrawer} style={{backgroundColor: '#fff',color: 'black',border: 'none',fontWeight: 'bold',display: 'flex',alignItems: 'center',gap: '6px'}}>Add Location</Button>
+            <Button onClick={openDrawer} style={{backgroundColor: 'rgba(0, 0, 0, 0.45)', color: 'white', border: 'none', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px'}}>Add Location</Button>
           </div>
 
         <div style={{ marginTop: "40px" }}>
@@ -208,7 +208,7 @@ useEffect(() => {
     >
       <span style={{minWidth: "120px"}}>{loc.name}</span>
       <Dropdown overlay={actionMenu(loc.id)} trigger={['click']} placement="bottomRight" arrow>
-        <MoreOutlined style={{ fontSize: 20, cursor: 'pointer' }} />
+        <MoreOutlined style={{ fontSize: 30, cursor: 'pointer' }} />
       </Dropdown>
     </div>
   ))}
