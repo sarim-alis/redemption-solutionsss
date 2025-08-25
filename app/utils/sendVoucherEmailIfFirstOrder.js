@@ -1,5 +1,6 @@
 import { sendEmail } from "../utils/mail.server";
 import { generateVoucherEmailHTML } from "../utils/voucherEmailTemplateShared";
+import { generateGiftCardEmailHTML } from "./giftCardEmailTemplate";
 import prisma from "../db.server";
 
 /**
@@ -52,15 +53,42 @@ export async function sendVoucherEmailIfFirstOrder(order, voucher, retryCount = 
     const customerName = order.customerName || order.customer?.firstName || customerEmail.split('@')[0];
     const orderName = order.shopifyOrderId || 'your order';
     
+    // Determine if this is a gift card order
+    const isGift = order.type === 'gift' || (order.lineItems?.some(item => 
+      item.title?.toLowerCase().includes('gift') || 
+      item.type?.toLowerCase() === 'gift'
+    ));
+    
     console.log(`[VoucherEmail] 👤 Customer name: ${customerName}`);
     console.log(`[VoucherEmail] 🛒 Order name: ${orderName}`);
+    console.log(`[VoucherEmail] 🎁 Order type: ${isGift ? 'Gift' : 'Voucher'}`);
+    
+    // Prepare email content based on order type
+    let emailSubject, emailText, emailHtml;
+    
+    if (isGift) {
+      // Gift card email
+      const giftCardAmount = order.totalPrice || 0;
+      emailSubject = `Your Jiffy Lube Gift - Thank You!`;
+      emailText = `Hello ${customerName},\n\nThank you for your gift purchase!\n\nGift Amount: $${giftCardAmount.toFixed(2)}\nGift Code: ${voucherCode}\n\nYou can use this gift at any Jiffy Lube location or online at checkout.\n\nThank you for choosing Jiffy Lube!`;
+      emailHtml = generateGiftCardEmailHTML({ 
+        code: voucherCode, 
+        customerEmail,
+        amount: giftCardAmount
+      });
+    } else {
+      // Voucher email (default)
+      emailSubject = `Here are your Oil Change Vouchers! Where to Redeem... 🎟️`;
+      emailText = `Hello ${customerName},\n\nThank you for your order ${orderName}.\nHere is your voucher code: ${voucherCode}`;
+      emailHtml = generateVoucherEmailHTML({ ...voucher, customerEmail });
+    }
     
     // Send email with enhanced error handling
     const emailResult = await sendEmail({
       to: customerEmail,
-      subject: `Here are your Oil Change Vouchers! Where to Redeem... 🎟️`,
-      text: `Hello ${customerName},\n\nThank you for your order ${orderName}.\nHere is your voucher code: ${voucherCode}`,
-      html: generateVoucherEmailHTML({ ...voucher, customerEmail }),
+      subject: emailSubject,
+      text: emailText,
+      html: emailHtml,
     });
     
     console.log(`[VoucherEmail] ✅ Email sent successfully! Message ID: ${emailResult.messageId}`);

@@ -15,6 +15,7 @@ interface ShopifyLineItem {
   price?: string | number;
   product_id?: string;
   variant_id?: string;
+  type?: string;
   originalUnitPriceSet?: {
     shopMoney?: {
       amount: string;
@@ -95,6 +96,20 @@ async function processOrderData(orderData: ShopifyOrder): Promise<ProcessResult>
       return isNaN(parsed) ? 0 : parsed;
     };
 
+    // Determine order type based on line items
+    let orderType = 'voucher'; // Default to voucher
+    const lineItems = orderData.line_items || [];
+    
+    // Check if any line item indicates a gift card
+    const isGift = lineItems.some(item => 
+      item.title?.toLowerCase().includes('gift') || 
+      item.type?.toLowerCase() === 'gift'
+    );
+    
+    if (isGift) {
+      orderType = 'gift';
+    }
+
     // @ts-ignore
     let processedLineItems = [];
     if (orderData.line_items) {
@@ -143,17 +158,28 @@ async function processOrderData(orderData: ShopifyOrder): Promise<ProcessResult>
     }
 
     const orderInfo: OrderData = {
-      shopifyOrderId: orderId,
+      shopifyOrderId: orderData.shopifyOrderId || orderData.id || 'unknown',
       customerEmail: orderData.customerEmail || orderData.email || orderData.customer?.email || null,
-      customerName: orderData.customerName || customerName || null,
-      totalPrice: parseFloat(totalPrice.toFixed(2)),
+      customerName: orderData.customerName || 
+                  (orderData.customer?.firstName ? 
+                    `${orderData.customer.firstName} ${orderData.customer.lastName || ''}`.trim() : 
+                    (orderData.customer?.first_name ? 
+                      `${orderData.customer.first_name} ${orderData.customer.last_name || ''}`.trim() : 
+                      null)
+                  ),
+      totalPrice: safeParseFloat(
+        orderData.total_price || 
+        orderData.totalPrice || 
+        orderData.totalPriceSet?.shopMoney?.amount || 0
+      ),
       currency: orderData.currency || orderData.totalPriceSet?.shopMoney?.currencyCode || 'USD',
-      status: (orderData.displayFinancialStatus || orderData.financial_status || 'PENDING').toUpperCase(),
+      status: (orderData.financial_status || orderData.displayFinancialStatus || 'pending')?.toLowerCase(),
       fulfillmentStatus: (orderData.displayFulfillmentStatus || orderData.fulfillment_status || 'unfulfilled')?.toLowerCase(),
       itemQuantity: parseInt(itemQuantity.toString()) || 0,
       processedAt: new Date(orderData.processedAt || orderData.processed_at || orderData.created_at || new Date()),
       // @ts-ignore
       lineItems: JSON.stringify(processedLineItems),
+      type: orderType, // Include the determined order type
     };
 
     return { success: true, orderInfo };
