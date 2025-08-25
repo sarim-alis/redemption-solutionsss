@@ -50,8 +50,10 @@ function VoucherListByOrder() {
     return (
       <BlockStack>
         <TextBlock>No order ID found for this order.</TextBlock>
-        <TextBlock>Order object:</TextBlock>
-        <TextBlock>{JSON.stringify(order)}</TextBlock>
+        <TextBlock>Order object fields:</TextBlock>
+        {order && Object.entries(order).map(([key, value]) => (
+          <TextBlock key={key}>{key}: {typeof value === 'object' ? JSON.stringify(value) : String(value)}</TextBlock>
+        ))}
       </BlockStack>
     );
   }
