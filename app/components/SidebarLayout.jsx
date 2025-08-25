@@ -134,7 +134,7 @@ export default function SidebarLayout({ children }) {
           style={{
             ...styles.hamburgerLine,
             transform: sidebarOpen
-              ? 'translateY(8px) rotate(45deg)'
+              ? 'translateY(11px) rotate(45deg)'
               : 'none',
             marginBottom: '4px',
           }}
