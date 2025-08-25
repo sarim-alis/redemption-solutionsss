@@ -73,7 +73,7 @@ const Users = () => {
       <Page fullWidth>
         {/* Header */}
         <div style={styles.container}>
-          <Text variant="headingXl" as="h1">Employees 👨‍💼🧑⭐🌱</Text>
+          <Text variant="headingXl" as="h1">Employees</Text>
           <Button onClick={openDrawer} style={{ fontWeight: 'bold' }}>
             Add Employee
           </Button>
