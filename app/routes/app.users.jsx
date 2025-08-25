@@ -73,7 +73,7 @@ const Users = () => {
       <Page fullWidth>
         {/* Header */}
         <div style={styles.container}>
-          <Text variant="headingXl" as="h1">Employees 👨‍💼🧑⭐🌱</Text>
+          <Text variant="headingXl" as="h1">Employees</Text>
           <Button onClick={openDrawer} style={{ fontWeight: 'bold' }}>
             Add Employee
           </Button>
@@ -112,7 +112,7 @@ const Users = () => {
               <span style={{ minWidth: "170px" }}>{emp.email}</span>
               <span style={{ minWidth: "170px" }}>{emp.address}</span>
               <Dropdown trigger={['click']} placement="bottomRight" arrow>
-                <MoreOutlined style={{ fontSize: 20, cursor: 'pointer' }} />
+                <MoreOutlined style={{ fontSize: 30, cursor: 'pointer' }} />
               </Dropdown>
             </div>
           ))}
@@ -120,7 +120,7 @@ const Users = () => {
 
         {/* Drawer to Add Employee */}
         <Drawer
-          title="Add Employee 🧑‍💼"
+          title="Add Employee"
           placement="right"
           open={drawerVisible}
           onClose={closeDrawer}

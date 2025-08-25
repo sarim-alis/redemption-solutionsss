@@ -1,11 +1,17 @@
+// Imports.
 import React, { useState, useEffect } from "react";
 import { useLoaderData } from "@remix-run/react";
 import { Page, DataTable, Text, BlockStack, Badge, Button } from "@shopify/polaris";
 import SidebarLayout from "../components/SidebarLayout";
 import { authenticate } from "../shopify.server";
+import { saveOrder } from "../models/order.server";
+import prisma from "../db.server";
+import { saveCustomer } from "../models/customer.server";
 // import { sendEmail } from "../utils/mail.server";
 // import { hasCustomerOrderedBefore } from "../models/order.server";
 
+
+// Frontend.
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
   console.log('🔄 Starting to fetch orders...');
@@ -73,6 +79,113 @@ export const loader = async ({ request }) => {
   const hasNextPage = orderJson.data.orders.pageInfo.hasNextPage;
   const totalOrders = orders.length;
   
+  // Save order to database.
+  let savedCount = 0;
+  let skippedCount = 0;
+  let customersSaved = 0;
+  let customersSkipped = 0;
+  
+  for (const order of orders) {
+    try {
+      const numericId = order.id.split('/').pop();
+      
+      // Save customer.
+      let savedCustomer = null;
+      if (order.customer && order.customer.id) {
+        try {
+          const customerShopifyId = order.customer.id.split('/').pop();
+
+          // Prepare customer data.
+          const customerData = {
+            shopifyId: customerShopifyId,
+            firstName: order.customer.firstName,
+            lastName: order.customer.lastName,
+            email: order.customer.email,
+          };
+
+          savedCustomer = await saveCustomer(customerData);
+          customersSaved++;
+        } catch (customerError) {
+          console.error('❌ Failed to save customer:', {
+            customerId: order.customer.id,
+            email: order.customer.email,
+            error: customerError.message
+          });
+          customersSkipped++;
+        }
+      } else {
+        console.log('⚠️ Order has no customer data:', numericId);
+      }
+
+      // Line items data.
+      const lineItems = {
+        edges: order.lineItems.edges.map((edge) => ({
+          node: {
+            title: edge.node.title,
+            quantity: edge.node.quantity,
+            originalUnitPriceSet: {
+              shopMoney: {
+                amount: edge.node.originalUnitPriceSet.shopMoney.amount,
+                currencyCode: edge.node.originalUnitPriceSet.shopMoney.currencyCode
+              }
+            },
+            variant: {
+              id: edge.node.variant?.id,
+              product: {
+                id: edge.node.variant?.product?.id,
+                metafield: {value: edge.node.variant?.product?.metafield?.value ?? null},
+                metafield_expiry: { value: edge.node.variant?.product?.metafield_expiry?.value ?? null },
+              }
+            }
+          }
+        }))
+      };
+
+      // Order data.
+      const orderData = {
+        id: numericId,
+        shopifyOrderId: numericId,
+        customer: order.customer,
+        customerId: savedCustomer?.id || null,
+        displayFinancialStatus: order.displayFinancialStatus,
+        displayFulfillmentStatus: order.displayFulfillmentStatus,
+        totalPriceSet: order.totalPriceSet,
+        processedAt: order.processedAt,
+        lineItems: lineItems
+      };
+
+      try {
+        console.log('💾 Attempting to save order:', numericId);
+        const savedOrder = await saveOrder(orderData);
+
+        const voucher = await prisma.voucher.findFirst({
+          where: {
+            shopifyOrderId: numericId,
+          },
+        });
+
+        savedCount++;
+      } catch (error) {
+        console.error('❌ Failed to save order:', {
+          orderId: numericId,
+          error: error.message
+        });
+        skippedCount++;
+      }
+    } catch (error) {
+      console.error('❌ Error processing order:', {
+        name: order.name,
+        id: order.id,
+        error: error.message
+      });
+      skippedCount++;
+    }
+  }
+  
+  console.log(`💾 Orders saved: ${savedCount}, skipped: ${skippedCount}`);
+  console.log(`👤 Customers saved: ${customersSaved}, skipped: ${customersSkipped}`);
+  
+  // Fetch any existing vouchers for these orders.
   // Ab sirf orders fetch kar rahe hain, save karna webhook pe hota hai
   const orderIdsList = orders.map(o => o.name.split('/').pop() || o.name);
   const { getVouchersByOrderIds } = await import('../models/voucher.server');
@@ -98,7 +211,7 @@ export default function OrdersPage() {
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [lastUpdate, setLastUpdate] = useState(null);
 
-  // SSE connection for real-time updates
+  // SSE connection for real-time updates.
   useEffect(() => {
     const eventSource = new EventSource('/webhook-stream');
     
@@ -120,10 +233,10 @@ export default function OrdersPage() {
               case 'ORDERS_CREATE':
               case 'ORDERS_EDITED':
               case 'ORDERS_PAID':
-                // Transform webhook payload to match GraphQL structure
+                // Transform webhook payload to match GraphQL structure.
                 const updatedOrder = transformWebhookToOrder(data.payload);
                 
-                // Update existing order or add new one
+                // Update existing order or add new one.
                 const existingIndex = currentOrders.findIndex(o => o.id === updatedOrder.id);
                 if (existingIndex >= 0) {
                   const updated = [...currentOrders];
@@ -156,7 +269,7 @@ export default function OrdersPage() {
     };
   }, []);
 
-  // Transform webhook payload to match orders GraphQL structure
+  // Transform webhook payload to match orders GraphQL structure.
   const transformWebhookToOrder = (webhookPayload) => {
     return {
       id: webhookPayload.id,

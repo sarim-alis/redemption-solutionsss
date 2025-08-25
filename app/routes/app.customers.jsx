@@ -6,7 +6,6 @@ import SidebarLayout from '../components/SidebarLayout';
 import { useLoaderData } from "@remix-run/react";
 import { json } from "@remix-run/node";
 import { getAllCustomers } from '../models/customer.server.js';
-import styles from '../styles/customers.js';
 
 // Loader.
 export const loader = async () => {
@@ -25,7 +24,7 @@ const Customers = () => {
      <div style={{ color: "black" }}>
       <Page fullWidth>
         {/* Header */}
-        <Text variant="headingXl" as="h1">Customers 🙍🏻‍♂️⭐🌱</Text>
+        <Text variant="headingXl" as="h1">Customers</Text>
 
         {/* Customer List */}
         <div style={{ marginTop: "40px" }}>
