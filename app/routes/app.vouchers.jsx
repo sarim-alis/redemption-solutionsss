@@ -16,11 +16,85 @@ export const loader = async () => {
 // Frontend.
 export default function VouchersPage() {
   const { vouchers } = useLoaderData();
-  console.log("📦 vouchers list:", vouchers);
+  const [search, setSearch] = React.useState("");
+  const [dateFilter, setDateFilter] = React.useState("All");
+
+  // Helper: date filter
+  function isDateMatch(dateString, filter) {
+    if (filter === "All") return true;
+    if (!dateString) return false;
+    const date = new Date(dateString);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    if (filter === "Today") {
+      return date.toDateString() === today.toDateString();
+    }
+    if (filter === "Yesterday") {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      return date.toDateString() === yesterday.toDateString();
+    }
+    if (filter === "This Week") {
+      const weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - today.getDay());
+      return date >= weekStart && date <= today;
+    }
+    if (filter === "This Month") {
+      return date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth();
+    }
+    if (filter === "This Year") {
+      return date.getFullYear() === today.getFullYear();
+    }
+    return true;
+  }
+
+  // Filter vouchers by search and date
+  const filteredVouchers = vouchers.filter(v => {
+    const q = search.toLowerCase();
+    const code = (v.code || "").toLowerCase();
+    const orderId = (v.shopifyOrderId || "").toLowerCase();
+    const email = (v.customerEmail || "").toLowerCase();
+    const matchesSearch = code.includes(q) || orderId.includes(q) || email.includes(q);
+    const matchesDate = isDateMatch(v.createdAt, dateFilter);
+    return matchesSearch && matchesDate;
+  });
 
   return (
     <SidebarLayout>
       <div style={{ padding: 40 }}>
+        {/* Search and Date Filter */}
+        <div style={{ marginBottom: 18, display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Search..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{
+              padding: "10px",
+              border: "1px solid #ccc",
+              borderRadius: "6px",
+              width: "320px",
+              fontSize: "15px"
+            }}
+          />
+          <select
+            value={dateFilter}
+            onChange={e => setDateFilter(e.target.value)}
+            style={{
+              padding: "10px",
+              border: "1px solid #ccc",
+              borderRadius: "6px",
+              fontSize: "15px"
+            }}
+          >
+            <option value="All">All</option>
+            <option value="Today">Today</option>
+            <option value="Yesterday">Yesterday</option>
+            <option value="This Week">This Week</option>
+            <option value="This Month">This Month</option>
+            <option value="This Year">This Year</option>
+          </select>
+        </div>
         <div
           style={containerStyle}
         >
@@ -41,8 +115,8 @@ export default function VouchersPage() {
               </tr>
             </thead>
             <tbody>
-              {vouchers.length > 0 ? (
-                vouchers.map((v, idx) => (
+              {filteredVouchers.length > 0 ? (
+                filteredVouchers.map((v, idx) => (
                   <tr
                     key={v.id}
                     style={{
@@ -112,6 +186,7 @@ const headStyle = {
   fontWeight: 600,
   borderBottom: "2px solid #e5e7eb",
   fontSize: 13,
+  textAlign: "left"
 };
 
 const cellStyle = {

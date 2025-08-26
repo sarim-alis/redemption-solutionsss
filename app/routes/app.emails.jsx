@@ -3,10 +3,7 @@ import { useLoaderData } from "@remix-run/react";
 import { Page, DataTable, Text, BlockStack, Badge, Button } from "@shopify/polaris";
 import SidebarLayout from "../components/SidebarLayout";
 import { authenticate } from "../shopify.server";
-import { saveOrder } from "../models/order.server";
-import prisma from "../db.server";
-import { sendEmail } from "../utils/mail.server";
-import { hasCustomerOrderedBefore } from "../models/order.server";
+
 // Server-only imports moved inside loader
 // import { generateVoucherEmailHTML } from "../utils/voucherEmailTemplate";
 
@@ -219,9 +216,7 @@ function generateVoucherEmailHTML(voucher) {
           </div>
         </div>
 
-      
-
-
+    
         <table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" style="font-family:Arial, sans-serif; background-color:#f9f9f9; padding:20px 0;">
           <tr>
             <td align="center">

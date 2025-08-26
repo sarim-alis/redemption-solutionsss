@@ -325,7 +325,11 @@ export default function OrdersPage() {
                  <Text variant="bodyMd" tone="emphasis">{`${order.customer?.firstName || "Guest"} ${order.customer?.lastName || ""}`}</Text>,
                  <Text variant="bodyMd" tone="subdued">{order.customer?.email || '—'}</Text>,
                  <Text variant="bodyMd">{new Date(order.processedAt).toLocaleString()}</Text>,
-                 <Text variant="bodyMd">{order.totalPriceSet.shopMoney.amount} {order.totalPriceSet.shopMoney.currencyCode}</Text>,
+                 <Text variant="bodyMd">{
+                   order.totalPriceSet.shopMoney.currencyCode === 'USD'
+                     ? Number(order.totalPriceSet.shopMoney.amount).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                     : `${order.totalPriceSet.shopMoney.amount} ${order.totalPriceSet.shopMoney.currencyCode}`
+                 }</Text>,
                  <Text variant="bodyMd">{order.lineItems.edges.length}</Text>,
                  <Badge status={order.displayFinancialStatus === 'PAID' ? 'success' : 'attention'}>{order.displayFinancialStatus}</Badge>,
                  <Badge>{order.displayFulfillmentStatus}</Badge>,

@@ -57,6 +57,9 @@ export function generateVoucherEmailHTML(voucher) {
           color: white;
           font-size: 24px;
           font-weight: bold;
+          display:flex;
+          justify-content: center;
+          align-items: center;
         }
         .logo-circle {
           display: inline-block;

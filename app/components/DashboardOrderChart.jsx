@@ -358,7 +358,10 @@ resetButton: {
         <div style={styles.metricCard}>
           <div style={styles.metricLabel}>Total Product Sales</div>
           <div style={styles.metricValue}>
-            ${productSales.reduce((sum, item) => sum + (item.revenue || 0), 0).toFixed(2)}
+            {
+              productSales.reduce((sum, item) => sum + (item.revenue || 0), 0)
+                .toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            }
           </div>
         </div>
         <div style={styles.metricCard}>
