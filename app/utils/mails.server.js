@@ -152,10 +152,81 @@ export function getVoucherHTML() {
               </table>
             </td>
           </tr>
-
         </table>
       </td>
     </tr>
+
+<!-- How to Redeem Section -->
+<tr>
+  <td align="center" style="padding-top:30px;">
+    <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
+           style="background:#ffffff; border:1px solid #e0e0e0; padding:20px;">
+      <tr>
+        <td align="left" style="font-size:18px; font-weight:bold; color:#862633; border-left:4px solid #862633; padding-left:10px; padding-bottom:10px;">
+          How to Redeem?
+        </td>
+      </tr>
+      <tr>
+        <td style="font-size:14px; color:#555555; line-height:1.6; text-align:left;">
+          Keep them all for yourself or share with friends and family. 
+          It’s a smart way to save and help others stay road-ready too. 
+          Look forward to seeing you soon at your local Jiffy Lube!
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
+
+
+<!-- Billing Information (inside same flow, wrapped in td) -->
+<tr>
+  <td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
+           style="background:#ffffff; border:1px solid #cccccc;">
+      <tr>
+        <td style="padding:20px; font-size:18px; font-weight:bold; color:#000000; border-bottom:1px solid #ddd;">
+          Billing Information:
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:15px;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <!-- Billing Address -->
+              <td width="50%" valign="top" style="font-size:14px; color:#333333;">
+                <strong style="display:block; margin-bottom:6px;">Billing Address</strong>
+                Full Name <br/>
+                Street <br/>
+                City, State, Zip Code
+              </td>
+              <!-- Payment Method -->
+              <td width="50%" valign="top" style="font-size:14px; color:#333333;">
+                <strong style="display:block; margin-bottom:6px;">Payment Method</strong>
+                Apple Pay
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
+
+
+   <!-- Footer -->
+  <tr style="margin-top:20px;">
+  <td style="color:white; font-size:24px; font-weight:bold; text-align:center;">
+  <span style="display:inline-flex; align-items:center; justify-content:center;">
+    <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1755837350/lxkizea7xfe7omtekg5r.png" width="60" height="60" style="margin-right:10px;" />
+    <span style="color: #862633;">jiffylube</span>
+  </span>
+</td>
+</tr>
+  <div style="color: black; font-size: 12px; line-height: 1.4; max-width: 500px; margin: 0 auto;">
+    *Valid for up to 5 quarts of oil, extra fee for additional quarts. Not valid with any other offer for same service. Only valid at participating ACE Jiffy Lube locations. Shop supply fees and applicable taxes are not included and must be paid at time of service.
+  </div>
+</div>
+    </body>
   </table>
   `;
 }
