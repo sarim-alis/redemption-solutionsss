@@ -200,9 +200,9 @@ export function generateVoucherEmailHTML(voucher) {
       <div class="email-container">
         <!-- Header -->
         <div class="header">
-          <div class="logo">
+          <div class="logo" style="display:flex; align-items:center;">
            <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1755837350/lxkizea7xfe7omtekg5r.png" width="60" height="60" style="display:block;" />
-            jiffy lube
+            jiffy lube custom
           </div>
         </div>
 

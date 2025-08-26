@@ -25,13 +25,13 @@ export function generateGiftCardEmailHTML({ code, customerEmail, amount = 0 }) {
     </head>
     <body>
       <div class="container">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" style="font-family:Arial, sans-serif; background-color:#f9f9f9; padding:20px 0;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" style="font-family:Arial, sans-serif; background-color:#f9f9f9; padding:20px;">
           <tr>
             <td align="center">
               <table width="600" cellpadding="0" cellspacing="0" border="0" style="border-radius:12px; background:#862633; padding:30px; color:#ffffff;">
                 <!-- Top Row -->
                 <tr>
-                  <td align="left" style="width:60px;">
+                  <td align="left" style="width:60px; padding:10px;">
                     <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1755837350/lxkizea7xfe7omtekg5r.png"
                          width="60" height="60" style="border-radius:50%; object-fit:contain;" alt="Jiffy Lube Logo" />
                   </td>
