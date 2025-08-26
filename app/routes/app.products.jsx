@@ -37,6 +37,7 @@ export const loader = async ({ request }) => {
             productType: metafield(namespace: "custom", key: "product_type") {
               value
             }
+            createdAt
             totalInventory
             category {
               id
@@ -222,6 +223,21 @@ export default function ProductsPage() {
     setSortedProducts(sorted);
   };
 
+const getExpiryFromPurchase = (createdAt, expiryDate) => {
+  if (!createdAt || !expiryDate) return "—";
+
+  const purchase = new Date(createdAt);
+  const expiry = new Date(expiryDate);
+
+  // Calculate difference in days.
+  const diffMs = expiry - purchase;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  return `${diffDays} days from purchase`;
+};
+
+
+
   const productRows = sortedProducts.map(product => {
     const image = getProductImage(product);
     let productType = "—";
@@ -231,11 +247,10 @@ export default function ProductsPage() {
       else if (value === "gift") productType = "Gift";
     else productType = value;
     }
-  let expiryDate = "—";
-    if (product.expiryDate?.value) {
-      const date = new Date(product.expiryDate.value);
-    expiryDate = date.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit",});
-  }
+let expiryDate = "—";
+if (product.expiryDate?.value && product.createdAt) {
+  expiryDate = getExpiryFromPurchase(product.createdAt, product.expiryDate.value);
+}
 
 
   return [
