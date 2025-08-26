@@ -156,9 +156,34 @@ export function getVoucherHTML() {
       </td>
     </tr>
 
+<!-- Find a Location Section -->
+<tr>
+  <td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
+           style="background:#f5f5f5; border-radius:8px; padding:30px;">
+      <tr>
+        <td align="center" style="font-size:20px; font-weight:bold; color:#000000; padding-bottom:20px;">
+          Find a Participating Location Near You
+        </td>
+      </tr>
+      <tr>
+        <td align="center">
+          <a href="https://redemption-portal-487066d362b4.herokuapp.com" 
+             style="display:inline-block; background:#862633; color:#ffffff; 
+                    text-decoration:none; font-size:16px; font-weight:bold; 
+                    padding:14px 30px; border-radius:6px;">
+            FIND A LOCATION
+          </a>
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
+
+
 <!-- How to Redeem Section -->
 <tr>
-  <td align="center" style="padding-top:30px;">
+  <td align="center">
     <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
            style="background:#ffffff; border:1px solid #e0e0e0; padding:20px;">
       <tr>
