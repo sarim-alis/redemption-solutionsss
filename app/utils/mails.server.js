@@ -38,6 +38,39 @@ export function getVoucherHTML() {
   <table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" style="font-family:Arial, sans-serif; background-color:#f9f9f9; padding:20px 0;">
     <tr>
       <td align="center">
+
+        <!-- Header -->
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:#862633; padding:20px; text-align:center;">
+          <tr>
+            <td style="color:white; font-size:24px; font-weight:bold; text-align:center;">
+  <span style="display:inline-flex; align-items:center; justify-content:center;">
+    <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1755837350/lxkizea7xfe7omtekg5r.png" width="60" height="60" style="margin-right:10px;" />
+    jiffylube
+  </span>
+</td>
+          </tr>
+        </table>
+
+        <!-- Main Content -->
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:white; padding:40px 30px;">
+          <tr>
+            <td align="center" style="color:#862633; font-size:28px; font-weight:bold; padding-bottom:20px;">
+              Thank you for your purchase!
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="color:#333333; font-size:18px; padding-bottom:30px;">
+              Your Jiffy Lube® Oil Change Pack is ready to use.
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="color:#666666; font-size:16px; line-height:1.5; padding-bottom:40px;">
+              You'll find your voucher(s) below—just bring a voucher number with you on your next visit to a participating location.
+            </td>
+          </tr>
+        </table>
+
+        <!-- Voucher Card -->
         <table width="600" cellpadding="0" cellspacing="0" border="0" style="border:2px solid #4a5568; background:#862633; padding:30px; border-radius:0 8px 8px 8px;">
           <tr>
             <td align="center" style="padding-bottom:20px;">
@@ -88,25 +121,21 @@ export function getVoucherHTML() {
             </td>
           </tr>
 
-<!-- Voucher Code -->
-<tr>
-<td height="30" style="line-height:30px; font-size:0;">&nbsp;</td>
-</tr>
-<tr>
-  <td align="center" style="background:#edf2f7; border-radius:12px; padding:20px; margin:30px 0;">
-    <table width="100%">
-      <tr>
-        <td align="left" style="font-size:24px; color:#862633; font-weight:bold; padding-right:10px;">
-          Voucher Code:
-        </td>
-        <td align="right" style="font-size:32px; font-weight:bold; color:#000000; letter-spacing:2px;">
-          32A9-TV09
-        </td>
-      </tr>
-    </table>
-  </td>
-</tr>
-
+          <!-- Voucher Code -->
+          <tr>
+            <td align="center" style="background:#edf2f7; border-radius:12px; padding:20px; margin:30px 0;">
+              <table width="100%">
+                <tr>
+                  <td align="left" style="font-size:24px; color:#862633; font-weight:bold; padding-right:10px;">
+                    Voucher Code:
+                  </td>
+                  <td align="right" style="font-size:32px; font-weight:bold; color:#000000; letter-spacing:2px;">
+                    32A9-TV09
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
           <!-- Terms -->
           <tr>
@@ -130,6 +159,7 @@ export function getVoucherHTML() {
   </table>
   `;
 }
+
 
 export function getGiftHTML() {
   return `
