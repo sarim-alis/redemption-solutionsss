@@ -5,6 +5,7 @@ import { Page, Text } from "@shopify/polaris";
 import SidebarLayout from '../components/SidebarLayout';
 import { useLoaderData } from "@remix-run/react";
 import { json } from "@remix-run/node";
+import { Table } from "antd";
 import { getAllCustomers } from '../models/customer.server.js';
 
 // Loader.
@@ -60,6 +61,25 @@ const Customers = () => {
     return matchesSearch && matchesDate;
   });
 
+  const columns = [
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
+    },
+  ];
+
+  const tableData = filteredCustomers.map(c => ({
+    key: c.id,
+    name: `${c.firstName} ${c.lastName}`,
+    email: c.email,
+  }));
+
   return (
     <SidebarLayout>
       <div style={{ color: "black" }}>
@@ -102,23 +122,13 @@ const Customers = () => {
           </div>
 
           {/* Customer List */}
-          <div style={{ marginTop: "40px" }}>
-            <div style={{display: 'flex',justifyContent: 'flex-start',fontWeight: 'bold',paddingBottom: '12px',borderBottom: '2px solid #333',gap: '450px',color: 'black'}}>
-              <Text variant="headingMd" as="h2">Name</Text>
-              <Text variant="headingMd" as="h2">Email</Text>
-            </div>
-
-            {filteredCustomers.length === 0 ? (
-              <div style={{ padding: '24px', color: '#888' }}>No customers found.</div>
-            ) : (
-              filteredCustomers.map(customer => (
-                <div key={customer.id} style={{display: 'flex',justifyContent: 'flex-start',alignItems: 'center',padding: '12px 0',gap: '310px',color: 'black'}}>
-                  <span style={{ minWidth: "170px" }}>{customer.firstName} {customer.lastName}</span>
-                  <span style={{ minWidth: "170px" }}>{customer.email}</span>
-                </div>
-              ))
-            )}
-          </div>
+          <Table
+            columns={columns}
+            dataSource={tableData}
+            bordered
+            pagination={false}
+            style={{ marginTop: "20px" }}
+          />
         </Page>
       </div>
     </SidebarLayout>
