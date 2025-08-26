@@ -111,9 +111,10 @@ const Users = () => {
               <span style={{ minWidth: "170px" }}>{emp.username}</span>
               <span style={{ minWidth: "170px" }}>{emp.email}</span>
               <span style={{ minWidth: "170px" }}>{emp.address}</span>
-              <Dropdown trigger={['click']} placement="bottomRight" arrow>
+              {/* trigger={['click']} placement="bottomRight" arrow */}
+              {/* <Dropdown> */}
                 <MoreOutlined style={{ fontSize: 30, cursor: 'pointer' }} />
-              </Dropdown>
+              {/* </Dropdown> */}
             </div>
           ))}
         </div>
