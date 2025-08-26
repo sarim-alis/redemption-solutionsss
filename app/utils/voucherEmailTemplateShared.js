@@ -49,11 +49,11 @@ export function generateVoucherEmailHTML(voucher) {
           <!-- Header -->
             <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:#862633; padding:10px; text-align:center;">
                   <tr>
-                    <td style="color:white; font-size:24px;  text-align:center;">
-                        <span style="display:flex; align-items:center; justify-content:center;">
-                          <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1756224071/gtgy8nrnhkbcemgyh1ps.png" width="40" height="40" style="margin-right:10px;" />
-                          <span style="font-weight:bold;" >jiffy</span>lube
-                        </span>
+                    <td style="color:white; text-align:center;">
+                     
+                          <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1756224071/gtgy8nrnhkbcemgyh1ps.png" width="50%" height="40" style="margin-right:10px; object-fit: contain;" />
+                         
+                      
                     </td>
                   </tr>
             </table>
@@ -251,8 +251,8 @@ export function generateVoucherEmailHTML(voucher) {
     <!-- Footer -->
     <tr style="margin-top:20px;">
     <td style="color:white; font-size:24px; font-weight:bold; text-align:center;">
-    <span style="display:inline-flex; align-items:center; justify-content:center;">
-      <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1756224350/kuc37dmifsg42ojqxwc1.png" width="60" height="60" style="margin-right:10px;" />
+    <span style="display:inline-block;">
+      <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1756224350/kuc37dmifsg42ojqxwc1.png" width="50%" height="60" style="margin-right:10px; object-fit: contain;" />
      
     </span>
   </td>
