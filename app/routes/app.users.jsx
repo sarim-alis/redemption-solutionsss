@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Page, Text } from "@shopify/polaris";
 import SidebarLayout from '../components/SidebarLayout';
-import { Drawer, Input, Button, Dropdown } from 'antd';
+import { Drawer, Input, Button, Dropdown, Table } from 'antd';
 import { MoreOutlined } from '@ant-design/icons';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -67,56 +67,52 @@ const Users = () => {
     },
   });
 
+  // Ant Design Table columns
+  const columns = [
+    {
+      title: "Name",
+      dataIndex: "username",
+      key: "username",
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
+    },
+    {
+      title: "Address",
+      dataIndex: "address",
+      key: "address",
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
+        <MoreOutlined style={{ fontSize: 20, cursor: 'pointer' }} />
+      ),
+    },
+  ];
+
   return (
     <SidebarLayout>
      <div style={{ color: "black" }}>
       <Page fullWidth>
         {/* Header */}
-        <div style={styles.container}>
+        <div style={{ ...styles.container, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Text variant="headingXl" as="h1">Employees</Text>
-          <Button onClick={openDrawer} style={{ fontWeight: 'bold' }}>
-            Add Employee
-          </Button>
-        </div>
-
-        {/* Employee List */}
-        <div style={{ marginTop: "40px" }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'flex-start',
-            fontWeight: 'bold',
-            paddingBottom: '12px',
-            borderBottom: '2px solid #333',
-            gap: '450px',
-            color: 'black'
-          }}>
-            <Text variant="headingMd" as="h2">Name</Text>
-            <Text variant="headingMd" as="h2">Email</Text>
-            <Text variant="headingMd" as="h2">Address</Text>
-            <Text variant="headingMd" as="h2">Actions</Text>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', flex: 1 }}>
+          <Button onClick={openDrawer} style={{backgroundColor: 'rgb(134, 38, 51)', color: 'white', border: 'none', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', marginLeft: 'auto'}}>Add Employee</Button>
           </div>
-
-          {employees.map(emp => (
-            <div
-              key={emp.id}
-              style={{
-                display: 'flex',
-                justifyContent: 'flex-start',
-                alignItems: 'center',
-                padding: '12px 0',
-                gap: '310px',
-                color: 'black'
-              }}
-            >
-              <span style={{ minWidth: "170px" }}>{emp.username}</span>
-              <span style={{ minWidth: "170px" }}>{emp.email}</span>
-              <span style={{ minWidth: "170px" }}>{emp.address}</span>
-              <Dropdown trigger={['click']} placement="bottomRight" arrow>
-                <MoreOutlined style={{ fontSize: 30, cursor: 'pointer' }} />
-              </Dropdown>
-            </div>
-          ))}
         </div>
+
+          {/* Employee Table */}
+          <Table
+            columns={columns}
+            dataSource={employees.map(emp => ({ ...emp, key: emp.id }))}
+            style={{ marginTop: "20px" }}
+            bordered
+            pagination={false}
+          />
 
         {/* Drawer to Add Employee */}
         <Drawer
