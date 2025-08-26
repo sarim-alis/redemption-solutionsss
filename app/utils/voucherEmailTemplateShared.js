@@ -28,6 +28,9 @@ export function generateVoucherEmailHTML(voucher) {
     ? formatDate(voucher.createdAt)
     : "03/16/2025";
   const name = formatCustomerName(voucher.customerEmail);
+  
+  // Get product title from line items or use a default
+  const productTitle = voucher?.lineItems?.[0]?.title || 'Oil Change Voucher';
 
   return `
     <!DOCTYPE html>
@@ -82,7 +85,7 @@ export function generateVoucherEmailHTML(voucher) {
           <table width="350" cellpadding="0" cellspacing="0" border="0" style="border:2px solid #ffffff; border-style:dashed; background:#862633; padding:20px; border-radius:0 8px 8px 8px;">
             <tr>
               <td align="center" style="padding-bottom:14px;">
-                <h1 style="font-size:26px; font-weight:bold; color:#ffffff; margin:0;">Oil Change Voucher</h1>
+                <h1 class="order-title" style="font-size:26px; font-weight:bold; color:#ffffff; margin:0;">${productTitle}</h1>
               </td>
             </tr>
             <tr>
