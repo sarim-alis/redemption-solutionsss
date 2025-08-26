@@ -15,7 +15,7 @@ export async function action({ request }) {
   }
 
   // Import inside server-only function.
-  const { sendEmail, getGiftHTML } = await import("../utils/mail.server.js");
+  const { sendEmail, getGiftHTML } = await import("../utils/mails.server.js");
 
   await sendEmail({
     to: email,
