@@ -36,54 +36,58 @@ export function generateVoucherEmailHTML(voucher) {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Jiffy Lube Voucher</title>
-      
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+            
     </head>
     <body>
-       <table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" style="font-family:Arial, sans-serif; background-color:#f9f9f9; padding:20px 0;">
+       <table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" style="font-family: 'Barlow Condensed', sans-serif; background-color:#f9f9f9; padding:20px 0;">
       <tr>
         <td align="center">
 
           <!-- Header -->
-            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:#862633; padding:20px; text-align:center;">
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:#862633; padding:10px; text-align:center;">
                   <tr>
-                    <td style="color:white; font-size:24px; font-weight:bold; text-align:center;">
-                        <span style="display:inline-flex; align-items:center; justify-content:center;">
-                          <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1755837350/lxkizea7xfe7omtekg5r.png" width="60" height="60" style="margin-right:10px;" />
-                          jiffylube
+                    <td style="color:white; font-size:24px;  text-align:center;">
+                        <span style="display:flex; align-items:center; justify-content:center;">
+                          <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1755837350/lxkizea7xfe7omtekg5r.png" width="40" height="40" style="margin-right:10px;" />
+                          <span style="font-weight:bold;" >jiffy</span>lube
                         </span>
                     </td>
                   </tr>
             </table>
 
           <!-- Main Content -->
-          <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:white; padding:40px 30px;">
+          <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:white; padding:35px 30px;">
               <tr>
-                <td align="center" style="color:#862633; font-size:28px; font-weight:bold; padding-bottom:20px;">
-                  Thank you for your purchase!
+                <td align="center" style="color:#000000; font-size:28px; font-weight:bold; padding-bottom:10px; font-family: 'Barlow Condensed', sans-serif;">
+                  <span style="color:#862633;">Thank you </span> for your purchase!
                 </td>
               </tr>
               <tr>
-                <td align="center" style="color:#333333; font-size:18px; padding-bottom:30px;">
+                <td align="center" style="color:#000000; font-size:16px; padding-bottom:10px; font-weight:500; font-family: 'Barlow Condensed', sans-serif;">
                   Your Jiffy Lube® Oil Change Pack is ready to use.
                 </td>
               </tr>
               <tr>
-                <td align="center" style="color:#666666; font-size:16px; line-height:1.5; padding-bottom:40px;">
+                <td align="center" style="color:#000000; font-size:16px; line-height:1.5; padding-bottom:5px; font-weight:400; font-family: 'Barlow Condensed', sans-serif;">
                   You'll find your voucher(s) below—just bring a voucher number with you on your next visit to a participating location.
                 </td>
               </tr>
           </table>
 
           <!-- Voucher Card -->
-          <table width="600" cellpadding="0" cellspacing="0" border="0" style="border:2px solid #4a5568; background:#862633; padding:30px; border-radius:0 8px 8px 8px;">
+          <div style="width:350px; padding:5px; background-color:#862633;">
+          <table width="350" cellpadding="0" cellspacing="0" border="0" style="border:2px solid #ffffff; border-style:dashed; background:#862633; padding:20px; border-radius:0 8px 8px 8px;">
             <tr>
-              <td align="center" style="padding-bottom:20px;">
-                <h1 style="font-size:32px; font-weight:bold; color:#ffffff; margin:0;">Oil Change Voucher</h1>
+              <td align="center" style="padding-bottom:14px;">
+                <h1 style="font-size:26px; font-weight:bold; color:#ffffff; margin:0; font-family: 'Barlow Condensed', sans-serif;">Oil Change Voucher</h1>
               </td>
             </tr>
             <tr>
               <td align="center" style="padding-bottom:30px;">
-                <p style="font-size:18px; color:#ffffff; margin:0; line-height:1.6;">
+                <p style="font-size:14px; color:#ffffff; margin:0; line-height:1.6; font-family: 'Barlow Condensed', sans-serif;">
                   Present this at participating locations to redeem.
                 </p>
               </td>
@@ -94,8 +98,8 @@ export function generateVoucherEmailHTML(voucher) {
               <td style="border-bottom:1px solid #e2e8f0; padding:20px 0;">
                 <table width="100%">
                   <tr>
-                    <td align="left" style="font-size:20px; color:#ffffff; font-weight:500;">Valid through:</td>
-                    <td align="right" style="font-size:20px; color:#ffffff; font-weight:500;">${validThrough}</td>
+                    <td align="left" style="font-size:18px; color:#ffffff; font-weight:600; font-family: 'Barlow Condensed', sans-serif;">Valid through:</td>
+                    <td align="right" style="font-size:20px; color:#ffffff; font-weight:400; font-family: 'Barlow Condensed', sans-serif;">${validThrough}</td>
                   </tr>
                 </table>
               </td>
@@ -157,6 +161,7 @@ export function generateVoucherEmailHTML(voucher) {
               </td>
             </tr>
           </table>
+          </div>
         </td>
       </tr>
 
