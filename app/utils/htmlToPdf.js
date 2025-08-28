@@ -1,6 +1,6 @@
-const puppeteer = require('puppeteer');
+import puppeteer from 'puppeteer';
 
-async function htmlToPdf(html, options = {}) {
+export async function htmlToPdf(html, options = {}) {
   const browser = await puppeteer.launch({
     headless: true,
     args: [
