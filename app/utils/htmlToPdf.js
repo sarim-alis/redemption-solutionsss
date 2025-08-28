@@ -44,4 +44,4 @@ async function htmlToPdf(html, options = {}) {
   }
 }
 
-module.exports = { htmlToPdf };
+export { htmlToPdf };
