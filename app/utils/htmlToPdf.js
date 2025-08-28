@@ -43,5 +43,3 @@ export async function htmlToPdf(html, options = {}) {
     await browser.close();
   }
 }
-
-export { htmlToPdf };
