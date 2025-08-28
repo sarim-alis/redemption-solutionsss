@@ -29,6 +29,20 @@ export function generateVoucherEmailHTML(voucher) {
     : "03/16/2025";
   const name = formatCustomerName(voucher.customerEmail);
 
+  // Try to get product title from voucher.lineItem if available
+  let productTitle = "Oil Change Voucher";
+  if (voucher?.lineItem) {
+    try {
+      // If lineItem is a stringified JSON, parse it
+      const lineItemObj = typeof voucher.lineItem === 'string' ? JSON.parse(voucher.lineItem) : voucher.lineItem;
+      if (lineItemObj && lineItemObj.title) {
+        productTitle = lineItemObj.title;
+      }
+    } catch (e) {
+      // fallback to default title
+    }
+  }
+
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -221,7 +235,7 @@ export function generateVoucherEmailHTML(voucher) {
         <table width="600" cellpadding="0" cellspacing="0" border="0" style="border:2px solid #4A5568; background:#862633; padding:30px; border-radius:0 8px 8px 8px;">
           <tr>
             <td align="center" style="padding-bottom:20px;">
-              <h1 style="font-size:32px; font-weight:bold; color:#ffffff; margin:0;">Oil Change Voucher</h1>
+              <h1 style="font-size:32px; font-weight:bold; color:#ffffff; margin:0;">${productTitle}</h1>
             </td>
           </tr>
           <tr>
