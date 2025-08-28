@@ -1,8 +1,10 @@
 import puppeteer from 'puppeteer';
 
 export async function htmlToPdf(html, options = {}) {
+  // Use Chrome from the Chrome for Testing buildpack
   const browser = await puppeteer.launch({
-    headless: true,
+    headless: 'new',
+    executablePath: process.env.CHROME_BIN || '/app/.chrome-for-testing/chrome-linux64/chrome',
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -11,7 +13,16 @@ export async function htmlToPdf(html, options = {}) {
       '--no-first-run',
       '--no-zygote',
       '--single-process',
-      '--disable-gpu'
+      '--disable-gpu',
+      '--disable-software-rasterizer',
+      '--disable-extensions',
+      '--disable-background-networking',
+      '--disable-default-apps',
+      '--disable-translate',
+      '--metrics-recording-only',
+      '--mute-audio',
+      '--no-default-browser-check',
+      '--safebrowsing-disable-auto-update'
     ]
   });
 
