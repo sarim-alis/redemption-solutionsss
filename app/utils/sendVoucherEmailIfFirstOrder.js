@@ -1,5 +1,6 @@
 import { sendEmail } from "../utils/mail.server";
 import { generateVoucherEmailHTML } from "../utils/voucherEmailTemplateShared";
+import { generateVoucherPDF } from "../utils/generateVoucherPDF";
 import { generateGiftCardEmailHTML } from "./giftCardEmailTemplate";
 import prisma from "../db.server";
 
@@ -66,29 +67,28 @@ export async function sendVoucherEmailIfFirstOrder(order, voucher, retryCount = 
     // Prepare email content based on order type
     let emailSubject, emailText, emailHtml;
     
-    if (isGift) {
-      // Gift card email
-      const giftCardAmount = order.totalPrice || 0;
-      emailSubject = `Your Jiffy Lube Gift - Thank You!`;
-      emailText = `Hello ${customerName},\n\nThank you for your gift purchase!\n\nGift Amount: $${giftCardAmount.toFixed(2)}\nGift Code: ${voucherCode}\n\nYou can use this gift at any Jiffy Lube location or online at checkout.\n\nThank you for choosing Jiffy Lube!`;
-      emailHtml = generateGiftCardEmailHTML({ 
-        code: voucherCode, 
-        customerEmail,
-        amount: giftCardAmount
-      });
-    } else {
-      // Voucher email (default)
-      emailSubject = `Here are your Oil Change Vouchers! Where to Redeem... 🎟️`;
-      emailText = `Hello ${customerName},\n\nThank you for your order ${orderName}.\nHere is your voucher code: ${voucherCode}`;
-      emailHtml = generateVoucherEmailHTML({ ...voucher, customerEmail });
+
+    let attachments = [];
+    if (!isGift) {
+      // Generate PDF for voucher and attach
+      try {
+        const pdfBuffer = await generateVoucherPDF({ ...voucher, customerEmail });
+        attachments.push({
+          filename: `voucher-${voucherCode}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf',
+        });
+      } catch (pdfErr) {
+        console.error(`[VoucherEmail] ⚠️ Failed to generate PDF for voucher ${voucherCode}:`, pdfErr);
+      }
     }
-    
-    // Send email with enhanced error handling
+
     const emailResult = await sendEmail({
       to: customerEmail,
       subject: emailSubject,
       text: emailText,
       html: emailHtml,
+      ...(attachments.length > 0 ? { attachments } : {}),
     });
     
     console.log(`[VoucherEmail] ✅ Email sent successfully! Message ID: ${emailResult.messageId}`);
