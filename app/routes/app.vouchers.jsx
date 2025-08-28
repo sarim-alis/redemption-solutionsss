@@ -94,6 +94,9 @@ export default function VouchersPage() {
             <option value="This Month">This Month</option>
             <option value="This Year">This Year</option>
           </select>
+        <form method="post" action="/vouchers/export" style={{ marginLeft: "auto" }}>
+         <button type="submit" style={{ background: "#862633", color: "#fff", padding: "12px 28px", borderRadius: "6px", fontWeight: "600", border: "rgba(0, 0, 0, 0.45)", cursor: "pointer"}}>Export</button>
+        </form>
         </div>
         <div
           style={containerStyle}
