@@ -84,7 +84,8 @@ model Order {
 
 model Location {
   id        String   @id @default(cuid())
-  name      String
+  name      String   @unique
+  market    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
