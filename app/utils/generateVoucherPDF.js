@@ -1,10 +1,13 @@
 // Utility to generate a PDF from voucher data using pdfkit (no Chrome needed)
+
 import PDFDocument from 'pdfkit';
 import getStream from 'get-stream';
+import { PassThrough } from 'stream';
 
 export async function generateVoucherPDF(voucher) {
   const doc = new PDFDocument({ size: 'A4', margin: 40 });
-  const stream = doc.pipe(getStream.buffer());
+  const passthrough = new PassThrough();
+  doc.pipe(passthrough);
 
   // Branding
   doc
@@ -75,5 +78,5 @@ export async function generateVoucherPDF(voucher) {
     .text('Thank you for your purchase!', { align: 'center' });
 
   doc.end();
-  return await stream;
+  return await getStream.buffer(passthrough);
 }
