@@ -4,8 +4,8 @@ export async function htmlToPdf(html, options = {}) {
   // Use Chrome from the Chrome for Testing buildpack
   const browser = await puppeteer.launch({
     headless: 'new',
-    executablePath: process.env.CHROME_BIN || '/app/.chrome-for-testing/chrome-linux64/chrome',
-    ignoreDefaultArgs: ['--disable-extensions'],
+    executablePath: process.env.CHROME_BIN || '/app/.apt/usr/bin/google-chrome-stable',
+    ignoreHTTPSErrors: true,
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
