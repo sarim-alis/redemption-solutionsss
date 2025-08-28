@@ -5,6 +5,7 @@ export async function htmlToPdf(html, options = {}) {
   const browser = await puppeteer.launch({
     headless: 'new',
     executablePath: process.env.CHROME_BIN || '/app/.chrome-for-testing/chrome-linux64/chrome',
+    ignoreDefaultArgs: ['--disable-extensions'],
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
