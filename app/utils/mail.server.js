@@ -53,9 +53,17 @@ async function verifyConnection() {
     }
 }
 
-// Enhanced email sending function
-// Add attachments param
-export async function sendEmail({ to, subject, text, html, priority = 'normal', attachments }) {
+/**
+ * Enhanced email sending function with attachment support
+ * @param {string|string[]} to - Recipient email address(es)
+ * @param {string} subject - Email subject
+ * @param {string} [text] - Plain text version
+ * @param {string} [html] - HTML version
+ * @param {string} [priority] - Email priority (high, normal, low)
+ * @param {Array} [attachments] - Array of attachment objects
+ * @returns {Promise<{success: boolean, messageId: string}>}
+ */
+export async function sendEmail({ to, subject, text, html, priority = 'normal', attachments = [] }) {
     const emailId = `EMAIL_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const timestamp = new Date().toISOString();
     
@@ -81,21 +89,34 @@ export async function sendEmail({ to, subject, text, html, priority = 'normal', 
     }
     
     try {
-        // Prepare email data
+        // Prepare email options
         const mailOptions = {
-            from: `"Redemption Solutions 🎟️" <${smtpUser}>`,
-            to,
-            subject,
-            text,
-            html,
-            priority: priority === 'high' ? 'high' : 'normal',
+            from: `"Jiffy Lube" <${smtpUser}>`,
+            to: Array.isArray(to) ? to.join(', ') : to,
+            subject: subject || 'No Subject',
+            priority: ['high', 'low'].includes(priority) ? priority : 'normal',
+            // Only include text/html if they have content
+            ...(text && { text }),
+            ...(html && { html }),
             headers: {
                 'X-Email-ID': emailId,
                 'X-Priority': priority,
                 'X-Sent-From': 'Shopify-Voucher-App'
             },
-            ...(attachments && attachments.length > 0 ? { attachments } : {})
         };
+
+        // Handle attachments if any
+        if (attachments && attachments.length > 0) {
+            mailOptions.attachments = attachments.map(attachment => ({
+                filename: attachment.filename || 'attachment.pdf',
+                content: attachment.content,
+                contentType: attachment.contentType || 'application/octet-stream',
+                ...(attachment.encoding && { encoding: attachment.encoding }),
+                ...(attachment.cid && { cid: attachment.cid })
+            }));
+        }
+
+        console.log(` [MailServer]  Sending email via SMTP...`);
         
         console.log(`📧 [MailServer] 📤 Sending email via SMTP...`);
         

@@ -1,0 +1,23 @@
+{
+  "buildpacks": [
+    {
+      "url": "https://github.com/heroku/heroku-buildpack-google-chrome"
+    },
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "environments": {
+    "test": {
+      "env": {
+        "NODE_ENV": "test"
+      },
+      "formation": {
+        "test": {
+          "quantity": 1,
+          "size": "basic"
+        }
+      }
+    }
+  }
+}

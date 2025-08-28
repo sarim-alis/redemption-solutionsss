@@ -1,7 +1,7 @@
 import { sendEmail } from "../utils/mail.server";
 import { generateVoucherEmailHTML } from "../utils/voucherEmailTemplateShared";
-import { generateVoucherPDF } from "../utils/generateVoucherPDF";
 import { generateGiftCardEmailHTML } from "./giftCardEmailTemplate";
+import { htmlToPdf } from "./htmlToPdf";
 import prisma from "../db.server";
 
 /**
@@ -65,7 +65,8 @@ export async function sendVoucherEmailIfFirstOrder(order, voucher, retryCount = 
     console.log(`[VoucherEmail] 🎁 Order type: ${isGift ? 'Gift' : 'Voucher'}`);
     
     // Prepare email content based on order type
-    let emailSubject, emailText, emailHtml;
+    let emailSubject, emailText, emailHtml, attachments = [];
+    
     if (isGift) {
       // Gift card email
       const giftCardAmount = order.totalPrice || 0;
@@ -81,46 +82,36 @@ export async function sendVoucherEmailIfFirstOrder(order, voucher, retryCount = 
       emailSubject = `Here are your Oil Change Vouchers! Where to Redeem... 🎟️`;
       emailText = `Hello ${customerName},\n\nThank you for your order ${orderName}.\nHere is your voucher code: ${voucherCode}`;
       emailHtml = generateVoucherEmailHTML({ ...voucher, customerEmail });
-    }
-
-    let attachments = [];
-    if (!isGift) {
-      // Generate PDF for voucher and attach
+      
+      // Generate PDF attachment for voucher
       try {
-        const pdfBuffer = await generateVoucherPDF({ ...voucher, customerEmail });
+        console.log('[VoucherEmail] 📄 Generating PDF attachment...');
+        const pdfBuffer = await htmlToPdf(emailHtml);
         attachments.push({
           filename: `voucher-${voucherCode}.pdf`,
           content: pdfBuffer,
-          contentType: 'application/pdf',
+          contentType: 'application/pdf'
         });
-      } catch (pdfErr) {
-        console.error(`[VoucherEmail] ⚠️ Failed to generate PDF for voucher ${voucherCode}:`, pdfErr);
-        // PDF failed, but still send email without attachment
+        console.log('[VoucherEmail] ✅ PDF generated successfully');
+      } catch (pdfError) {
+        console.error('[VoucherEmail] ❌ Error generating PDF:', pdfError);
+        // Continue without PDF if generation fails
       }
     }
-
-    // Safety checks and debug logging
-    if (!emailSubject || (!emailText && !emailHtml)) {
-      console.error('[VoucherEmail] ❌ Email subject or content missing before sending!', {
-        emailSubject,
-        emailText,
-        emailHtml,
-        voucher,
-        order
-      });
-      throw new Error('Email subject or content missing');
-    }
+    
     console.log('[VoucherEmail] 📧 Sending email with subject:', emailSubject);
     console.log('[VoucherEmail] 📧 Email HTML length:', emailHtml?.length);
     console.log('[VoucherEmail] 📧 Attachments:', attachments.length);
 
-    const emailResult = await sendEmail({
+    const emailData = {
       to: customerEmail,
       subject: emailSubject,
-      text: emailText,
       html: emailHtml,
-      ...(attachments.length > 0 ? { attachments } : {}),
-    });
+      text: emailText,
+      attachments
+    };
+
+    const emailResult = await sendEmail(emailData);
     
     console.log(`[VoucherEmail] ✅ Email sent successfully! Message ID: ${emailResult.messageId}`);
     
