@@ -77,6 +77,21 @@ export async function sendVoucherEmailIfFirstOrder(order, voucher, retryCount = 
         customerEmail,
         amount: giftCardAmount
       });
+      
+      // Generate PDF attachment for gift card
+      try {
+        console.log('[GiftCardEmail] 📄 Generating PDF attachment...');
+        const pdfBuffer = await htmlToPdf(emailHtml);
+        attachments.push({
+          filename: `gift-card-${voucherCode}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf'
+        });
+        console.log('[GiftCardEmail] ✅ PDF generated successfully');
+      } catch (pdfError) {
+        console.error('[GiftCardEmail] ❌ Error generating PDF:', pdfError);
+        // Continue without PDF if generation fails
+      }
     } else {
       // Voucher email (default)
       emailSubject = `Here are your Oil Change Vouchers! Where to Redeem... 🎟️`;
