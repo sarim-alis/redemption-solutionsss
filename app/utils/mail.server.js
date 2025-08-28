@@ -54,7 +54,8 @@ async function verifyConnection() {
 }
 
 // Enhanced email sending function
-export async function sendEmail({ to, subject, text, html, priority = 'normal' }) {
+// Add attachments param
+export async function sendEmail({ to, subject, text, html, priority = 'normal', attachments }) {
     const emailId = `EMAIL_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const timestamp = new Date().toISOString();
     
@@ -92,7 +93,8 @@ export async function sendEmail({ to, subject, text, html, priority = 'normal' }
                 'X-Email-ID': emailId,
                 'X-Priority': priority,
                 'X-Sent-From': 'Shopify-Voucher-App'
-            }
+            },
+            ...(attachments && attachments.length > 0 ? { attachments } : {})
         };
         
         console.log(`📧 [MailServer] 📤 Sending email via SMTP...`);
