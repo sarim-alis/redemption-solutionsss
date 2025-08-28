@@ -115,6 +115,7 @@ export default function VouchersPage() {
                 <th style={headStyle}>Customer Email</th>
                 <th style={headStyle}>Used</th>
                 <th style={headStyle}>Created At</th>
+                <th style={headStyle}>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -146,12 +147,15 @@ export default function VouchersPage() {
                     <td style={cellStyle}>
                       {new Date(v.createdAt).toLocaleString()}
                     </td>
+                    <button onClick={() => window.open(`/vouchers/export?id=${v.id}`, "_blank")} style={{ padding: "6px 12px", backgroundColor: "#862633", color: "white", border: "none", borderRadius: "6px", cursor: "pointer"}}>
+                      Download
+                    </button>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     style={{
                       textAlign: "center",
                       padding: 40,

@@ -1,11 +1,10 @@
+// /app/routes/vouchers.export.jsx
 import puppeteer from "puppeteer";
-import { json } from "@remix-run/node";
 import { getAllVouchers } from "../models/voucher.server";
+import prisma from "../db.server";
 
-export const action = async () => {
-  const vouchers = await getAllVouchers();
-
-  // Generate HTML for PDF
+// 🔥 Shared function to build PDF
+async function buildPdf(vouchers, singleId = null) {
   const html = `
     <html>
       <head>
@@ -17,7 +16,7 @@ export const action = async () => {
         </style>
       </head>
       <body>
-        <h2>Voucher Report</h2>
+        <h2>${singleId ? "Voucher" : "Voucher Report"}</h2>
         <table>
           <thead>
             <tr>
@@ -29,7 +28,9 @@ export const action = async () => {
             </tr>
           </thead>
           <tbody>
-            ${vouchers.map(v => `
+            ${vouchers
+              .map(
+                (v) => `
               <tr>
                 <td>${v.code}</td>
                 <td>${v.shopifyOrderId}</td>
@@ -37,14 +38,15 @@ export const action = async () => {
                 <td>${v.used ? "Yes" : "No"}</td>
                 <td>${new Date(v.createdAt).toLocaleString()}</td>
               </tr>
-            `).join("")}
+            `
+              )
+              .join("")}
           </tbody>
         </table>
       </body>
     </html>
   `;
 
-  // Puppeteer render
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
   await page.setContent(html, { waitUntil: "networkidle0" });
@@ -55,7 +57,32 @@ export const action = async () => {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": "attachment; filename=vouchers.pdf"
-    }
+      "Content-Disposition": `attachment; filename=${singleId ? `voucher-${singleId}.pdf` : "vouchers.pdf"}`,
+    },
   });
+}
+
+// 🔹 Loader handles GET requests (for single voucher download link or full export via ?id=)
+export const loader = async ({ request }) => {
+  const url = new URL(request.url);
+  const id = url.searchParams.get("id");
+
+  if (id) {
+    const voucher = await prisma.voucher.findUnique({
+      where: { id: String(id) },
+    });
+
+    if (!voucher) throw new Response("Not Found", { status: 404 });
+    return buildPdf([voucher], id);
+  }
+
+  // No ID → export all
+  const vouchers = await getAllVouchers();
+  return buildPdf(vouchers);
+};
+
+// 🔹 Action handles POST requests (export all from form button)
+export const action = async () => {
+  const vouchers = await getAllVouchers();
+  return buildPdf(vouchers);
 };
