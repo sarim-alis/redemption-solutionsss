@@ -31,7 +31,7 @@ export function generateGiftCardEmailHTML({ code, customerEmail, amount = 0 }) {
         <!-- Header -->
            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:#862633; padding:10px; text-align:center;">
                   <tr>
-                    <td style="color:white; text-align:center;">
+                    <td style="color:white; text-align:center; padding: 10px;">
                      
                           <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1756224071/gtgy8nrnhkbcemgyh1ps.png" width="50%" height="40" style="margin-right:10px; object-fit: contain;" />
                          
@@ -41,19 +41,19 @@ export function generateGiftCardEmailHTML({ code, customerEmail, amount = 0 }) {
             </table>
 
               <!-- Main Content -->
-             <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:white; padding:35px 30px;">
+             <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:white; margin:35px 30px;">
               <tr>
-                <td align="center" style="color:#000000; font-size:28px; font-weight:bold; padding-bottom:10px;">
+                <td align="center" style="color:#000000; font-size:28px; font-weight:bold; margin-bottom:10px;">
                   <span style="color:#862633;">Thank you </span> for your purchase!
                 </td>
               </tr>
               <tr>
-                <td align="center" style="color:#000000; font-size:16px; padding-bottom:10px; font-weight:500;">
+                <td align="center" style="color:#000000; font-size:16px; margin-bottom:10px; font-weight:500;">
                   Your Jiffy Lube® Oil Change Pack is ready to use.
                 </td>
               </tr>
               <tr>
-                <td align="center" style="color:#000000; font-size:16px; line-height:1.5; padding-bottom:5px; font-weight:400;">
+                <td align="center" style="color:#000000; font-size:16px; line-height:1.5; margin-bottom:5px; font-weight:400;">
                   You'll find your voucher(s) below—just bring a voucher number with you on your next visit to a participating location.
                 </td>
               </tr>
@@ -62,7 +62,7 @@ export function generateGiftCardEmailHTML({ code, customerEmail, amount = 0 }) {
 
           <tr>
             <td align="center">
-              <table width="600" cellpadding="0" cellspacing="0" border="0" style="border-radius:12px; background:#862633; padding:30px; color:#ffffff;">
+              <table width="600" cellpadding="0" cellspacing="0" border="0" style="border-radius:12px; background:#862633; margin:30px; color:#ffffff;">
                 <!-- Top Row -->
                     <tr>
                       <td align="left" style="width:60px; padding: 10px;">
@@ -105,7 +105,7 @@ export function generateGiftCardEmailHTML({ code, customerEmail, amount = 0 }) {
               </td>
             </tr>
             <tr>
-              <td align="center">
+              <td align="center" style="padding: 0 20px; ">
                 <a href="https://redemption-portal-487066d362b4.herokuapp.com" 
                   style="display:block; background:#862633; color:#ffffff; 
                           text-decoration:none; font-size:16px; font-weight:bold; 
@@ -124,12 +124,12 @@ export function generateGiftCardEmailHTML({ code, customerEmail, amount = 0 }) {
             <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
                   style="background:#ffffff; padding:20px; border-left:3px solid #862633;">
               <tr>
-                <td align="left" style="font-size:24px; font-weight:bold; color:#000000;  padding-bottom:10px;">
+                <td align="left" style="font-size:24px; font-weight:bold; color:#000000;  padding-bottom:10px; padding-left:20px;">
                   How to Redeem?
                 </td>
               </tr>
               <tr>
-                <td style="font-size:14px; color:#555555; line-height:1.6; text-align:left;">
+                <td style="font-size:14px; color:#555555; line-height:1.6; text-align:left; padding: 0 20px;">
                   Keep them all for yourself or share with friends and family. 
                   It’s a smart way to save and help others stay road-ready too. 
                   Look forward to seeing you soon at your local Jiffy Lube!
