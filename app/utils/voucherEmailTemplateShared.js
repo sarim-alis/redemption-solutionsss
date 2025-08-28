@@ -29,8 +29,20 @@ export function generateVoucherEmailHTML(voucher) {
     : "03/16/2025";
   const name = formatCustomerName(voucher.customerEmail);
   
+  // Parse line items if they exist and are a string
+  let lineItems = [];
+  try {
+    if (typeof voucher.lineItems === 'string') {
+      lineItems = JSON.parse(voucher.lineItems);
+    } else if (Array.isArray(voucher.lineItems)) {
+      lineItems = voucher.lineItems;
+    }
+  } catch (error) {
+    console.error('Error parsing line items:', error);
+  }
+  
   // Get product title from line items or use a default
-  const productTitle = voucher?.lineItems?.[0]?.title || 'Oil Change Voucher';
+  const productTitle = lineItems[0]?.title || 'Oil Change Voucher';
 
   return `
     <!DOCTYPE html>
