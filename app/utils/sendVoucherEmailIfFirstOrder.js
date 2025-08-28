@@ -83,6 +83,21 @@ export async function sendVoucherEmailIfFirstOrder(order, voucher, retryCount = 
       }
     }
 
+    // Safety checks and debug logging
+    if (!emailSubject || (!emailText && !emailHtml)) {
+      console.error('[VoucherEmail] ❌ Email subject or content missing before sending!', {
+        emailSubject,
+        emailText,
+        emailHtml,
+        voucher,
+        order
+      });
+      throw new Error('Email subject or content missing');
+    }
+    console.log('[VoucherEmail] 📧 Sending email with subject:', emailSubject);
+    console.log('[VoucherEmail] 📧 Email HTML length:', emailHtml?.length);
+    console.log('[VoucherEmail] 📧 Attachments:', attachments.length);
+
     const emailResult = await sendEmail({
       to: customerEmail,
       subject: emailSubject,
