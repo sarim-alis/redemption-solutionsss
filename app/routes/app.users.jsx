@@ -80,7 +80,7 @@ const Users = () => {
       key: "email",
     },
     {
-      title: "Address",
+      title: "Location",
       dataIndex: "address",
       key: "address",
     },
