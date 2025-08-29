@@ -4,7 +4,7 @@ import { useLoaderData, useNavigation } from "@remix-run/react";
 import SidebarLayout from "../components/SidebarLayout";
 import { json } from "@remix-run/node";
 import { getAllVouchers } from "../models/voucher.server";
-import { Loader } from "@shopify/polaris";
+import { Spinner } from "@shopify/polaris";
 
 
 // Loader.
@@ -184,7 +184,7 @@ export default function VouchersPage() {
               alignItems: 'center',
               gap: '16px'
             }}>
-              <Loader size="large" />
+              <Spinner size="large" />
               <div style={{ color: '#4b5563', marginTop: '12px' }}>Loading vouchers...</div>
             </div>
           </div>
