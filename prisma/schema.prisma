@@ -89,7 +89,7 @@ model Location {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  employees Employee[] @relation("EmployeeLocations")
+  employees Employee[]
 }
 
 model Employee {
@@ -101,7 +101,8 @@ model Employee {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
-  locations Location[] @relation("EmployeeLocations")
+  locationId String
+  location   Location  @relation(fields: [locationId], references: [id])
 }
 
 model Customer {

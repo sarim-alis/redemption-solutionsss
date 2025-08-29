@@ -3,7 +3,7 @@
 client_id = "c2f415f66df6ec14c9b7ccef564c014c"
 name = "redeem-gift"
 handle = "redeem-gift"
-application_url = "https://disclaimer-temporal-gratis-ministry.trycloudflare.com"
+application_url = "https://louisville-rapid-hypothetical-vegetables.trycloudflare.com"
 embedded = true
 
 [build]
@@ -19,9 +19,9 @@ scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gi
 
 [auth]
 redirect_urls = [
-  "https://disclaimer-temporal-gratis-ministry.trycloudflare.com/auth/callback",
-  "https://disclaimer-temporal-gratis-ministry.trycloudflare.com/auth/shopify/callback",
-  "https://disclaimer-temporal-gratis-ministry.trycloudflare.com/api/auth/callback"
+  "https://louisville-rapid-hypothetical-vegetables.trycloudflare.com/auth/callback",
+  "https://louisville-rapid-hypothetical-vegetables.trycloudflare.com/auth/shopify/callback",
+  "https://louisville-rapid-hypothetical-vegetables.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
