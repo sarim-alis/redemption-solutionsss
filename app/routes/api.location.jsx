@@ -12,14 +12,14 @@ export const action = async ({ request }) => {
   if (method === "POST") {
     try {
       const body = await request.json();
-      const { name } = body;
+      const { name, market } = body;
 
-      if (!name) {
-        return json({ error: "Name are required" }, { status: 400 });
+      if (!name || !market) {
+        return json({ error: "Name and market are required" }, { status: 400 });
       }
 
       const location = await prisma.location.create({
-        data: { name },
+        data: { name, market },
       });
 
       console.log("✅ Location created:", location);
@@ -34,15 +34,15 @@ export const action = async ({ request }) => {
   if (method === "PUT") {
     try {
       const body = await request.json();
-      const { id, name } = body;
+      const { id, name, market } = body;
 
-      if (!id || !name) {
-        return json({ error: "ID and name are required for update" }, { status: 400 });
+      if (!id || !name || !market) {
+        return json({ error: "ID and name and market are required for update" }, { status: 400 });
       }
 
       const updated = await prisma.location.update({
         where: { id },
-        data: { name },
+        data: { name, market },
       });
 
       console.log("✏️ Updated location:", updated);

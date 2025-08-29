@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Page, Text } from "@shopify/polaris";
 import SidebarLayout from "../components/SidebarLayout";
-import { Drawer, Form, Input, Button, Dropdown, Menu } from 'antd';
+import { Drawer, Input, Button, Dropdown, Menu } from 'antd';
 import { MoreOutlined } from '@ant-design/icons';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -14,17 +14,18 @@ import { getAllLocations } from '../models/location.server';
 import styles from '../styles/location.js';
 
 
-// Action.
+// Action. 
 export const action = async ({ request }) => {
   const formData = await request.formData();
   const name = formData.get("name");
+  const market = formData.get("market");
 
-  if (!name) {
-    return json({ error: "Location name is required" }, { status: 400 });
+  if (!name || !market) {
+    return json({ error: "Location name and market is required" }, { status: 400 });
   }
 
   await createLocation(name);
-  return redirect("/app.locations"); // refresh after save
+  return redirect("/app.locations");
 };
 
 // Loader.
@@ -36,11 +37,12 @@ export const loader = async () => {
 
 // Frontend.
 const Locations = () => {
-  // const { locations } = useLoaderData();
   const { locations: initialLocations } = useLoaderData();
   const [locations, setLocations] = useState(initialLocations);
   const [editDrawerVisible, setEditDrawerVisible] = useState(false);
   const [editingLocation, setEditingLocation] = useState(null);
+
+  const marketOptions = ["Market #1", "Market #2", "Market #3", "Market #4", "Market #5", "Market #6", "Market #7"];
 
 
   const handleDelete = async (locationId) => {
@@ -98,9 +100,11 @@ const actionMenu = (locationId) => (
   const formik = useFormik({
     initialValues: {
       name: '',
+      market: '',
     },
     validationSchema: Yup.object({
       name: Yup.string().required('Location name is required'),
+      market: Yup.string().required('Market is required'),
     }),
     // onSubmit: (values) => {
     //   console.log('Form Values:', values);
@@ -137,10 +141,12 @@ const actionMenu = (locationId) => (
   initialValues: {
     id: '',
     name: '',
+    market: '',
   },
   enableReinitialize: true,
   validationSchema: Yup.object({
     name: Yup.string().required("Location name is required"),
+    market: Yup.string().required("Market is required"),
   }),
   onSubmit: async (values) => {
     try {
@@ -180,6 +186,7 @@ useEffect(() => {
     editFormik.setValues({
       id: editingLocation.id,
       name: editingLocation.name,
+      market: editingLocation.market,
     });
   }
 }, [editingLocation]);
@@ -212,6 +219,7 @@ useEffect(() => {
               key={loc.id}
               style={{display: 'flex',alignItems: 'center',padding: '12px 0',color: 'black'}}>
               <span style={{ flex: 1, minWidth: "120px", textAlign: 'left' }}>{loc.name}</span>
+              <span style={{ flex: 1, minWidth: "120px", textAlign: 'left' }}>{loc.market}</span>
               <div style={{ width: 200, textAlign: 'right' }}>
                 <Dropdown overlay={actionMenu(loc.id)} trigger={['click']} placement="bottomRight" arrow>
                   <MoreOutlined style={{ fontSize: 30, cursor: 'pointer' }} />
@@ -244,6 +252,27 @@ useEffect(() => {
         <div style={{ color: '#ff4d4f', marginTop: '4px' }}>{formik.errors.name}</div>
       )}
     </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
+                  Market <span style={{ color: '#ce1127' }}>*</span>
+                </label>
+                <select
+                  name="market"
+                  value={formik.values.market}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  style={{ width: '100%', height: '40px' }}
+                >
+                  <option value="">Select Market</option>
+                  {marketOptions.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+                {formik.touched.market && formik.errors.market && (
+                  <div style={{ color: '#ff4d4f', marginTop: '4px' }}>{formik.errors.market}</div>
+                )}
+              </div>
 
     <Button
       htmlType="submit"
@@ -293,6 +322,30 @@ useEffect(() => {
         </div>
       )}
     </div>
+
+     <div style={{ marginBottom: "20px" }}>
+                <label style={{ display: "block", fontSize: "16px", marginBottom: "8px" }}>
+                  Market <span style={{ color: "#ce1127" }}>*</span>
+                </label>
+                <select
+                  name="market"
+                  value={editFormik.values.market}
+                  onChange={editFormik.handleChange}
+                  onBlur={editFormik.handleBlur}
+                  style={{ width: "100%", height: "40px" }}
+                >
+                  <option value="">Select Market</option>
+                  {marketOptions.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+                {editFormik.touched.market && editFormik.errors.market && (
+                  <div style={{ color: "#ff4d4f", marginTop: "4px" }}>
+                    {editFormik.errors.market}
+                  </div>
+                )}
+              </div>
+
 
     <Button
       htmlType="submit"
