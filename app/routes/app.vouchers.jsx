@@ -13,11 +13,58 @@ export const loader = async () => {
 };
 
 
+// Helper function to get voucher type
+const getVoucherType = (lineItems) => {
+  if (!lineItems) return '--';
+  try {
+    const items = JSON.parse(lineItems);
+    const firstItem = Array.isArray(items) ? items[0] : 
+                     items?.edges?.[0]?.node || items;
+    return firstItem?.type || '--';
+  } catch (e) {
+    return '--';
+  }
+};
+
 // Frontend.
 export default function VouchersPage() {
   const { vouchers } = useLoaderData();
   const [search, setSearch] = React.useState("");
   const [dateFilter, setDateFilter] = React.useState("All");
+  const [typeFilter, setTypeFilter] = React.useState("all");
+  const [usedFilter, setUsedFilter] = React.useState("all");
+  
+  // Calculate summary counts
+  const summary = React.useMemo(() => {
+    return vouchers.reduce((acc, v) => {
+      const type = getVoucherType(v.order?.lineItems).toLowerCase();
+      const isGift = type === 'gift';
+      const isVoucher = !isGift;
+      const isUsed = v.order?.statusUse;
+      
+      // Total counts
+      acc.totalVouchers++;
+      
+      // Voucher specific counts
+      if (isVoucher) {
+        acc.vouchers.total++;
+        if (isUsed) acc.vouchers.used++;
+        else acc.vouchers.unused++;
+      } 
+      // Gift card specific counts
+      else if (isGift) {
+        acc.gifts.total++;
+        if (isUsed) acc.gifts.used++;
+        else acc.gifts.unused++;
+      }
+      
+      return acc;
+    }, { 
+      totalVouchers: 0,
+      vouchers: { total: 0, used: 0, unused: 0 },
+      gifts: { total: 0, used: 0, unused: 0 }
+    });
+  }, [vouchers]);
 
   // Helper: date filter
   function isDateMatch(dateString, filter) {
@@ -48,55 +95,141 @@ export default function VouchersPage() {
     return true;
   }
 
-  // Filter vouchers by search and date
-  const filteredVouchers = vouchers.filter(v => {
-    const q = search.toLowerCase();
-    const code = (v.code || "").toLowerCase();
-    const orderId = (v.shopifyOrderId || "").toLowerCase();
-    const email = (v.customerEmail || "").toLowerCase();
-    const matchesSearch = code.includes(q) || orderId.includes(q) || email.includes(q);
-    const matchesDate = isDateMatch(v.createdAt, dateFilter);
-    return matchesSearch && matchesDate;
-  });
+  // Filter vouchers by search, date, type and status
+  const filteredVouchers = React.useMemo(() => {
+    return vouchers.filter(v => {
+      const q = search.toLowerCase();
+      const code = (v.code || "").toLowerCase();
+      const orderId = (v.shopifyOrderId || "").toLowerCase();
+      const email = (v.customerEmail || "").toLowerCase();
+      const type = getVoucherType(v.order?.lineItems).toLowerCase();
+      
+      const matchesSearch = code.includes(q) || orderId.includes(q) || email.includes(q);
+      const matchesDate = isDateMatch(v.createdAt, dateFilter);
+      const matchesType = typeFilter === 'all' || type === typeFilter.toLowerCase();
+      const matchesUsed = usedFilter === 'all' || 
+                         (usedFilter === 'used' && v.order?.statusUse) || 
+                         (usedFilter === 'not_used' && !v.order?.statusUse);
+      
+      return matchesSearch && matchesDate && matchesType && matchesUsed;
+    });
+  }, [vouchers, search, dateFilter, typeFilter, usedFilter]);
 
   return (
     <SidebarLayout>
       <div style={{ padding: 40 }}>
-        {/* Search and Date Filter */}
-        <div style={{ marginBottom: 18, display: 'flex', gap: '16px', alignItems: 'center' }}>
-          <input
-            type="text"
-            placeholder="Search..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{
-              padding: "10px",
-              border: "1px solid #ccc",
-              borderRadius: "6px",
-              width: "320px",
-              fontSize: "15px"
-            }}
-          />
-          <select
-            value={dateFilter}
-            onChange={e => setDateFilter(e.target.value)}
-            style={{
-              padding: "10px",
-              border: "1px solid #ccc",
-              borderRadius: "6px",
-              fontSize: "15px"
-            }}
-          >
-            <option value="All">All</option>
-            <option value="Today">Today</option>
-            <option value="Yesterday">Yesterday</option>
-            <option value="This Week">This Week</option>
-            <option value="This Month">This Month</option>
-            <option value="This Year">This Year</option>
-          </select>
-        <form method="post" action="/vouchers/export" style={{ marginLeft: "auto" }}>
-         <button type="submit" style={{ background: "#862633", color: "#fff", padding: "14px 28px", borderRadius: "6px", fontWeight: "600", border: "rgba(0, 0, 0, 0.45)", cursor: "pointer"}}>Export</button>
-        </form>
+        {/* Summary Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginBottom: '24px' }}>
+          {/* Vouchers Card */}
+          <div style={cardStyle}>
+            <div style={{ ...cardTitleStyle, fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>Vouchers</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+              <div>
+                <div style={cardTitleStyle}>Total</div>
+                <div style={cardValueStyle}>{summary.vouchers.total}</div>
+              </div>
+              <div>
+                <div style={cardTitleStyle}>Used</div>
+                <div style={{ ...cardValueStyle, color: '#b91c1c' }}>{summary.vouchers.used}</div>
+              </div>
+              <div>
+                <div style={cardTitleStyle}>Available</div>
+                <div style={{ ...cardValueStyle, color: '#065f46' }}>{summary.vouchers.unused}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Gift Cards Card */}
+          <div style={cardStyle}>
+            <div style={{ ...cardTitleStyle, fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>Gift Cards</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+              <div>
+                <div style={cardTitleStyle}>Total</div>
+                <div style={cardValueStyle}>{summary.gifts.total}</div>
+              </div>
+              <div>
+                <div style={cardTitleStyle}>Used</div>
+                <div style={{ ...cardValueStyle, color: '#b91c1c' }}>{summary.gifts.used}</div>
+              </div>
+              <div>
+                <div style={cardTitleStyle}>Available</div>
+                <div style={{ ...cardValueStyle, color: '#065f46' }}>{summary.gifts.unused}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Search and Filters */}
+        <div style={{ 
+          backgroundColor: '#fff', 
+          padding: '20px', 
+          borderRadius: '8px', 
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          marginBottom: '24px'
+        }}>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
+            gap: '16px',
+            marginBottom: '16px'
+          }}>
+            <div>
+              <label style={labelStyle}>Search</label>
+              <input
+                type="text"
+                placeholder="Search by code, order ID, or email"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Date Range</label>
+              <select
+                value={dateFilter}
+                onChange={e => setDateFilter(e.target.value)}
+                style={inputStyle}
+              >
+                <option value="All">All Time</option>
+                <option value="Today">Today</option>
+                <option value="Yesterday">Yesterday</option>
+                <option value="This Week">This Week</option>
+                <option value="This Month">This Month</option>
+                <option value="This Year">This Year</option>
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Type</label>
+              <select
+                value={typeFilter}
+                onChange={e => setTypeFilter(e.target.value)}
+                style={inputStyle}
+              >
+                <option value="all">All Types</option>
+                <option value="voucher">Voucher</option>
+                <option value="gift">Gift Card</option>
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Status</label>
+              <select
+                value={usedFilter}
+                onChange={e => setUsedFilter(e.target.value)}
+                style={inputStyle}
+              >
+                <option value="all">All Status</option>
+                <option value="used">Used</option>
+                <option value="not_used">Not Used</option>
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <form method="post" action="/vouchers/export">
+              <button type="submit" style={exportButtonStyle}>
+                Export
+              </button>
+            </form>
+          </div>
         </div>
         <div
           style={containerStyle}
@@ -129,7 +262,9 @@ export default function VouchersPage() {
                     }}
                   >
                     <td style={cellStyle}>{v.code}</td>
-                    <td style={cellStyle}>{v.type || ''}</td>
+                    <td style={cellStyle}>
+                      {getVoucherType(v.order?.lineItems)}
+                    </td>
                     <td style={cellStyle}>
                       <a
                         href={`https://${v.shopifyOrderId.split('/')[0]}/admin/orders/${v.shopifyOrderId.split('/')[1]}`}
@@ -189,8 +324,68 @@ export default function VouchersPage() {
   );
 }
 
-// Styles.
-const containerStyle ={
+// Styles
+const cardStyle = {
+  backgroundColor: '#fff',
+  borderRadius: '8px',
+  padding: '20px',
+  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  textAlign: 'center',
+  borderTop: '3px solid #862633'
+};
+
+const cardTitleStyle = {
+  color: '#6b7280',
+  fontSize: '14px',
+  marginBottom: '8px'
+};
+
+const cardValueStyle = {
+  color: '#111827',
+  fontSize: '24px',
+  fontWeight: '600'
+};
+
+const labelStyle = {
+  display: 'block',
+  marginBottom: '6px',
+  fontSize: '14px',
+  color: '#374151',
+  fontWeight: '500'
+};
+
+const inputStyle = {
+  width: '100%',
+  padding: '8px 12px',
+  border: '1px solid #d1d5db',
+  borderRadius: '6px',
+  fontSize: '14px',
+  color: '#111827',
+  backgroundColor: '#fff',
+  transition: 'border-color 0.2s',
+  ':focus': {
+    outline: 'none',
+    borderColor: '#862633',
+    boxShadow: '0 0 0 2px rgba(134, 38, 51, 0.1)'
+  }
+};
+
+const exportButtonStyle = {
+  backgroundColor: '#862633',
+  color: 'white',
+  border: 'none',
+  borderRadius: '6px',
+  padding: '10px 20px',
+  fontSize: '14px',
+  fontWeight: '500',
+  cursor: 'pointer',
+  transition: 'background-color 0.2s',
+  ':hover': {
+    backgroundColor: '#6e1e2c'
+  }
+};
+
+const containerStyle = {
   overflowX: "auto",
   width: "100%",
   margin: 0,

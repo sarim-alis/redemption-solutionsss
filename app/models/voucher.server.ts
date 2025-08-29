@@ -29,7 +29,8 @@ export async function getAllVouchers() {
     include: {
       order: {
         select: {
-          statusUse: true
+          statusUse: true,
+          lineItems: true
         }
       }
     }
