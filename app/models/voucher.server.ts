@@ -24,17 +24,33 @@ export async function createVoucher({ shopifyOrderId, customerEmail }: { shopify
 }
 
 export async function getAllVouchers() {
-  return prisma.voucher.findMany({
+  const vouchers = await prisma.voucher.findMany({
     orderBy: { createdAt: "desc" },
     include: {
       order: {
         select: {
+          id: true,
+          shopifyOrderId: true,
           statusUse: true,
-          lineItems: true
+          lineItems: true,
+          createdAt: true,
+          updatedAt: true
         }
       }
     }
   });
+
+  // Log a sample of the data for debugging
+  if (vouchers.length > 0) {
+    console.log('Sample voucher data:', {
+      id: vouchers[0].id,
+      orderId: vouchers[0].order?.shopifyOrderId,
+      lineItems: vouchers[0].order?.lineItems,
+      lineItemsType: typeof vouchers[0].order?.lineItems
+    });
+  }
+
+  return vouchers;
 }
 
 // Fetch a voucher by Shopify order ID

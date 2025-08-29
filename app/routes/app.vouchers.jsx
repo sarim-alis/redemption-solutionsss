@@ -16,12 +16,43 @@ export const loader = async () => {
 // Helper function to get voucher type
 const getVoucherType = (lineItems) => {
   if (!lineItems) return '--';
+  
   try {
-    const items = JSON.parse(lineItems);
-    const firstItem = Array.isArray(items) ? items[0] : 
-                     items?.edges?.[0]?.node || items;
-    return firstItem?.type || '--';
+    // If lineItems is already an object, use it directly
+    const items = typeof lineItems === 'string' ? JSON.parse(lineItems) : lineItems;
+    
+    // Debug log the line items structure
+    console.log('Line items:', JSON.stringify(items, null, 2));
+    
+    // Handle different possible structures
+    let firstItem;
+    if (Array.isArray(items)) {
+      firstItem = items[0];
+    } else if (items?.edges?.[0]?.node) {
+      firstItem = items.edges[0].node;
+    } else if (items?.line_items?.[0]) {
+      // Shopify's line_items format
+      firstItem = items.line_items[0];
+    } else if (items?.length > 0) {
+      firstItem = items[0];
+    } else if (typeof items === 'object') {
+      firstItem = items;
+    }
+    
+    // Debug log the first item
+    console.log('First item:', JSON.stringify(firstItem, null, 2));
+    
+    // Try different possible type fields
+    const type = firstItem?.type || 
+                firstItem?.product_type || 
+                firstItem?.productType ||
+                firstItem?.properties?.find(p => p.name === 'type' || p.name === 'product_type')?.value ||
+                (firstItem?.title?.toLowerCase().includes('gift') ? 'Gift Card' : 'Voucher');
+    
+    return type || 'Voucher';
   } catch (e) {
+    console.error('Error parsing line items:', e);
+    console.log('Line items data:', lineItems);
     return '--';
   }
 };
@@ -37,9 +68,10 @@ export default function VouchersPage() {
   // Calculate summary counts
   const summary = React.useMemo(() => {
     return vouchers.reduce((acc, v) => {
-      const type = getVoucherType(v.order?.lineItems).toLowerCase();
-      const isGift = type === 'gift';
-      const isVoucher = !isGift;
+      const type = getVoucherType(v.order?.lineItems);
+      console.log('Voucher type for order', v.order?.shopifyOrderId, ':', type);
+      const isGift = type.toLowerCase().includes('gift');
+      const isVoucher = !isGift && type !== '--';
       const isUsed = v.order?.statusUse;
       
       // Total counts
@@ -263,7 +295,10 @@ export default function VouchersPage() {
                   >
                     <td style={cellStyle}>{v.code}</td>
                     <td style={cellStyle}>
-                      {getVoucherType(v.order?.lineItems)}
+                      {(() => {
+                        const type = getVoucherType(v.order?.lineItems);
+                        return type === '--' ? 'Voucher' : type;
+                      })()}
                     </td>
                     <td style={cellStyle}>
                       <a
