@@ -68,7 +68,11 @@ export default function VouchersPage() {
   // Calculate summary counts
   const summary = React.useMemo(() => {
     return vouchers.reduce((acc, v) => {
-      const type = getVoucherType(v.order?.lineItems);
+      let type = getVoucherType(v.order?.lineItems);
+      // Clean up the type display
+      if (type.startsWith('["') && type.endsWith('"]')) {
+        type = type.slice(2, -2);
+      }
       console.log('Voucher type for order', v.order?.shopifyOrderId, ':', type);
       const isGift = type.toLowerCase().includes('gift');
       const isVoucher = !isGift && type !== '--';
@@ -135,10 +139,13 @@ export default function VouchersPage() {
       const orderId = (v.shopifyOrderId || "").toLowerCase();
       const email = (v.customerEmail || "").toLowerCase();
       const type = getVoucherType(v.order?.lineItems).toLowerCase();
+      const isGift = type.includes('gift');
       
       const matchesSearch = code.includes(q) || orderId.includes(q) || email.includes(q);
       const matchesDate = isDateMatch(v.createdAt, dateFilter);
-      const matchesType = typeFilter === 'all' || type === typeFilter.toLowerCase();
+      const matchesType = typeFilter === 'all' || 
+                         (typeFilter === 'voucher' && !isGift) ||
+                         (typeFilter === 'gift' && isGift);
       const matchesUsed = usedFilter === 'all' || 
                          (usedFilter === 'used' && v.order?.statusUse) || 
                          (usedFilter === 'not_used' && !v.order?.statusUse);
@@ -234,12 +241,12 @@ export default function VouchersPage() {
               <label style={labelStyle}>Type</label>
               <select
                 value={typeFilter}
-                onChange={e => setTypeFilter(e.target.value)}
+                onChange={(e) => setTypeFilter(e.target.value)}
                 style={inputStyle}
               >
                 <option value="all">All Types</option>
-                <option value="voucher">Voucher</option>
-                <option value="gift">Gift Card</option>
+                <option value="voucher">Vouchers</option>
+                <option value="gift">Gift Cards</option>
               </select>
             </div>
             <div>
@@ -275,7 +282,7 @@ export default function VouchersPage() {
           >
             <thead style={{ background: "#f3f4f6" }}>
               <tr>
-                <th style={headStyle}>Voucher Code</th>
+                <th style={headStyle}>Code</th>
                 <th style={headStyle}>Type</th>
                 <th style={headStyle}>Order ID</th>
                 <th style={headStyle}>Customer Email</th>
@@ -296,7 +303,11 @@ export default function VouchersPage() {
                     <td style={cellStyle}>{v.code}</td>
                     <td style={cellStyle}>
                       {(() => {
-                        const type = getVoucherType(v.order?.lineItems);
+                        let type = getVoucherType(v.order?.lineItems);
+                        // Clean up the type display
+                        if (type.startsWith('["') && type.endsWith('"]')) {
+                          type = type.slice(2, -2);
+                        }
                         return type === '--' ? 'Voucher' : type;
                       })()}
                     </td>
