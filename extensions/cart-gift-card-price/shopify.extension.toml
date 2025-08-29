@@ -1,0 +1,21 @@
+api_version = "2025-07"
+
+[[extensions]]
+name = "t:name"
+handle = "cart-gift-card-price"
+type = "function"
+
+description = "t:description"
+
+  [[extensions.targeting]]
+  target = "cart.transform.run"
+  input_query = "src/run.graphql"
+  export = "run"
+
+  [extensions.build]
+  command = ""
+  path = "dist/function.wasm"
+
+  [extensions.ui.paths]
+  create = "/"
+  details = "/"

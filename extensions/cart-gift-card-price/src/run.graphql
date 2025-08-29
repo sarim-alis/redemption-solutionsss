@@ -1,0 +1,19 @@
+query RunInput {
+  cart {
+    lines {
+      id
+      merchandise {
+        ... on ProductVariant {
+          id
+          product {
+            id
+            isGiftCard
+          }
+        }
+      }
+      attribute(key: "Gift_Card_Amount") {
+        value
+      }
+    }
+  }
+}

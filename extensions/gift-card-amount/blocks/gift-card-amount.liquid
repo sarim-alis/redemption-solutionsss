@@ -5,7 +5,10 @@
     <!-- Gift Card Image -->
     <div class="gift-card-image">
       {% if block.settings.card_image != blank %}
-        <img src="{{ block.settings.card_image | img_url: '400x250' }}" alt="{{ block.settings.card_title | default: 'Gift Card' }}">
+        <img src="{{ block.settings.card_image | img_url: '400x250' }}" 
+             alt="{{ block.settings.card_title | default: 'Gift Card' }}"
+             width="400" 
+             height="250">
       {% else %}
         <div class="default-gift-card">
           <div class="gift-card-text">
@@ -18,14 +21,14 @@
 
     <!-- Gift Card Form -->
     <div class="gift-card-form">
-      <form action="/cart/add" method="post" enctype="multipart/form-data" class="gift-card-add-form">
+      <form action="{{ routes.cart_add_url }}" method="post" enctype="multipart/form-data" class="gift-card-add-form">
         <input type="hidden" name="id" value="{{ block.settings.gift_card_product.selected_or_first_available_variant.id }}">
         
         <!-- Amount Input Field -->
         <div class="amount-input-container">
           <span class="currency-symbol">$</span>
           <input type="number" 
-                 name="properties[Gift_Card_Amount]" 
+                 name="attributes[Gift_Card_Amount]" 
                  placeholder="Enter Amount" 
                  min="{{ block.settings.min_amount | default: 1 }}"
                  max="{{ block.settings.max_amount | default: 1000 }}"
@@ -97,10 +100,6 @@
       "id": "button_text",
       "label": "Button Text",
       "default": "ADD TO CART"
-    },
-    {
-      "type": "header",
-      "content": "Styling Options"
     },
     {
       "type": "color",
