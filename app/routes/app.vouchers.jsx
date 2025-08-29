@@ -1,9 +1,10 @@
 // Imports.
 import React from "react";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, useNavigation } from "@remix-run/react";
 import SidebarLayout from "../components/SidebarLayout";
 import { json } from "@remix-run/node";
 import { getAllVouchers } from "../models/voucher.server";
+import { Loader } from "@shopify/polaris";
 
 
 // Loader.
@@ -60,7 +61,10 @@ const getVoucherType = (lineItems) => {
 // Frontend.
 export default function VouchersPage() {
   const { vouchers } = useLoaderData();
+  const navigation = useNavigation();
   const [search, setSearch] = React.useState("");
+  
+  const isLoading = navigation.state === "loading";
   const [dateFilter, setDateFilter] = React.useState("All");
   const [typeFilter, setTypeFilter] = React.useState("all");
   const [usedFilter, setUsedFilter] = React.useState("all");
@@ -156,7 +160,35 @@ export default function VouchersPage() {
 
   return (
     <SidebarLayout>
-      <div style={{ padding: 40 }}>
+      <div style={{ padding: 40, position: 'relative' }}>
+        {isLoading && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              background: 'white',
+              padding: '20px 40px',
+              borderRadius: '8px',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '16px'
+            }}>
+              <Loader size="large" />
+              <div style={{ color: '#4b5563', marginTop: '12px' }}>Loading vouchers...</div>
+            </div>
+          </div>
+        )}
         {/* Summary Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginBottom: '24px' }}>
           {/* Vouchers Card */}
