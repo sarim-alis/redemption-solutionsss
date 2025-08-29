@@ -219,7 +219,6 @@ useEffect(() => {
               key={loc.id}
               style={{display: 'flex',alignItems: 'center',padding: '12px 0',color: 'black'}}>
               <span style={{ flex: 1, minWidth: "120px", textAlign: 'left' }}>{loc.name}</span>
-              <span style={{ flex: 1, minWidth: "120px", textAlign: 'left' }}>{loc.market}</span>
               <div style={{ width: 200, textAlign: 'right' }}>
                 <Dropdown overlay={actionMenu(loc.id)} trigger={['click']} placement="bottomRight" arrow>
                   <MoreOutlined style={{ fontSize: 30, cursor: 'pointer' }} />
