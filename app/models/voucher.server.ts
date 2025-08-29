@@ -26,6 +26,13 @@ export async function createVoucher({ shopifyOrderId, customerEmail }: { shopify
 export async function getAllVouchers() {
   return prisma.voucher.findMany({
     orderBy: { createdAt: "desc" },
+    include: {
+      order: {
+        select: {
+          statusUse: true
+        }
+      }
+    }
   });
 }
 

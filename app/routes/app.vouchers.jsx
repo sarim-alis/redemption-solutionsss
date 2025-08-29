@@ -111,6 +111,7 @@ export default function VouchersPage() {
             <thead style={{ background: "#f3f4f6" }}>
               <tr>
                 <th style={headStyle}>Voucher Code</th>
+                <th style={headStyle}>Type</th>
                 <th style={headStyle}>Order ID</th>
                 <th style={headStyle}>Customer Email</th>
                 <th style={headStyle}>Used</th>
@@ -128,7 +129,17 @@ export default function VouchersPage() {
                     }}
                   >
                     <td style={cellStyle}>{v.code}</td>
-                    <td style={cellStyle}>{v.shopifyOrderId}</td>
+                    <td style={cellStyle}>{v.type || ''}</td>
+                    <td style={cellStyle}>
+                      <a
+                        href={`https://${v.shopifyOrderId.split('/')[0]}/admin/orders/${v.shopifyOrderId.split('/')[1]}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: '#1976d2', textDecoration: 'none' }}
+                      >
+                        {v.shopifyOrderId}
+                      </a>
+                    </td>
                     <td style={cellStyle}>{v.customerEmail}</td>
                     <td style={cellStyle}>
                       <span
@@ -136,12 +147,13 @@ export default function VouchersPage() {
                           display: "inline-block",
                           padding: "2px 8px",
                           borderRadius: 8,
-                          background: v.used ? "#d1fae5" : "#fef3c7",
-                          color: v.used ? "#065f46" : "#92400e",
+                          background: v.order?.statusUse ? "#fee2e2" : "#f3f4f6",
+                          color: v.order?.statusUse ? "#b91c1c" : "#4b5563",
                           fontWeight: 600,
                           fontSize: 12,
+                          textTransform: 'uppercase',
                         }}>
-                        {v.used ? "Yes" : "No"}
+                        {v.order?.statusUse ? "USED" : "NO"}
                       </span>
                     </td>
                     <td style={cellStyle}>
