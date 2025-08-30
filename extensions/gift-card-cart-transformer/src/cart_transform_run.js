@@ -11,48 +11,59 @@
  */
 export function cartTransformRun(input) {
   const operations = [];
-
-  console.log('=== Cart Transform Debug ===');
-  console.log('Input cart lines:', input.cart.lines.length);
-
+  
+  console.log('=== Gift Card Cart Transform ===');
+  console.log('Cart lines:', input.cart.lines.length);
+  
   input.cart.lines.forEach((line, index) => {
-    console.log(`\nLine ${index + 1}:`);
-    console.log('- Line ID:', line.id);
-    console.log('- Product Type:', line.merchandise?.product?.productType);
-    console.log('- Custom Attribute:', line.attribute);
-    
     if (line.merchandise?.__typename === 'ProductVariant') {
-      // IMPORTANT: Check for custom amount attribute FIRST (any product type)
-      const customAmountAttr = line.attribute;
+      const product = line.merchandise.product;
       
-      if (customAmountAttr && customAmountAttr.value) {
-        const customAmount = parseFloat(customAmountAttr.value);
-        console.log('- Custom Amount Found:', customAmount);
+      console.log(`\nLine ${index + 1}:`);
+      console.log('- Product ID:', product?.id);
+      console.log('- Line Quantity:', line.quantity);
+      console.log('- Product Type:', product?.productType);
+      
+      // Target your specific Jiffy Lube Gift Card product
+      const targetProductId = 'gid://shopify/Product/7488258998368';
+      
+      if (product?.id === targetProductId) {
+        console.log('🎯 Jiffy Lube Gift Card detected!');
         
-        if (customAmount > 0) {
-          console.log('- Applying price update:', customAmount);
-          
-          operations.push({
-            update: {
-              cartLineId: line.id,
-              price: {
-                adjustment: {
-                  fixedAmountPerUnit: {
-                    amount: customAmount.toFixed(2)
-                  }
+        // Extract customer amount from quantity
+        let customAmount = "25.00"; // Default fallback price
+        
+        if (line.quantity >= 1 && line.quantity <= 1000) {
+          // Customer amount was transferred via quantity
+          customAmount = line.quantity.toFixed(2);
+          console.log('💰 Customer entered amount:', customAmount);
+        }
+        
+        operations.push({
+          update: {
+            cartLineId: line.id,
+            quantity: 1, // Reset quantity to 1
+            price: {
+              adjustment: {
+                fixedAmountPerUnit: {
+                  amount: customAmount
                 }
               }
             }
-          });
-        }
+          }
+        });
+        
+        console.log(`✅ Applied customer price: $${customAmount}`);
+        console.log('✅ Quantity reset to: 1');
+        
       } else {
-        console.log('- No custom amount attribute found');
+        console.log('❌ Different product, skipping...');
       }
     }
   });
-
-  console.log('\nTotal operations:', operations.length);
-  console.log('Operations:', JSON.stringify(operations, null, 2));
+  
+  console.log('\n=== Transform Summary ===');
+  console.log('Operations applied:', operations.length);
   
   return {
     operations: operations

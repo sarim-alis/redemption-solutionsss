@@ -5,7 +5,7 @@
     <!-- Gift Card Image -->
     <div class="gift-card-image">
       {% if block.settings.card_image != blank %}
-        <img src="{{ block.settings.card_image | img_url: '400x250' }}" 
+        <img src="{{ block.settings.card_image | image_url: width: 400, height: 250 }}" 
              alt="{{ block.settings.card_title | default: 'Gift Card' }}"
              width="400" 
              height="250">
@@ -18,34 +18,36 @@
         </div>
       {% endif %}
     </div>
-
+    
     <!-- Gift Card Form -->
     <div class="gift-card-form">
       <form action="{{ routes.cart_add_url }}" method="post" enctype="multipart/form-data" class="gift-card-add-form">
         <input type="hidden" name="id" value="{{ block.settings.gift_card_product.selected_or_first_available_variant.id }}">
         
-        <!-- Amount Input Field -->
+        <!-- Amount Input -->
         <div class="amount-input-container">
           <span class="currency-symbol">$</span>
           <input type="number" 
-                 name="attributes[Gift_Card_Amount]" 
+                 class="amount-input"
                  placeholder="Enter Amount" 
                  min="{{ block.settings.min_amount | default: 1 }}"
                  max="{{ block.settings.max_amount | default: 1000 }}"
                  step="0.01"
-                 class="amount-input"
                  required>
         </div>
-
-        <!-- Quantity Controls -->
+        
+        <!-- Hidden quantity field for amount transfer -->
+        <input type="hidden" name="quantity" class="quantity-field" value="1">
+        
+        <!-- Display Quantity Controls (for show only) -->
         <div class="quantity-section">
           <div class="quantity-controls">
             <button type="button" class="quantity-btn minus-btn">−</button>
-            <input type="number" name="quantity" value="1" min="1" max="10" class="quantity-input" readonly>
+            <input type="number" class="quantity-display" value="1" min="1" max="10" readonly>
             <button type="button" class="quantity-btn plus-btn">+</button>
           </div>
         </div>
-
+        
         <!-- Add to Cart Button -->
         <button type="submit" class="add-to-cart-btn">
           {{ block.settings.button_text | default: 'ADD TO CART' }}
@@ -54,6 +56,57 @@
     </div>
   </div>
 </div>
+
+<!-- JavaScript for Amount Transfer -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const forms = document.querySelectorAll('.gift-card-add-form');
+  
+  forms.forEach(form => {
+    const amountInput = form.querySelector('.amount-input');
+    const quantityField = form.querySelector('.quantity-field');
+    const quantityDisplay = form.querySelector('.quantity-display');
+    const minusBtn = form.querySelector('.minus-btn');
+    const plusBtn = form.querySelector('.plus-btn');
+    
+    // Quantity controls for display
+    minusBtn.addEventListener('click', function() {
+      const currentValue = parseInt(quantityDisplay.value);
+      if (currentValue > 1) {
+        quantityDisplay.value = currentValue - 1;
+      }
+    });
+    
+    plusBtn.addEventListener('click', function() {
+      const currentValue = parseInt(quantityDisplay.value);
+      if (currentValue < 10) {
+        quantityDisplay.value = currentValue + 1;
+      }
+    });
+    
+    // Form submission - transfer amount to quantity
+    form.addEventListener('submit', function(e) {
+      const customAmount = parseFloat(amountInput.value);
+      
+      if (customAmount && customAmount > 0) {
+        // Transfer customer amount to quantity field (clever trick!)
+        quantityField.value = Math.round(customAmount);
+        
+        console.log('Customer entered amount:', customAmount);
+        console.log('Transferred to quantity:', Math.round(customAmount));
+        
+        // Add loading state
+        const submitBtn = form.querySelector('.add-to-cart-btn');
+        submitBtn.textContent = 'Adding...';
+        submitBtn.disabled = true;
+      } else {
+        e.preventDefault();
+        alert('Please enter a valid amount');
+      }
+    });
+  });
+});
+</script>
 
 <script src="{{ 'gift-card-amount.js' | asset_url }}" defer></script>
 
