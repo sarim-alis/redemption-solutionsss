@@ -2,12 +2,14 @@ query RunInput {
   cart {
     lines {
       id
+      quantity
       merchandise {
+        __typename
         ... on ProductVariant {
           id
           product {
             id
-            isGiftCard
+            productType
           }
         }
       }

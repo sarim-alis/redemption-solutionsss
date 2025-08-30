@@ -2,15 +2,15 @@ api_version = "2025-07"
 
 [[extensions]]
 name = "t:name"
-handle = "cart-gift-card-price"
+handle = "gift-card-cart-transformer"
 type = "function"
 
 description = "t:description"
 
   [[extensions.targeting]]
   target = "cart.transform.run"
-  input_query = "src/run.graphql"
-  export = "run"
+  input_query = "src/cart_transform_run.graphql"
+  export = "cart-transform-run"
 
   [extensions.build]
   command = ""
