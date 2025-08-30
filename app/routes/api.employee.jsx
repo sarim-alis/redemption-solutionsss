@@ -3,6 +3,7 @@
 import { json } from "@remix-run/node";
 import prisma from "../db.server";
 
+
 // Action.
 export const action = async ({ request }) => {
   const method = request.method;
@@ -11,20 +12,13 @@ export const action = async ({ request }) => {
     const formData = await request.formData();
     const username = formData.get("username");
     const email = formData.get("email");
-    const locationId = formData.get("locationId");
     const password = formData.get("password");
+    const locationId = formData.get("locationId");
 
     try {
       const employee = await prisma.employee.create({
-        data: {
-          username,
-          email,
-          locationId,
-          password,
-        },
-        include: {
-          location: true,
-        },
+        data: { username, email, password, locationId},
+        include: { location: true },
       });
 
       return json({ success: true, employee });
@@ -34,7 +28,20 @@ export const action = async ({ request }) => {
     }
   }
 
+  if (method === "DELETE") {
+    const formData = await request.formData();
+    const id = formData.get("id");
+
+    try {
+      await prisma.employee.delete({
+        where: { id },
+      });
+      return json({ success: true });
+    } catch (error) {
+      console.error("Error deleting employee:", error);
+      return json({ success: false, error: error.message }, { status: 500 });
+    }
+  }
+
   return json({ message: "Method Not Allowed" }, { status: 405 });
 };
-
-

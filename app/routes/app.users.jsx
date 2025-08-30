@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Page, Text } from "@shopify/polaris";
 import SidebarLayout from '../components/SidebarLayout';
-import { Drawer, Input, Button, Select, Table } from 'antd';
+import { Drawer, Input, Button, Select, Table, Popconfirm, Menu, Dropdown } from 'antd';
 import { MoreOutlined } from '@ant-design/icons';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -70,6 +70,30 @@ const Users = () => {
     },
   });
 
+  // Handle delete.
+  const handleDelete = async (id) => {
+  try {
+    const formData = new FormData();
+    formData.append("id", id);
+
+    const response = await fetch("/api/employee", {
+      method: "DELETE",
+      body: formData,
+    });
+
+    const result = await response.json();
+    if (result.success) {
+      setEmployees(prev => prev.filter(emp => emp.id !== id));
+      alert("User deleted successfully!");
+    } else {
+      alert("Error: " + result.error);
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Unexpected error while deleting");
+  }
+};
+
   // Columns.
   const columns = [
     {
@@ -88,13 +112,24 @@ const Users = () => {
       render: (_, record) => record.location?.name || 'N/A',
     },
     {
-      title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <MoreOutlined style={{ fontSize: 20, cursor: 'pointer' }} />
-      ),
+    title: "Actions",
+    key: "actions",
+    render: (_, record) => {
+      const menu = (
+        <Menu>
+          <Menu.Item key="edit" onClick={() => openDrawer(record)}>Edit</Menu.Item>
+          <Menu.Item key="delete"><Popconfirm title="Are you sure to delete this user?" onConfirm={() => handleDelete(record.id)} okText="Yes" cancelText="No">Delete</Popconfirm></Menu.Item>
+        </Menu>
+      );
+
+      return (
+        <Dropdown overlay={menu} trigger={["click"]}>
+          <MoreOutlined style={{ fontSize: 20, cursor: "pointer" }} />
+        </Dropdown>
+      );
     },
-  ];
+  },
+];
 
   return (
     <SidebarLayout>
@@ -108,8 +143,8 @@ const Users = () => {
           </div>
         </div>
 
-          {/* Employee Table */}
-          <Table columns={columns} dataSource={employees.map(emp => ({ ...emp, key: emp.id }))} style={{ marginTop: "20px" }} bordered pagination={false} />
+        {/* Employee Table */}
+        <Table columns={columns} dataSource={employees.map(emp => ({ ...emp, key: emp.id }))} style={{ marginTop: "20px" }} bordered pagination={false} />
 
         {/* Add Employee */}
         <Drawer title="Add Employee" placement="right" open={drawerVisible} onClose={closeDrawer} width={400}>
