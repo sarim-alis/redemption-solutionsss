@@ -26,9 +26,22 @@ const Users = () => {
   const { employees: initialEmployees, locations } = useLoaderData();
   const [employees, setEmployees] = useState(initialEmployees);
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [editDrawerVisible, setEditDrawerVisible] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
 
   const openDrawer = () => setDrawerVisible(true);
   const closeDrawer = () => setDrawerVisible(false);
+
+  const openEditDrawer = (user) => {
+    setEditingUser(user);
+    editFormik.setValues({ username: user.username, email: user.email, locationId: user.locationId, password: user.password});
+    setEditDrawerVisible(true);
+  };
+
+  const closeEditDrawer = () => {
+    setEditingUser(null);
+    setEditDrawerVisible(false);
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -70,18 +83,59 @@ const Users = () => {
     },
   });
 
+  const editFormik = useFormik({
+  initialValues: {
+    username: '',
+    email: '',
+    locationId: '',
+    password: '',
+  },
+  validationSchema: Yup.object({
+    username: Yup.string().required('Username is required'),
+    email: Yup.string().email('Invalid email').required('Email is required'),
+    locationId: Yup.string().required('Location is required'),
+    password: Yup.string().required('Password is required'),
+  }),
+  onSubmit: async (values, { setSubmitting }) => {
+    try {
+      const formData = new FormData();
+      formData.append("id", editingUser.id);
+      formData.append("username", values.username);
+      formData.append("email", values.email);
+      formData.append("locationId", values.locationId);
+      formData.append("password", values.password);
+
+      const response = await fetch('/api/employee', {method: 'PUT', body: formData});
+      const result = await response.json();
+
+      if (result.success) {
+        setEmployees(prev =>
+          prev.map(emp => (emp.id === editingUser.id ? result.employee : emp))
+        );
+        alert("User updated successfully!");
+        closeEditDrawer();
+      } else {
+        alert("Error: " + result.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Unexpected error");
+    } finally {
+      setSubmitting(false);
+    }
+  },
+});
+
+
   // Handle delete.
   const handleDelete = async (id) => {
   try {
     const formData = new FormData();
     formData.append("id", id);
 
-    const response = await fetch("/api/employee", {
-      method: "DELETE",
-      body: formData,
-    });
-
+    const response = await fetch("/api/employee", {method: "DELETE", body: formData});
     const result = await response.json();
+
     if (result.success) {
       setEmployees(prev => prev.filter(emp => emp.id !== id));
       alert("User deleted successfully!");
@@ -117,7 +171,7 @@ const Users = () => {
     render: (_, record) => {
       const menu = (
         <Menu>
-          <Menu.Item key="edit" onClick={() => openDrawer(record)}>Edit</Menu.Item>
+          <Menu.Item key="edit" onClick={() => openEditDrawer(record)}>Edit</Menu.Item>
           <Menu.Item key="delete"><Popconfirm title="Are you sure to delete this user?" onConfirm={() => handleDelete(record.id)} okText="Yes" cancelText="No">Delete</Popconfirm></Menu.Item>
         </Menu>
       );
@@ -143,7 +197,7 @@ const Users = () => {
           </div>
         </div>
 
-        {/* Employee Table */}
+        {/* Table */}
         <Table columns={columns} dataSource={employees.map(emp => ({ ...emp, key: emp.id }))} style={{ marginTop: "20px" }} bordered pagination={false} />
 
         {/* Add Employee */}
@@ -188,6 +242,48 @@ const Users = () => {
             </Button>
           </form>
         </Drawer>
+
+{/* Edit Employee */}
+<Drawer title="Edit Employee" placement="right" open={editDrawerVisible} onClose={closeEditDrawer} width={400}>
+  <form onSubmit={editFormik.handleSubmit}>
+    <div style={{ marginBottom: '16px' }}>
+      <label>Username <span style={{ color: '#ce1127' }}>*</span></label>
+      <Input name="username" placeholder="Doron" style={{ width: '100%', height: '40px' }} value={editFormik.values.username} onChange={editFormik.handleChange} onBlur={editFormik.handleBlur}/>
+      {editFormik.touched.username && editFormik.errors.username && (
+        <div style={{ color: '#ff4d4f' }}>{editFormik.errors.username}</div>
+      )}
+    </div>
+
+    <div style={{ marginBottom: '16px' }}>
+      <label>Email <span style={{ color: '#ce1127' }}>*</span></label>
+      <Input name="email" placeholder="doron@gmail.com" style={{ width: '100%', height: '40px' }} value={editFormik.values.email} onChange={editFormik.handleChange} onBlur={editFormik.handleBlur}/>
+      {editFormik.touched.email && editFormik.errors.email && (
+        <div style={{ color: '#ff4d4f' }}>{editFormik.errors.email}</div>
+      )}
+    </div>
+
+    <div style={{ marginBottom: '16px' }}>
+      <label>Location <span style={{ color: '#ce1127' }}>*</span></label>
+      <Select name="locationId" placeholder="Select Location" style={{ width: '100%', height: '40px' }} value={editFormik.values.locationId} onChange={(value) => editFormik.setFieldValue('locationId', value)} onBlur={editFormik.handleBlur}>
+        {locations.map(location => (<Select.Option key={location.id} value={location.id}>{location.name}</Select.Option>))}
+      </Select>
+      {editFormik.touched.locationId && editFormik.errors.locationId && (
+        <div style={{ color: '#ff4d4f' }}>{editFormik.errors.locationId}</div>
+      )}
+    </div>
+
+    <div style={{ marginBottom: '16px' }}>
+      <label>Password <span style={{ color: '#ce1127' }}>*</span></label>
+      <Input.Password name="password" placeholder="******" style={{ width: '100%', height: '40px' }} value={editFormik.values.password} onChange={editFormik.handleChange} onBlur={editFormik.handleBlur}/>
+      {editFormik.touched.password && editFormik.errors.password && (
+        <div style={{ color: '#ff4d4f' }}>{editFormik.errors.password}</div>
+      )}
+    </div>
+
+    <Button htmlType="submit" block style={styles.button} loading={editFormik.isSubmitting}>Save</Button>
+  </form>
+</Drawer>
+
       </Page>
         </div> 
     </SidebarLayout>

@@ -15,3 +15,12 @@ export async function getAllEmployees() {
     include: {location: true},
   });
 }
+
+// updateEmployee.
+export async function updateEmployee(id: string, username?: string, email?: string, locationId?: string, password?: string) {
+  return prisma.employee.update({
+    where: { id },
+    data: {...(username && { username }), ...(email && { email }), ...(locationId && { locationId }), ...(password && { password })},
+    include: { location: true },
+  });
+}

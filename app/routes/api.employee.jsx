@@ -43,5 +43,25 @@ export const action = async ({ request }) => {
     }
   }
 
+ if (method === "PUT") {
+    const formData = await request.formData();
+    const id = formData.get("id");
+    const username = formData.get("username");
+    const email = formData.get("email");
+    const password = formData.get("password");
+    const locationId = formData.get("locationId");
+
+    try {
+      const employee = await prisma.employee.update({
+        where: { id },
+        data: {...(username && { username }), ...(email && { email }), ...(password && { password }), ...(locationId && { locationId })},
+        include: { location: true },
+      });
+      return json({ success: true, employee });
+    } catch (error) {
+      console.error("Error updating employee:", error);
+      return json({ success: false, error: error.message }, { status: 500 });
+    }
+  }
   return json({ message: "Method Not Allowed" }, { status: 405 });
 };

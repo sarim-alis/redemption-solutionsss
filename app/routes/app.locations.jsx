@@ -106,10 +106,6 @@ const actionMenu = (locationId) => (
       name: Yup.string().required('Location name is required'),
       market: Yup.string().required('Market is required'),
     }),
-    // onSubmit: (values) => {
-    //   console.log('Form Values:', values);
-    //   // Integration to API will come later
-    // },
     onSubmit: async (values) => {
   try {
     const res = await fetch("/api/location", {
@@ -181,15 +177,7 @@ const actionMenu = (locationId) => (
   },
 });
 
-useEffect(() => {
-  if (editingLocation) {
-    editFormik.setValues({
-      id: editingLocation.id,
-      name: editingLocation.name,
-      market: editingLocation.market,
-    });
-  }
-}, [editingLocation]);
+useEffect(() => { if (editingLocation) { editFormik.setValues({ id: editingLocation.id, name: editingLocation.name, market: editingLocation.market})}}, [editingLocation]);
 
 
   return (
@@ -231,22 +219,12 @@ useEffect(() => {
         
 
 
-          {/* Drawer */}
-        <Drawer title="Add Location" placement="right" open={drawerVisible} onClose={closeDrawer}>
+{/* Add Location */}
+  <Drawer title="Add Location" placement="right" open={drawerVisible} onClose={closeDrawer}>
   <form onSubmit={formik.handleSubmit}>
     <div style={{ marginBottom: '20px' }}>
-      <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
-        Location Name <span style={{ color: '#ce1127' }}>*</span>
-      </label>
-      <Input
-        name="name"
-        placeholder="e.g. Woodland Hills"
-        style={{ width: '100%', height: '40px' }}
-        value={formik.values.name}
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        status={formik.touched.name && formik.errors.name ? 'error' : ''}
-      />
+      <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>Location Name <span style={{ color: '#ce1127' }}>*</span></label>
+      <Input name="name" placeholder="e.g. Woodland Hills" style={{ width: '100%', height: '40px' }} value={formik.values.name} onChange={formik.handleChange} onBlur={formik.handleBlur} status={formik.touched.name && formik.errors.name ? 'error' : ''}/>
       {formik.touched.name && formik.errors.name && (
         <div style={{ color: '#ff4d4f', marginTop: '4px' }}>{formik.errors.name}</div>
       )}
@@ -256,87 +234,35 @@ useEffect(() => {
                 <label style={{ display: 'block', fontSize: '16px', marginBottom: '8px' }}>
                   Market <span style={{ color: '#ce1127' }}>*</span>
                 </label>
-                <select
-                  name="market"
-                  value={formik.values.market}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  style={{ width: '100%', height: '40px' }}
-                >
+                <select name="market" value={formik.values.market} onChange={formik.handleChange} onBlur={formik.handleBlur} style={{ width: '100%', height: '40px' }}>
                   <option value="">Select Market</option>
-                  {marketOptions.map((m) => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
+                  {marketOptions.map((m) => (<option key={m} value={m}>{m}</option>))}
                 </select>
                 {formik.touched.market && formik.errors.market && (
                   <div style={{ color: '#ff4d4f', marginTop: '4px' }}>{formik.errors.market}</div>
                 )}
               </div>
 
-    <Button
-      htmlType="submit"
-      block
-      style={styles.button}
-      loading={formik.isSubmitting}
-    >
-      Save Location
-    </Button>
+    <Button htmlType="submit" block style={styles.button} loading={formik.isSubmitting}>Save</Button>
   </form>
 </Drawer>
 
-<Drawer
-  title="Edit Location"
-  placement="right"
-  open={editDrawerVisible}
-  onClose={() => {
-    setEditDrawerVisible(false);
-    setEditingLocation(null);
-  }}
->
+{/* Edit Location */}
+<Drawer title="Edit Location" placement="right" open={editDrawerVisible} onClose={() => { setEditDrawerVisible(false); setEditingLocation(null)}}>
   <form onSubmit={editFormik.handleSubmit}>
     <div style={{ marginBottom: "20px" }}>
-      <label
-        style={{
-          display: "block",
-          fontSize: "16px",
-          marginBottom: "8px",
-        }}
-      >
-        Location Name <span style={{ color: "#ce1127" }}>*</span>
-      </label>
-      <Input
-        name="name"
-        placeholder="e.g. Woodland Hills"
-        style={{ width: "100%", height: "40px" }}
-        value={editFormik.values.name}
-        onChange={editFormik.handleChange}
-        onBlur={editFormik.handleBlur}
-        status={
-          editFormik.touched.name && editFormik.errors.name ? "error" : ""
-        }
-      />
-      {editFormik.touched.name && editFormik.errors.name && (
-        <div style={{ color: "#ff4d4f", marginTop: "4px" }}>
-          {editFormik.errors.name}
-        </div>
-      )}
+      <label style={{ display: "block", fontSize: "16px", marginBottom: "8px"}}>Location Name <span style={{ color: "#ce1127" }}>*</span></label>
+      <Input name="name" placeholder="e.g. Woodland Hills" style={{ width: "100%", height: "40px" }} value={editFormik.values.name} onChange={editFormik.handleChange} onBlur={editFormik.handleBlur} status={ editFormik.touched.name && editFormik.errors.name ? "error" : ""}/>
+      {editFormik.touched.name && editFormik.errors.name && (<div style={{ color: "#ff4d4f", marginTop: "4px" }}>{editFormik.errors.name}</div>)}
     </div>
 
      <div style={{ marginBottom: "20px" }}>
                 <label style={{ display: "block", fontSize: "16px", marginBottom: "8px" }}>
                   Market <span style={{ color: "#ce1127" }}>*</span>
                 </label>
-                <select
-                  name="market"
-                  value={editFormik.values.market}
-                  onChange={editFormik.handleChange}
-                  onBlur={editFormik.handleBlur}
-                  style={{ width: "100%", height: "40px" }}
-                >
+                <select name="market" value={editFormik.values.market} onChange={editFormik.handleChange} onBlur={editFormik.handleBlur} style={{ width: "100%", height: "40px" }}>
                   <option value="">Select Market</option>
-                  {marketOptions.map((m) => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
+                  {marketOptions.map((m) => (<option key={m} value={m}>{m}</option>))}
                 </select>
                 {editFormik.touched.market && editFormik.errors.market && (
                   <div style={{ color: "#ff4d4f", marginTop: "4px" }}>
@@ -344,16 +270,7 @@ useEffect(() => {
                   </div>
                 )}
               </div>
-
-
-    <Button
-      htmlType="submit"
-      block
-      style={styles.button}
-      loading={editFormik.isSubmitting}
-    >
-      Update Location
-    </Button>
+    <Button htmlType="submit" block style={styles.button} loading={editFormik.isSubmitting}>Save</Button>
   </form>
 </Drawer>
 
