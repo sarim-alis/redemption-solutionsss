@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Page, Text } from "@shopify/polaris";
 import SidebarLayout from "../components/SidebarLayout";
-import { Drawer, Input, Button, Dropdown, Menu } from 'antd';
+import { Drawer, Input, Button, Dropdown, Menu, Popconfirm, } from 'antd';
 import { MoreOutlined } from '@ant-design/icons';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -80,12 +80,12 @@ const actionMenu = (locationId) => (
   setEditingLocation(loc);
   setEditDrawerVisible(true);
 }
-
       },
-      {
-        key: 'delete',
-        label: 'Delete',
-        onClick: () => handleDelete(locationId),
+       {
+        key: "delete",
+        label: (
+          <Popconfirm title="Are you sure to delete this location?" onConfirm={() => handleDelete(locationId)} okText="Yes" cancelText="No"><span style={{ color: "black" }}>Delete</span></Popconfirm>
+        ),
       },
     ]}
   />
