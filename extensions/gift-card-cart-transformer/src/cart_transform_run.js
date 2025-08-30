@@ -21,28 +21,34 @@ export function cartTransformRun(input) {
       
       console.log(`\nLine ${index + 1}:`);
       console.log('- Product ID:', product?.id);
-      console.log('- Line Quantity:', line.quantity);
-      console.log('- Product Type:', product?.productType);
+      console.log('- Quantity:', line.quantity);
       
-      // Target your specific Jiffy Lube Gift Card product
+      // Access the attribute using the alias name from GraphQL
+      const customPriceAttr = line.customPriceAttribute;
+      console.log('- Custom Price Attribute:', customPriceAttr);
+      
+      // Target your specific product
       const targetProductId = 'gid://shopify/Product/7488258998368';
       
       if (product?.id === targetProductId) {
         console.log('🎯 Jiffy Lube Gift Card detected!');
         
-        // Extract customer amount from quantity
-        let customAmount = "25.00"; // Default fallback price
+        // Get customer's custom amount from attribute
+        let customAmount = "25.00"; // Default fallback
         
-        if (line.quantity >= 1 && line.quantity <= 1000) {
-          // Customer amount was transferred via quantity
-          customAmount = line.quantity.toFixed(2);
-          console.log('💰 Customer entered amount:', customAmount);
+        if (customPriceAttr && customPriceAttr.value) {
+          const customerAmount = parseFloat(customPriceAttr.value);
+          if (customerAmount > 0 && customerAmount <= 1000) {
+            customAmount = customerAmount.toFixed(2);
+            console.log('💰 Customer entered amount:', customAmount);
+          }
+        } else {
+          console.log('⚠️ No custom amount found, using default');
         }
         
         operations.push({
           update: {
             cartLineId: line.id,
-            quantity: 1, // Reset quantity to 1
             price: {
               adjustment: {
                 fixedAmountPerUnit: {
@@ -54,7 +60,7 @@ export function cartTransformRun(input) {
         });
         
         console.log(`✅ Applied customer price: $${customAmount}`);
-        console.log('✅ Quantity reset to: 1');
+        console.log(`✅ Quantity: ${line.quantity}`);
         
       } else {
         console.log('❌ Different product, skipping...');
