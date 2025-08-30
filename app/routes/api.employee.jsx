@@ -11,7 +11,7 @@ export const action = async ({ request }) => {
     const formData = await request.formData();
     const username = formData.get("username");
     const email = formData.get("email");
-    const address = formData.get("address");
+    const locationId = formData.get("locationId");
     const password = formData.get("password");
 
     try {
@@ -19,8 +19,11 @@ export const action = async ({ request }) => {
         data: {
           username,
           email,
-          address,
+          locationId,
           password,
+        },
+        include: {
+          location: true,
         },
       });
 

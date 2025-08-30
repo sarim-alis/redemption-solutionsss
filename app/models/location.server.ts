@@ -19,6 +19,9 @@ export async function getAllLocations() {
 export async function getLocationById(id: string) {
   return prisma.location.findUnique({
     where: { id },
+    include: {
+      employees: true,
+    },
   });
 }
 

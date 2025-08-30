@@ -2,18 +2,16 @@
 import prisma from "../db.server";
 
 // createEmployee.
-export async function createEmployee(username: string, email?: string, address?: string, password?: string) {
+export async function createEmployee(username: string, email?: string, locationId?: string, password?: string) {
   return prisma.employee.create({
-    data: {
-      username,
-      email,
-      address,
-      password,
-    },
+    data: { username, email, locationId, password},
+    include: { location: true},
   });
 }
 
 // getAllEmployees.
- export async function getAllEmployees() {
-  return prisma.employee.findMany();
+export async function getAllEmployees() {
+  return prisma.employee.findMany({
+    include: {location: true},
+  });
 }

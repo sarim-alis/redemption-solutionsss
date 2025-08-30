@@ -3,24 +3,27 @@
 import { useState } from 'react';
 import { Page, Text } from "@shopify/polaris";
 import SidebarLayout from '../components/SidebarLayout';
-import { Drawer, Input, Button, Dropdown, Table } from 'antd';
+import { Drawer, Input, Button, Select, Table } from 'antd';
 import { MoreOutlined } from '@ant-design/icons';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useLoaderData } from "@remix-run/react";
 import { json } from "@remix-run/node";
 import { getAllEmployees } from "../models/employee.server.js";
+import { getAllLocations } from "../models/location.server.js";
 import styles from '../styles/users.js';
 
 // Loader.
 export const loader = async () => {
   const employees = await getAllEmployees();
-  return json({ employees });
+  const locations = await getAllLocations();
+  return json({ employees, locations });
 };
 
-// Component
+
+// Frontend.
 const Users = () => {
-  const { employees: initialEmployees } = useLoaderData();
+  const { employees: initialEmployees, locations } = useLoaderData();
   const [employees, setEmployees] = useState(initialEmployees);
   const [drawerVisible, setDrawerVisible] = useState(false);
 
@@ -31,13 +34,13 @@ const Users = () => {
     initialValues: {
       username: '',
       email: '',
-      address: '',
+      locationId: '',
       password: '',
     },
     validationSchema: Yup.object({
       username: Yup.string().required('Username is required'),
       email: Yup.string().email('Invalid email').required('Email is required'),
-      address: Yup.string().required('Address is required'),
+      locationId: Yup.string().required('Location is required'),
       password: Yup.string().required('Password is required'),
     }),
     onSubmit: async (values, { resetForm, setSubmitting }) => {
@@ -67,7 +70,7 @@ const Users = () => {
     },
   });
 
-  // Ant Design Table columns
+  // Columns.
   const columns = [
     {
       title: "Name",
@@ -81,8 +84,8 @@ const Users = () => {
     },
     {
       title: "Location",
-      dataIndex: "address",
-      key: "address",
+      key: "location",
+      render: (_, record) => record.location?.name || 'N/A',
     },
     {
       title: "Actions",
@@ -106,22 +109,10 @@ const Users = () => {
         </div>
 
           {/* Employee Table */}
-          <Table
-            columns={columns}
-            dataSource={employees.map(emp => ({ ...emp, key: emp.id }))}
-            style={{ marginTop: "20px" }}
-            bordered
-            pagination={false}
-          />
+          <Table columns={columns} dataSource={employees.map(emp => ({ ...emp, key: emp.id }))} style={{ marginTop: "20px" }} bordered pagination={false} />
 
-        {/* Drawer to Add Employee */}
-        <Drawer
-          title="Add Employee"
-          placement="right"
-          open={drawerVisible}
-          onClose={closeDrawer}
-          width={400}
-        >
+        {/* Add Employee */}
+        <Drawer title="Add Employee" placement="right" open={drawerVisible} onClose={closeDrawer} width={400}>
           <form onSubmit={formik.handleSubmit}>
             <div style={{ marginBottom: '16px' }}>
               <label>Username <span style={{ color: '#ce1127' }}>*</span></label>
@@ -140,10 +131,12 @@ const Users = () => {
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <label>Address <span style={{ color: '#ce1127' }}>*</span></label>
-              <Input name="address" placeholder="United States" style={{ width: '100%', height: '40px' }} value={formik.values.address} onChange={formik.handleChange} onBlur={formik.handleBlur} />
-              {formik.touched.address && formik.errors.address && (
-                <div style={{ color: '#ff4d4f' }}>{formik.errors.address}</div>
+              <label>Location <span style={{ color: '#ce1127' }}>*</span></label>
+              <Select name="locationId" placeholder="Select Location" style={{ width: '100%', height: '40px' }} value={formik.values.locationId} onChange={(value) => formik.setFieldValue('locationId', value)} onBlur={formik.handleBlur}>
+                {locations.map(location => (<Select.Option key={location.id} value={location.id}>{location.name}</Select.Option>))}
+              </Select>
+              {formik.touched.locationId && formik.errors.locationId && (
+                <div style={{ color: '#ff4d4f' }}>{formik.errors.locationId}</div>
               )}
             </div>
 
