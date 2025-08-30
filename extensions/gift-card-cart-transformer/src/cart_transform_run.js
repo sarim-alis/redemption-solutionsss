@@ -9,57 +9,50 @@
  * @param {RunInput} input
  * @returns {FunctionRunResult}
  */
-export function cartTransformRun(input) {  // ← Name change kiya
+export function cartTransformRun(input) {
   const operations = [];
 
-  console.log('Cart Transform Function Started');
+  console.log('=== Cart Transform Debug ===');
   console.log('Input cart lines:', input.cart.lines.length);
 
   input.cart.lines.forEach((line, index) => {
-    console.log(`Processing line ${index + 1}:`, line.id);
+    console.log(`\nLine ${index + 1}:`);
+    console.log('- Line ID:', line.id);
+    console.log('- Product Type:', line.merchandise?.product?.productType);
+    console.log('- Custom Attribute:', line.attribute);
     
     if (line.merchandise?.__typename === 'ProductVariant') {
-      const product = line.merchandise.product;
+      // IMPORTANT: Check for custom amount attribute FIRST (any product type)
+      const customAmountAttr = line.attribute;
       
-      // Gift card identify karein
-      const isGiftCard = product?.productType?.toLowerCase() === 'gift card' ||
-                        product?.productType?.toLowerCase() === 'giftcard' ||
-                        product?.productType?.toLowerCase().includes('gift');
-
-      console.log(`Line ${index + 1} product type:`, product?.productType);
-      console.log(`Line ${index + 1} is gift card:`, isGiftCard);
-
-      if (isGiftCard) {
-        // Custom amount attribute check
-        const customAmountAttr = line.attribute;
-
-        console.log(`Custom amount attribute:`, customAmountAttr);
-
-        if (customAmountAttr && customAmountAttr.value) {
-          const customAmount = parseFloat(customAmountAttr.value);
+      if (customAmountAttr && customAmountAttr.value) {
+        const customAmount = parseFloat(customAmountAttr.value);
+        console.log('- Custom Amount Found:', customAmount);
+        
+        if (customAmount > 0) {
+          console.log('- Applying price update:', customAmount);
           
-          if (customAmount > 0) {
-            console.log(`Updating price to: $${customAmount}`);
-            
-            operations.push({
-              update: {
-                cartLineId: line.id,
-                price: {
-                  adjustment: {
-                    fixedAmountPerUnit: {
-                      amount: customAmount.toFixed(2)
-                    }
+          operations.push({
+            update: {
+              cartLineId: line.id,
+              price: {
+                adjustment: {
+                  fixedAmountPerUnit: {
+                    amount: customAmount.toFixed(2)
                   }
                 }
               }
-            });
-          }
+            }
+          });
         }
+      } else {
+        console.log('- No custom amount attribute found');
       }
     }
   });
 
-  console.log('Total operations:', operations.length);
+  console.log('\nTotal operations:', operations.length);
+  console.log('Operations:', JSON.stringify(operations, null, 2));
   
   return {
     operations: operations
