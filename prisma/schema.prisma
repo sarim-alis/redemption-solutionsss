@@ -66,7 +66,7 @@ model Order {
   customerEmail     String?
   customerName      String?
   totalPrice        Float
-  remainingBalance  Float?
+  remainingBalance  Float[]   @default([])
   currency          String
   status            String
   fulfillmentStatus String?
