@@ -68,18 +68,31 @@ async function processWebhook({ shop, session, topic, payload }) {
             
             let lineItems = [];
             if (paidOrder.lineItems?.edges) {
-              lineItems = paidOrder.lineItems.edges.map(edge => ({
-                title: edge.node.title,
-                quantity: edge.node.quantity,
-                type: edge.node.variant?.product?.metafield?.value || 'voucher' // Extract type from metafield
-              }));
+              lineItems = paidOrder.lineItems.edges.map(edge => {
+                // Manual type assignment based on product title
+                let type = edge.node.variant?.product?.metafield?.value || 'voucher';
+                if (edge.node.title.toLowerCase().includes('gift card')) {
+                  type = 'gift';
+                }
+                return {
+                  title: edge.node.title,
+                  quantity: edge.node.quantity,
+                  type: type
+                };
+              });
             } else if (paidOrder.lineItems?.length > 0) {
               // Fallback: direct array structure
-              lineItems = paidOrder.lineItems.map(item => ({
-                title: item.title || item.node?.title,
-                quantity: item.quantity || item.node?.quantity,
-                type: item.type || item.node?.variant?.product?.metafield?.value || 'voucher'
-              }));
+              lineItems = paidOrder.lineItems.map(item => {
+                let type = item.type || item.node?.variant?.product?.metafield?.value || 'voucher';
+                if ((item.title || item.node?.title || '').toLowerCase().includes('gift card')) {
+                  type = 'gift';
+                }
+                return {
+                  title: item.title || item.node?.title,
+                  quantity: item.quantity || item.node?.quantity,
+                  type: type
+                };
+              });
             }
             
             console.log(`📦 [Webhook] Processing ${lineItems.length} line items for voucher creation`);
@@ -232,6 +245,7 @@ async function fetchProductMetafields(shop, session, productIds) {
     }
     
     console.log(`📋 Fetched metafields for ${Object.keys(metafieldsMap).length} products`);
+    console.log('🔍 [DEBUG] Metafields map:', JSON.stringify(metafieldsMap, null, 2));
     return metafieldsMap;
   } catch (error) {
     console.error('❌ Failed to fetch product metafields:', error);
@@ -335,18 +349,31 @@ async function saveOrderToDatabase(payload, action, session = null) {
           
           let lineItems = [];
           if (savedOrder.lineItems?.edges) {
-            lineItems = savedOrder.lineItems.edges.map(edge => ({
-              title: edge.node.title,
-              quantity: edge.node.quantity,
-              type: edge.node.variant?.product?.metafield?.value || 'voucher' // Extract type from metafield
-            }));
+            lineItems = savedOrder.lineItems.edges.map(edge => {
+              // Manual type assignment based on product title
+              let type = edge.node.variant?.product?.metafield?.value || 'voucher';
+              if (edge.node.title.toLowerCase().includes('gift card')) {
+                type = 'gift';
+              }
+              return {
+                title: edge.node.title,
+                quantity: edge.node.quantity,
+                type: type
+              };
+            });
           } else if (savedOrder.lineItems?.length > 0) {
             // Fallback: direct array structure
-            lineItems = savedOrder.lineItems.map(item => ({
-              title: item.title || item.node?.title,
-              quantity: item.quantity || item.node?.quantity,
-              type: item.type || item.node?.variant?.product?.metafield?.value || 'voucher'
-            }));
+            lineItems = savedOrder.lineItems.map(item => {
+              let type = item.type || item.node?.variant?.product?.metafield?.value || 'voucher';
+              if ((item.title || item.node?.title || '').toLowerCase().includes('gift card')) {
+                type = 'gift';
+              }
+              return {
+                title: item.title || item.node?.title,
+                quantity: item.quantity || item.node?.quantity,
+                type: type
+              };
+            });
           }
           
           console.log(`📦 Processing ${lineItems.length} line items for voucher creation`);
