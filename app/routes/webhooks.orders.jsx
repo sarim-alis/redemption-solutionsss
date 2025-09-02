@@ -111,23 +111,8 @@ async function processWebhook({ shop, session, topic, payload }) {
             console.error('❌ [Webhook] Failed to create vouchers for paid order:', voucherError);
           }
         } else if (paidOrder && paidVoucher) {
-          // Voucher already exists, send email if not sent before
-          if (!paidVoucher.emailSent) {
-            console.log(`📧 [Webhook] Sending voucher email for existing voucher: ${paidVoucher.code}`);
-            sendVoucherEmailIfFirstOrder(paidOrder, paidVoucher)
-              .then((result) => {
-                if (result.success) {
-                  console.log(`✅ [Webhook] Email sent successfully for existing voucher: ${result.voucherCode}`);
-                } else {
-                  console.error(`❌ [Webhook] Email failed for existing voucher: ${result.voucherCode}: ${result.message}`);
-                }
-              })
-              .catch((err) => {
-                console.error('❌ [Webhook] Error sending voucher email for existing voucher:', err);
-              });
-          } else {
-            console.log(`⏭️ [Webhook] Email already sent for voucher: ${paidVoucher.code}`);
-          }
+          // Voucher already exists, no need to send email again
+          console.log(`⏭️ [Webhook] Voucher already exists: ${paidVoucher.code}, email already sent`);
         }
         break;
 

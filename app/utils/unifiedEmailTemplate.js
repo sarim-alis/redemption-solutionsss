@@ -172,9 +172,14 @@ function generateGiftCard(voucher, amount = 0) {
 export function generateUnifiedEmailHTML({ order, vouchers }) {
   const customerName = formatCustomerName(order?.customerEmail);
   
+  // Debug: Log voucher types
+  console.log('🔍 [UnifiedEmail] Voucher types:', vouchers.map(v => ({ code: v.code, type: v.type, productTitle: v.productTitle })));
+  
   // Separate vouchers by type
   const voucherVouchers = vouchers.filter(v => v.type !== 'gift');
   const giftVouchers = vouchers.filter(v => v.type === 'gift');
+  
+  console.log(`🔍 [UnifiedEmail] Found ${voucherVouchers.length} vouchers and ${giftVouchers.length} gift cards`);
   
   // Generate voucher cards HTML
   const voucherCardsHTML = voucherVouchers.map(voucher => generateVoucherCard(voucher)).join('');
