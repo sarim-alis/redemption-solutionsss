@@ -40,6 +40,7 @@ model Voucher {
   createdAt     DateTime @default(now())
   order         Order    @relation(fields: [shopifyOrderId], references: [shopifyOrderId])
   emailSent      Boolean  @default(false)
+  username      String[] @default([])
 }
 
 model Product {
@@ -66,6 +67,7 @@ model Order {
   customerName      String?
   totalPrice        Float
   remainingBalance  Float?
+  cashHistory       Float[]   @default([])
   currency          String
   status            String
   fulfillmentStatus String?
@@ -80,27 +82,29 @@ model Order {
   locationUsed      String[]
   redeemedAt        DateTime[]
   statusUse         Boolean  @default(false)
+  username          String[] @default([])
 }
 
 model Location {
   id        String   @id @default(cuid())
-  name      String
+  name      String   @unique
+  market    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  employees Employee[] @relation("EmployeeLocations")
+  employees Employee[]
 }
 
 model Employee {
   id        String      @id @default(cuid())
   username  String      @unique
   email     String?     @unique
-  address   String?
   password  String?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
-  locations Location[] @relation("EmployeeLocations")
+  locationId String
+  location   Location  @relation(fields: [locationId], references: [id])
 }
 
 model Customer {
