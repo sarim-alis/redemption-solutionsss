@@ -238,6 +238,11 @@ async function fetchProductMetafields(shop, session, productIds) {
 
 // Helper function to save order to database
 async function saveOrderToDatabase(payload, action, session = null) {
+  // Import server-only modules inside the function
+  const { saveOrder } = await import("../models/order.server");
+  const { saveCustomer } = await import("../models/customer.server");
+  const { createVouchersForOrder } = await import("../models/voucher.server");
+  const { sendUnifiedVoucherEmail } = await import("../utils/sendVoucherEmailIfFirstOrder");
   try {
     const numericId = payload.id.toString();
     
