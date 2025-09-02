@@ -63,8 +63,12 @@ async function processWebhook({ shop, session, topic, payload }) {
           try {
             console.log('🎟️ [Webhook] Creating multiple vouchers for paid order:', paidOrder.shopifyOrderId);
             
-            // Parse line items from the order
-            const lineItems = paidOrder.lineItems || [];
+            // Parse line items from the order and extract type from metafields
+            const lineItems = paidOrder.lineItems?.edges?.map(edge => ({
+              title: edge.node.title,
+              quantity: edge.node.quantity,
+              type: edge.node.variant?.product?.metafield?.value || 'voucher' // Extract type from metafield
+            })) || [];
             console.log(`📦 [Webhook] Processing ${lineItems.length} line items for voucher creation`);
             
             // Create vouchers for each product
@@ -327,8 +331,12 @@ async function saveOrderToDatabase(payload, action, session = null) {
         try {
           console.log('🎟️ Creating multiple vouchers for paid order via saveOrderToDatabase:', savedOrder.shopifyOrderId);
           
-          // Parse line items from the order
-          const lineItems = savedOrder.lineItems || [];
+          // Parse line items from the order and extract type from metafields
+          const lineItems = savedOrder.lineItems?.edges?.map(edge => ({
+            title: edge.node.title,
+            quantity: edge.node.quantity,
+            type: edge.node.variant?.product?.metafield?.value || 'voucher' // Extract type from metafield
+          })) || [];
           console.log(`📦 Processing ${lineItems.length} line items for voucher creation`);
           
           // Create vouchers for each product

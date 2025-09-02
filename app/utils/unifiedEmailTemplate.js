@@ -127,42 +127,44 @@ function generateVoucherCard(voucher) {
   `;
 }
 
-// Generate gift card HTML
+// Generate gift card HTML - Using original gift card design
 function generateGiftCard(voucher, amount = 0) {
   const formattedAmount = formatCurrency(amount);
   
   return `
-    <table width="600" cellpadding="0" cellspacing="0" border="0" style="border-radius:12px; background:#862633; margin:30px; color:#ffffff;">
-      <!-- Top Row -->
-      <tr>
-        <td align="left" style="width:60px; padding: 10px;">
-          <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1755837350/lxkizea7xfe7omtekg5r.png"
-              width="60" height="60" style="border-radius:50%; object-fit:contain;" />
-        </td>
-        <td align="right" style="font-size:24px; font-weight:bold; color:#ffffff; padding-right:10px;">
-           ${voucher.code}
-        </td>
-      </tr>
+    <div style="width:600px; margin: 20px auto;">
+      <table width="600" cellpadding="0" cellspacing="0" border="0" style="border-radius:12px; background:#862633; margin:30px; color:#ffffff;">
+        <!-- Top Row -->
+        <tr>
+          <td align="left" style="width:60px; padding: 10px;">
+            <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1755837350/lxkizea7xfe7omtekg5r.png"
+                width="60" height="60" style="border-radius:50%; object-fit:contain;" />
+          </td>
+          <td align="right" style="font-size:24px; font-weight:bold; color:#ffffff; padding-right:10px;">
+             ${voucher.code}
+          </td>
+        </tr>
 
-      <!-- Spacer -->
-      <tr><td colspan="2" height="40"></td></tr>
+        <!-- Spacer -->
+        <tr><td colspan="2" height="40"></td></tr>
 
-      <!-- Balance Row -->
-      <tr>
-        <td colspan="2" style="padding:10px;">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0">
-            <tr>
-              <td align="left" style="font-size:24px; font-weight:600; color:#ffffff; white-space:nowrap;">
-                Current Balance:
-              </td>
-              <td align="right" style="font-size:40px; font-weight:bold; color:#ffffff; white-space:nowrap;">
-                ${formattedAmount}
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
+        <!-- Balance Row -->
+        <tr>
+          <td colspan="2" style="padding:10px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td align="left" style="font-size:24px; font-weight:600; color:#ffffff; white-space:nowrap;">
+                  Current Balance:
+                </td>
+                <td align="right" style="font-size:40px; font-weight:bold; color:#ffffff; white-space:nowrap;">
+                  ${formattedAmount}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
   `;
 }
 
