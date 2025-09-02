@@ -2,9 +2,9 @@ import prisma from "../db.server";
 
 
 // createLocation.
-export async function createLocation(name: string) {
+export async function createLocation(name: string, market: string) {
   return prisma.location.create({
-    data: { name },
+    data: { name, market },
   });
 }
 
@@ -19,6 +19,9 @@ export async function getAllLocations() {
 export async function getLocationById(id: string) {
   return prisma.location.findUnique({
     where: { id },
+    include: {
+      employees: true,
+    },
   });
 }
 
@@ -30,9 +33,9 @@ export async function deleteLocation(id: string) {
 }
 
 // updateLocation.
-export async function updateLocation(id: string, name: string) {
+export async function updateLocation(id: string, name: string, market: string) {
   return prisma.location.update({
     where: { id },
-    data: { name },
+    data: { name, market },
   });
 }
