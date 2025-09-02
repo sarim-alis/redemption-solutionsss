@@ -1,10 +1,6 @@
 // app/routes/webhooks.orders.jsx
 import { authenticate } from "../shopify.server";
 import { broadcastToClients } from "./webhook-stream";
-import { saveOrder } from "../models/order.server";
-import { sendVoucherEmailIfFirstOrder } from "../utils/sendVoucherEmailIfFirstOrder";
-import { saveCustomer } from "../models/customer.server";
-import { createVoucher } from "../models/voucher.server";
 
 export const action = async ({ request }) => {
   const { shop, session, topic, payload } = await authenticate.webhook(request);
@@ -21,6 +17,11 @@ export const action = async ({ request }) => {
 
 // Separate function to handle processing & broadcasting
 async function processWebhook({ shop, session, topic, payload }) {
+  // Import server-only modules inside the function
+  const { saveOrder } = await import("../models/order.server");
+  const { sendVoucherEmailIfFirstOrder, sendUnifiedVoucherEmail } = await import("../utils/sendVoucherEmailIfFirstOrder");
+  const { saveCustomer } = await import("../models/customer.server");
+  const { createVoucher, createVouchersForOrder } = await import("../models/voucher.server");
   if (!session) {
     console.log("⚠️ No session found for shop:", shop);
     return;
@@ -57,31 +58,39 @@ async function processWebhook({ shop, session, topic, payload }) {
         // Update order payment status in database and create voucher if not exists
         const { order: paidOrder, voucher: paidVoucher } = await saveOrderToDatabase(payload, 'PAID', session);
         
-        // If order was paid but no voucher exists, create one and send email
+        // If order was paid but no voucher exists, create multiple vouchers (one per product) and send unified email
         if (paidOrder && !paidVoucher) {
           try {
-            console.log('🎟️ [Webhook] Creating voucher for paid order:', paidOrder.shopifyOrderId);
-            const newVoucher = await createVoucher({
-              shopifyOrderId: paidOrder.shopifyOrderId,
-              customerEmail: paidOrder.customerEmail || ''
-            });
-            console.log('✅ [Webhook] Voucher created for paid order:', newVoucher.code);
+            console.log('🎟️ [Webhook] Creating multiple vouchers for paid order:', paidOrder.shopifyOrderId);
             
-            // Send voucher email immediately
-            console.log(`📧 [Webhook] Sending voucher email for paid order: ${paidOrder.shopifyOrderId}`);
-            sendVoucherEmailIfFirstOrder(paidOrder, newVoucher)
+            // Parse line items from the order
+            const lineItems = paidOrder.lineItems || [];
+            console.log(`📦 [Webhook] Processing ${lineItems.length} line items for voucher creation`);
+            
+            // Create vouchers for each product
+            const newVouchers = await createVouchersForOrder({
+              shopifyOrderId: paidOrder.shopifyOrderId,
+              customerEmail: paidOrder.customerEmail || '',
+              lineItems: lineItems
+            });
+            
+            console.log(`✅ [Webhook] Created ${newVouchers.length} vouchers for paid order`);
+            
+            // Send unified email for all vouchers
+            console.log(`📧 [Webhook] Sending unified email for ${newVouchers.length} vouchers`);
+            sendUnifiedVoucherEmail(paidOrder, newVouchers)
               .then((result) => {
                 if (result.success) {
-                  console.log(`✅ [Webhook] Email sent successfully for paid order voucher: ${result.voucherCode}`);
+                  console.log(`✅ [Webhook] Unified email sent successfully for ${newVouchers.length} vouchers`);
                 } else {
-                  console.error(`❌ [Webhook] Email failed for paid order voucher: ${result.voucherCode}: ${result.message}`);
+                  console.error(`❌ [Webhook] Unified email failed: ${result.message}`);
                 }
               })
               .catch((err) => {
-                console.error('❌ [Webhook] Error sending voucher email for paid order:', err);
+                console.error(`❌ [Webhook] Error sending unified email:`, err);
               });
           } catch (voucherError) {
-            console.error('❌ [Webhook] Failed to create voucher for paid order:', voucherError);
+            console.error('❌ [Webhook] Failed to create vouchers for paid order:', voucherError);
           }
         } else if (paidOrder && paidVoucher) {
           // Voucher already exists, send email if not sent before
@@ -308,18 +317,41 @@ async function saveOrderToDatabase(payload, action, session = null) {
     if (savedOrder) {
       console.log(`💾 Order ${action} saved to database via webhook: ${savedOrder.shopifyOrderId}`);
       
-      // For PAID action, if no voucher exists, create one
+      // For PAID action, if no voucher exists, create multiple vouchers
       if (action === 'PAID' && !voucher) {
         try {
-          console.log('🎟️ Creating voucher for paid order via saveOrderToDatabase:', savedOrder.shopifyOrderId);
-          const newVoucher = await createVoucher({
+          console.log('🎟️ Creating multiple vouchers for paid order via saveOrderToDatabase:', savedOrder.shopifyOrderId);
+          
+          // Parse line items from the order
+          const lineItems = savedOrder.lineItems || [];
+          console.log(`📦 Processing ${lineItems.length} line items for voucher creation`);
+          
+          // Create vouchers for each product
+          const newVouchers = await createVouchersForOrder({
             shopifyOrderId: savedOrder.shopifyOrderId,
-            customerEmail: savedOrder.customerEmail || ''
+            customerEmail: savedOrder.customerEmail || '',
+            lineItems: lineItems
           });
-          console.log('✅ Voucher created for paid order:', newVoucher.code);
-          return { order: savedOrder, voucher: newVoucher };
+          
+          console.log(`✅ Created ${newVouchers.length} vouchers for paid order`);
+          
+          // Send unified email for all vouchers
+          console.log(`📧 Sending unified email for ${newVouchers.length} vouchers`);
+          sendUnifiedVoucherEmail(savedOrder, newVouchers)
+            .then((result) => {
+              if (result.success) {
+                console.log(`✅ Unified email sent successfully for ${newVouchers.length} vouchers`);
+              } else {
+                console.error(`❌ Unified email failed: ${result.message}`);
+              }
+            })
+            .catch((err) => {
+              console.error(`❌ Error sending unified email:`, err);
+            });
+          
+          return { order: savedOrder, voucher: newVouchers[0] }; // Return first voucher for backward compatibility
         } catch (voucherError) {
-          console.error('❌ Failed to create voucher for paid order:', voucherError);
+          console.error('❌ Failed to create vouchers for paid order:', voucherError);
         }
       }
       

@@ -36,6 +36,8 @@ model Voucher {
   code          String   @unique
   shopifyOrderId String
   customerEmail String
+  productTitle  String?  // Product title for this specific voucher
+  type          String?  // Type of voucher (gift, voucher, etc.)
   used          Boolean  @default(false)
   createdAt     DateTime @default(now())
   order         Order    @relation(fields: [shopifyOrderId], references: [shopifyOrderId])

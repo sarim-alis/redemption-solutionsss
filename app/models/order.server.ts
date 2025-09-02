@@ -1,5 +1,5 @@
 import prisma from "../db.server";
-import { createVoucher } from "./voucher.server";
+import { createVoucher, createVouchersForOrder } from "./voucher.server";
 
 interface ShopifyCustomer {
   email?: string;
@@ -238,16 +238,24 @@ export async function saveOrder(orderData: ShopifyOrder) {
     // Check if voucher exists
     let voucher = await prisma.voucher.findFirst({ where: { shopifyOrderId: info.shopifyOrderId } });
     
-    // If order is now PAID and no voucher exists, create one
+    // If order is now PAID and no voucher exists, create multiple vouchers
     if (info.status === 'PAID' && !voucher) {
       try {
-        voucher = await createVoucher({
+        // Parse line items from the order
+        const lineItems = updated.lineItems || [];
+        console.log(`📦 Processing ${lineItems.length} line items for voucher creation`);
+        
+        // Create vouchers for each product
+        const newVouchers = await createVouchersForOrder({
           shopifyOrderId: updated.shopifyOrderId,
-          customerEmail: updated.customerEmail || ''
+          customerEmail: updated.customerEmail || '',
+          lineItems: lineItems
         });
-        console.log('🎟️ Voucher created for paid order:', voucher.code);
+        
+        console.log(`✅ Created ${newVouchers.length} vouchers for paid order`);
+        voucher = newVouchers[0]; // Set first voucher for backward compatibility
       } catch (voucherError: any) {
-        console.error('❌ Failed to create voucher for paid order:', voucherError);
+        console.error('❌ Failed to create vouchers for paid order:', voucherError);
       }
     }
     
@@ -282,13 +290,21 @@ export async function updateOrderStatus(shopifyOrderId: string, newStatus: strin
       
       if (!voucher) {
         try {
-          voucher = await createVoucher({
+          // Parse line items from the order
+          const lineItems = updated.lineItems || [];
+          console.log(`📦 Processing ${lineItems.length} line items for voucher creation`);
+          
+          // Create vouchers for each product
+          const newVouchers = await createVouchersForOrder({
             shopifyOrderId,
-            customerEmail: updated.customerEmail || ''
+            customerEmail: updated.customerEmail || '',
+            lineItems: lineItems
           });
-          console.log('🎟️ Voucher created for paid order:', voucher.code);
+          
+          console.log(`✅ Created ${newVouchers.length} vouchers for paid order`);
+          voucher = newVouchers[0]; // Set first voucher for backward compatibility
         } catch (voucherError: any) {
-          console.error('❌ Failed to create voucher for paid order:', voucherError);
+          console.error('❌ Failed to create vouchers for paid order:', voucherError);
         }
       }
       
