@@ -64,12 +64,26 @@ async function processWebhook({ shop, session, topic, payload }) {
             console.log('🎟️ [Webhook] Creating multiple vouchers for paid order:', paidOrder.shopifyOrderId);
             
             // Parse line items from the order and extract type from metafields
-            const lineItems = paidOrder.lineItems?.edges?.map(edge => ({
-              title: edge.node.title,
-              quantity: edge.node.quantity,
-              type: edge.node.variant?.product?.metafield?.value || 'voucher' // Extract type from metafield
-            })) || [];
+            console.log('🔍 [DEBUG] Line items structure:', JSON.stringify(paidOrder.lineItems, null, 2));
+            
+            let lineItems = [];
+            if (paidOrder.lineItems?.edges) {
+              lineItems = paidOrder.lineItems.edges.map(edge => ({
+                title: edge.node.title,
+                quantity: edge.node.quantity,
+                type: edge.node.variant?.product?.metafield?.value || 'voucher' // Extract type from metafield
+              }));
+            } else if (paidOrder.lineItems?.length > 0) {
+              // Fallback: direct array structure
+              lineItems = paidOrder.lineItems.map(item => ({
+                title: item.title || item.node?.title,
+                quantity: item.quantity || item.node?.quantity,
+                type: item.type || item.node?.variant?.product?.metafield?.value || 'voucher'
+              }));
+            }
+            
             console.log(`📦 [Webhook] Processing ${lineItems.length} line items for voucher creation`);
+            console.log('🔍 [DEBUG] Parsed line items:', JSON.stringify(lineItems, null, 2));
             
             // Create vouchers for each product
             const newVouchers = await createVouchersForOrder({
@@ -332,12 +346,26 @@ async function saveOrderToDatabase(payload, action, session = null) {
           console.log('🎟️ Creating multiple vouchers for paid order via saveOrderToDatabase:', savedOrder.shopifyOrderId);
           
           // Parse line items from the order and extract type from metafields
-          const lineItems = savedOrder.lineItems?.edges?.map(edge => ({
-            title: edge.node.title,
-            quantity: edge.node.quantity,
-            type: edge.node.variant?.product?.metafield?.value || 'voucher' // Extract type from metafield
-          })) || [];
+          console.log('🔍 [DEBUG] Line items structure:', JSON.stringify(savedOrder.lineItems, null, 2));
+          
+          let lineItems = [];
+          if (savedOrder.lineItems?.edges) {
+            lineItems = savedOrder.lineItems.edges.map(edge => ({
+              title: edge.node.title,
+              quantity: edge.node.quantity,
+              type: edge.node.variant?.product?.metafield?.value || 'voucher' // Extract type from metafield
+            }));
+          } else if (savedOrder.lineItems?.length > 0) {
+            // Fallback: direct array structure
+            lineItems = savedOrder.lineItems.map(item => ({
+              title: item.title || item.node?.title,
+              quantity: item.quantity || item.node?.quantity,
+              type: item.type || item.node?.variant?.product?.metafield?.value || 'voucher'
+            }));
+          }
+          
           console.log(`📦 Processing ${lineItems.length} line items for voucher creation`);
+          console.log('🔍 [DEBUG] Parsed line items:', JSON.stringify(lineItems, null, 2));
           
           // Create vouchers for each product
           const newVouchers = await createVouchersForOrder({
