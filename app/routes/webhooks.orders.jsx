@@ -349,31 +349,56 @@ async function saveOrderToDatabase(payload, action, session = null) {
           
           let lineItems = [];
           if (savedOrder.lineItems?.edges) {
-            lineItems = savedOrder.lineItems.edges.map(edge => {
+            lineItems = savedOrder.lineItems.edges.flatMap(edge => {
+              // Get variant title (fallback to product title if variant title is not available)
+              const variantTitle = edge.node.variant?.title || edge.node.title || '';
+              
+              // Extract pack number from variant title (e.g., '3 Pack' -> 3, '5 Pack' -> 5)
+              const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
+              const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
+              
+              // Calculate total vouchers needed (pack count * quantity)
+              const totalVouchers = packCount * edge.node.quantity;
+              
               // Manual type assignment based on product title
               let type = edge.node.variant?.product?.metafield?.value || 'voucher';
               if (edge.node.title.toLowerCase().includes('gift card')) {
                 type = 'gift';
               }
-              return {
+              
+              // Create array of line items with quantity 1 for each voucher needed
+              return Array.from({ length: totalVouchers }, () => ({
                 title: edge.node.title,
-                quantity: edge.node.quantity,
+                quantity: 1, // Each voucher is counted as 1
                 type: type
-              };
-            });
+              }));
+            }).flat();
           } else if (savedOrder.lineItems?.length > 0) {
             // Fallback: direct array structure
-            lineItems = savedOrder.lineItems.map(item => {
+            lineItems = savedOrder.lineItems.flatMap(item => {
+              const title = item.title || item.node?.title || '';
+              const variantTitle = item.variant?.title || item.node?.variant?.title || title;
+              const quantity = item.quantity || item.node?.quantity || 1;
+              
+              // Extract pack number from variant title (e.g., '3 Pack' -> 3, '5 Pack' -> 5)
+              const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
+              const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
+              
+              // Calculate total vouchers needed (pack count * quantity)
+              const totalVouchers = packCount * quantity;
+              
               let type = item.type || item.node?.variant?.product?.metafield?.value || 'voucher';
-              if ((item.title || item.node?.title || '').toLowerCase().includes('gift card')) {
+              if (title.toLowerCase().includes('gift card')) {
                 type = 'gift';
               }
-              return {
-                title: item.title || item.node?.title,
-                quantity: item.quantity || item.node?.quantity,
+              
+              // Create array of line items with quantity 1 for each voucher needed
+              return Array.from({ length: totalVouchers }, () => ({
+                title: title,
+                quantity: 1, // Each voucher is counted as 1
                 type: type
-              };
-            });
+              }));
+            }).flat();
           }
           
           console.log(`📦 Processing ${lineItems.length} line items for voucher creation`);
