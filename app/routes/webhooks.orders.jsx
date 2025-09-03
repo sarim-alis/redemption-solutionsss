@@ -72,16 +72,36 @@ async function processWebhook({ shop, session, topic, payload }) {
                 const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
                 const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
                 
-                let type = edge.node.variant?.product?.metafield?.value || 'voucher';
-                if (edge.node.title.toLowerCase().includes('gift card')) {
-                  type = 'gift';
+                // Get the type from metafield or default to 'voucher'
+                let type = 'voucher';
+                const metafieldValue = edge.node.variant?.product?.metafield?.value;
+                
+                // Parse the metafield value if it's a JSON string
+                try {
+                  const parsedMetafield = metafieldValue ? JSON.parse(metafieldValue) : null;
+                  if (Array.isArray(parsedMetafield) && parsedMetafield.length > 0) {
+                    type = parsedMetafield[0]; // Take the first type if it's an array
+                  } else if (typeof parsedMetafield === 'string') {
+                    type = parsedMetafield;
+                  }
+                } catch (e) {
+                  console.log('Using default type as voucher due to metafield parsing error');
+                }
+
+                // Skip if not a voucher type
+                if (type.toLowerCase() !== 'voucher' || edge.node.title.toLowerCase().includes('gift card')) {
+                  console.log(`⏭️ Skipping non-voucher item: ${edge.node.title}`);
+                  return null;
                 }
                 
-                console.log(`📦 Processing item: ${edge.node.title} (${edge.node.quantity} × ${packCount} pack) - Type: ${type}`);
+                // For pack items, we want to create vouchers for each item in the pack
+                const quantity = 1; // Always create 1 line item per pack
+                
+                console.log(`📦 Processing voucher item: ${edge.node.title} (${quantity} × ${packCount} pack) - Type: ${type}`);
                 
                 return {
                   title: edge.node.title,
-                  quantity: edge.node.quantity,
+                  quantity: quantity,
                   price: edge.node.originalUnitPriceSet?.shopMoney?.amount || 0,
                   variantTitle: variantTitle,
                   variant: edge.node.variant || {},
@@ -98,16 +118,36 @@ async function processWebhook({ shop, session, topic, payload }) {
                 const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
                 const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
                 
-                let type = node.type || node.variant?.product?.metafield?.value || 'voucher';
-                if ((node.title || '').toLowerCase().includes('gift card')) {
-                  type = 'gift';
+                // Get the type from metafield or default to 'voucher'
+                let type = 'voucher';
+                const metafieldValue = node.variant?.product?.metafield?.value || node.type;
+                
+                // Parse the metafield value if it's a JSON string
+                try {
+                  const parsedMetafield = metafieldValue ? JSON.parse(metafieldValue) : null;
+                  if (Array.isArray(parsedMetafield) && parsedMetafield.length > 0) {
+                    type = parsedMetafield[0]; // Take the first type if it's an array
+                  } else if (typeof parsedMetafield === 'string') {
+                    type = parsedMetafield;
+                  }
+                } catch (e) {
+                  console.log('Using default type as voucher due to metafield parsing error');
+                }
+
+                // Skip if not a voucher type or if it's a gift card
+                if (type.toLowerCase() !== 'voucher' || (node.title || '').toLowerCase().includes('gift card')) {
+                  console.log(`⏭️ Skipping non-voucher item: ${node.title}`);
+                  return null;
                 }
                 
-                console.log(`📦 Processing item: ${node.title} (${node.quantity} × ${packCount} pack) - Type: ${type}`);
+                // For pack items, we want to create vouchers for each item in the pack
+                const quantity = 1; // Always create 1 line item per pack
+                
+                console.log(`📦 Processing voucher item: ${node.title} (${quantity} × ${packCount} pack) - Type: ${type}`);
                 
                 return {
                   title: node.title,
-                  quantity: node.quantity,
+                  quantity: quantity,
                   price: node.price || node.originalUnitPriceSet?.shopMoney?.amount || 0,
                   variantTitle: variantTitle,
                   variant: node.variant || {},
@@ -119,8 +159,10 @@ async function processWebhook({ shop, session, topic, payload }) {
               });
             }
             
-            console.log(`📦 [Webhook] Processing ${lineItems.length} line items for voucher creation`);
-            console.log('🔍 [DEBUG] Parsed line items:', JSON.stringify(lineItems, null, 2));
+            // Filter out any null items (skipped non-voucher items)
+            lineItems = lineItems.filter(item => item !== null);
+            console.log(`📦 [Webhook] Processing ${lineItems.length} voucher items for creation`);
+            console.log('🔍 [DEBUG] Parsed voucher items:', JSON.stringify(lineItems, null, 2));
             
             // Create vouchers for each product
             const newVouchers = await createVouchersForOrder({
