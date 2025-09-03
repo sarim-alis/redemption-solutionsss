@@ -350,12 +350,23 @@ async function saveOrderToDatabase(payload, action, session = null) {
           let lineItems = [];
           if (savedOrder.lineItems?.edges) {
             lineItems = savedOrder.lineItems.edges.flatMap(edge => {
-              // Get variant title (fallback to product title if variant title is not available)
+              // Get variant information
               const variantTitle = edge.node.variant?.title || edge.node.title || '';
+              const variantId = edge.node.variant?.id?.replace('gid://shopify/ProductVariant/', '') || '';
+              
+              // Debug log variant information
+              console.log('🔍 Variant Info:', {
+                variantTitle,
+                variantId,
+                nodeTitle: edge.node.title,
+                nodeVariant: edge.node.variant
+              });
               
               // Extract pack number from variant title (e.g., '3 Pack' -> 3, '5 Pack' -> 5)
               const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
               const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
+              
+              console.log(`📦 Pack Calculation: '${variantTitle}' -> ${packCount} pack(s) × ${edge.node.quantity} quantity = ${packCount * edge.node.quantity} total vouchers`);
               
               // Calculate total vouchers needed (pack count * quantity)
               const totalVouchers = packCount * edge.node.quantity;
@@ -366,12 +377,20 @@ async function saveOrderToDatabase(payload, action, session = null) {
                 type = 'gift';
               }
               
-              // Create array of line items with quantity 1 for each voucher needed
-              return Array.from({ length: totalVouchers }, () => ({
+              // Create array of line items with correct quantity
+              return {
                 title: edge.node.title,
-                quantity: 1, // Each voucher is counted as 1
-                type: type
-              }));
+                quantity: totalVouchers, // Total vouchers needed (pack count * quantity)
+                type: type,
+                price: edge.node.originalUnitPriceSet?.shopMoney?.amount || 0,
+                productId: edge.node.variant?.product?.id?.replace('gid://shopify/Product/', '') || '',
+                variantId: edge.node.variant?.id?.replace('gid://shopify/ProductVariant/', '') || '',
+                expire: edge.node.variant?.product?.metafield_expiry?.value || null,
+                productType: edge.node.variant?.product?.metafield?.value || 'voucher',
+                variantTitle: variantTitle,
+                packCount: packCount,
+                originalQuantity: edge.node.quantity
+              };
             }).flat();
           } else if (savedOrder.lineItems?.length > 0) {
             // Fallback: direct array structure
@@ -392,12 +411,20 @@ async function saveOrderToDatabase(payload, action, session = null) {
                 type = 'gift';
               }
               
-              // Create array of line items with quantity 1 for each voucher needed
-              return Array.from({ length: totalVouchers }, () => ({
+              // Return single line item with total quantity
+              return {
                 title: title,
-                quantity: 1, // Each voucher is counted as 1
-                type: type
-              }));
+                quantity: totalVouchers, // Total vouchers needed (pack count * quantity)
+                type: type,
+                price: item.price || item.node?.originalUnitPriceSet?.shopMoney?.amount || 0,
+                productId: item.productId || item.node?.variant?.product?.id?.replace('gid://shopify/Product/', '') || '',
+                variantId: item.variantId || item.node?.variant?.id?.replace('gid://shopify/ProductVariant/', '') || '',
+                expire: item.expire || item.node?.variant?.product?.metafield_expiry?.value || null,
+                productType: item.type || item.node?.variant?.product?.metafield?.value || 'voucher',
+                variantTitle: variantTitle,
+                packCount: packCount,
+                originalQuantity: quantity
+              };
             }).flat();
           }
           
