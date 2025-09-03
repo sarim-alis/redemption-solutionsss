@@ -1,5 +1,6 @@
 import prisma from "../db.server";
 import { v4 as uuidv4 } from "uuid";
+import type { LineItem } from "./order.server";
 
 function generateVoucherCode(): string {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -42,26 +43,45 @@ export async function createVouchersForOrder({
 }: { 
   shopifyOrderId: string, 
   customerEmail: string, 
-  lineItems: any[] 
+  lineItems: LineItem[] 
 }) {
   const vouchers = [];
   
   for (const item of lineItems) {
-    // Create one voucher per quantity of each product
-    for (let i = 0; i < item.quantity; i++) {
+    // For gift cards, use quantity as is, don't apply pack count
+    const isGiftCard = item.type === 'gift' || item.title.toLowerCase().includes('gift card');
+    
+    let totalVouchers;
+    if (isGiftCard) {
+      totalVouchers = item.quantity || 1;
+      console.log(`🎁 Creating gift card: ${item.quantity} × $${item.price} (${item.title})`);
+    } else {
+      // For regular products, apply pack count
+      const packCount = item.packCount || 1;
+      totalVouchers = packCount * (item.quantity || 1);
+      console.log(`📦 Creating ${totalVouchers} vouchers for ${item.title} (${packCount} pack × ${item.quantity} qty)`);
+    }
+    
+    // Create all vouchers at once
+    const voucherPromises = Array.from({ length: totalVouchers }, async (_, index) => {
       try {
         const voucher = await createVoucher({
           shopifyOrderId,
           customerEmail,
-          productTitle: item.title,
-          type: item.type || 'voucher' // Default to voucher if no type specified
+          productTitle: isGiftCard ? `${item.title} - $${item.price}` : item.title,
+          type: isGiftCard ? 'gift' : (item.type || 'voucher'),
         });
-        vouchers.push(voucher);
         console.log(`🎟️ Created voucher ${voucher.code} for product: ${item.title}`);
+        return voucher;
       } catch (error) {
         console.error(`❌ Failed to create voucher for product ${item.title}:`, error);
+        return null;
       }
-    }
+    });
+    
+    // Wait for all vouchers to be created
+    const createdVouchers = await Promise.all(voucherPromises);
+    vouchers.push(...createdVouchers.filter(Boolean));
   }
   
   return vouchers;

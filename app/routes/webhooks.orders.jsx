@@ -63,34 +63,58 @@ async function processWebhook({ shop, session, topic, payload }) {
           try {
             console.log('🎟️ [Webhook] Creating multiple vouchers for paid order:', paidOrder.shopifyOrderId);
             
-            // Parse line items from the order and extract type from metafields
             console.log('🔍 [DEBUG] Line items structure:', JSON.stringify(paidOrder.lineItems, null, 2));
             
             let lineItems = [];
             if (paidOrder.lineItems?.edges) {
               lineItems = paidOrder.lineItems.edges.map(edge => {
-                // Manual type assignment based on product title
+                const variantTitle = edge.node.variant_title || edge.node.variant?.title || edge.node.title || 'Standard';
+                const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
+                const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
+                
                 let type = edge.node.variant?.product?.metafield?.value || 'voucher';
                 if (edge.node.title.toLowerCase().includes('gift card')) {
                   type = 'gift';
                 }
+                
+                console.log(`📦 Processing item: ${edge.node.title} (${edge.node.quantity} × ${packCount} pack) - Type: ${type}`);
+                
                 return {
                   title: edge.node.title,
                   quantity: edge.node.quantity,
-                  type: type
+                  price: edge.node.originalUnitPriceSet?.shopMoney?.amount || 0,
+                  variantTitle: variantTitle,
+                  variant: edge.node.variant || {},
+                  packCount: packCount,
+                  type: type,
+                  productId: edge.node.variant?.product?.id?.replace('gid://shopify/Product/', '') || null,
+                  variantId: edge.node.variant?.id?.replace('gid://shopify/ProductVariant/', '') || null
                 };
               });
             } else if (paidOrder.lineItems?.length > 0) {
-              // Fallback: direct array structure
               lineItems = paidOrder.lineItems.map(item => {
-                let type = item.type || item.node?.variant?.product?.metafield?.value || 'voucher';
-                if ((item.title || item.node?.title || '').toLowerCase().includes('gift card')) {
+                const node = item.node || item;
+                const variantTitle = node.variant_title || node.variant?.title || node.title || 'Standard';
+                const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
+                const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
+                
+                let type = node.type || node.variant?.product?.metafield?.value || 'voucher';
+                if ((node.title || '').toLowerCase().includes('gift card')) {
                   type = 'gift';
                 }
+                
+                console.log(`📦 Processing item: ${node.title} (${node.quantity} × ${packCount} pack) - Type: ${type}`);
+                
                 return {
-                  title: item.title || item.node?.title,
-                  quantity: item.quantity || item.node?.quantity,
-                  type: type
+                  title: node.title,
+                  quantity: node.quantity,
+                  price: node.price || node.originalUnitPriceSet?.shopMoney?.amount || 0,
+                  variantTitle: variantTitle,
+                  variant: node.variant || {},
+                  packCount: packCount,
+                  type: type,
+                  productId: node.variant?.product?.id?.replace('gid://shopify/Product/', '') || null,
+                  variantId: node.variant?.id?.replace('gid://shopify/ProductVariant/', '') || null
                 };
               });
             }

@@ -188,12 +188,28 @@ async function processOrderData(orderData: ShopifyOrder): Promise<ProcessResult>
   }
 }
 
-interface LineItem {
+export interface LineItem {
   title: string;
   quantity: number;
   price: number;
   productId: string | null;
   variantId: string | null;
+  type: string;
+  variantTitle: string;
+  variant: any;
+  packCount: number;
+}
+
+interface LineItemInput {
+  title: string;
+  quantity: number;
+  price: number;
+  productId: string | null;
+  variantId: string | null;
+  type?: string;
+  variantTitle?: string;
+  variant?: any;
+  packCount?: number;
 }
 
 export async function saveOrder(orderData: ShopifyOrder) {
@@ -241,15 +257,62 @@ export async function saveOrder(orderData: ShopifyOrder) {
     // If order is now PAID and no voucher exists, create multiple vouchers
     if (info.status === 'PAID' && !voucher) {
       try {
-        // Parse line items from the order
-        const lineItems = updated.lineItems || [];
+        // Parse line items from the order with proper type safety
+        const parseLineItems = (itemsData: unknown): LineItem[] => {
+          if (!itemsData) return [];
+          
+          let parsedItems: any;
+          try {
+            // If it's a string, try to parse it as JSON
+            parsedItems = typeof itemsData === 'string' 
+              ? JSON.parse(itemsData) 
+              : itemsData;
+          } catch (e) {
+            console.error('Failed to parse line items:', e);
+            return [];
+          }
+
+          // Handle both array and edges format
+          const items = parsedItems?.edges?.map((edge: any) => edge?.node) || 
+                       (Array.isArray(parsedItems) ? parsedItems : []);
+          
+          return items.map((item: any): LineItem => {
+            const title = item.title || 'Untitled Product';
+            const variantTitle = item.variantTitle || item.variant?.title || title;
+            const packMatch = typeof variantTitle === 'string' ? variantTitle.match(/(\d+)\s*Pack/i) : null;
+            const packCount = item.packCount || (packMatch ? parseInt(packMatch[1], 10) : 1);
+            const quantity = item.quantity ? Number(item.quantity) : 1;
+            const price = item.price ? Number(item.price) : 
+                         (item.originalUnitPriceSet?.shopMoney?.amount ? 
+                          Number(item.originalUnitPriceSet.shopMoney.amount) : 0);
+            const type = item.type || 'voucher';
+            const variant = item.variant || {};
+            const productId = item.productId || item.variant?.product?.id?.split('/').pop() || null;
+            const variantId = item.variantId || item.variant?.id?.split('/').pop() || null;
+            
+            return {
+              title,
+              variantTitle,
+              quantity,
+              price,
+              type,
+              variant,
+              packCount,
+              productId,
+              variantId
+            };
+          });
+        };
+
+        const lineItems = parseLineItems(updated.lineItems);
         console.log(`📦 Processing ${lineItems.length} line items for voucher creation`);
+        console.log('🔍 Line items data:', JSON.stringify(lineItems, null, 2));
         
         // Create vouchers for each product
         const newVouchers = await createVouchersForOrder({
           shopifyOrderId: updated.shopifyOrderId,
           customerEmail: updated.customerEmail || '',
-          lineItems: lineItems
+          lineItems
         });
         
         console.log(`✅ Created ${newVouchers.length} vouchers for paid order`);
@@ -291,20 +354,57 @@ export async function updateOrderStatus(shopifyOrderId: string, newStatus: strin
       if (!voucher) {
         try {
           // Parse line items from the order
-          const lineItems = updated.lineItems || [];
-          console.log(`📦 Processing ${lineItems.length} line items for voucher creation`);
+          let lineItems: any[] = [];
           
-          // Create vouchers for each product
-          const newVouchers = await createVouchersForOrder({
-            shopifyOrderId,
-            customerEmail: updated.customerEmail || '',
-            lineItems: lineItems
-          });
-          
-          console.log(`✅ Created ${newVouchers.length} vouchers for paid order`);
-          voucher = newVouchers[0]; // Set first voucher for backward compatibility
+          // Helper function to parse line items
+          const parseLineItems = (itemsData: any): any[] => {
+            if (!itemsData) return [];
+            
+            // If it's a string, try to parse it as JSON
+            const parsedItems = typeof itemsData === 'string' 
+              ? JSON.parse(itemsData) 
+              : itemsData;
+
+            // Handle both array and edges format
+            const items = parsedItems.edges?.map((edge: any) => edge.node) || 
+                         (Array.isArray(parsedItems) ? parsedItems : []);
+            
+            return items.map((item: any) => ({
+              title: item.title || 'Untitled Product',
+              quantity: item.quantity || 1,
+              price: item.price || item.originalUnitPriceSet?.shopMoney?.amount || 0,
+              type: item.type || 'voucher',
+              variantTitle: item.variantTitle || item.variant?.title || item.title || 'Standard',
+              packCount: item.packCount || (() => {
+                const title = item.variantTitle || item.variant?.title || '';
+                const match = typeof title === 'string' ? title.match(/(\d+)\s*Pack/i) : null;
+                return match ? parseInt(match[1], 10) : 1;
+              })(),
+              variant: item.variant || {}
+            }));
+          };
+
+          try {
+            lineItems = parseLineItems(updated.lineItems);
+            console.log(`📦 Processing ${lineItems.length} line items for voucher creation`);
+            console.log('🔍 Line items data:', JSON.stringify(lineItems, null, 2));
+            
+            // Create vouchers for each product
+            const newVouchers = await createVouchersForOrder({
+              shopifyOrderId,
+              customerEmail: updated.customerEmail || '',
+              lineItems
+            });
+            
+            console.log(`✅ Created ${newVouchers.length} vouchers for paid order`);
+            voucher = newVouchers[0]; // Set first voucher for backward compatibility
+          } catch (parseError) {
+            console.error('❌ Failed to parse line items:', parseError);
+            throw new Error('Failed to process order line items');
+          }
         } catch (voucherError: any) {
           console.error('❌ Failed to create vouchers for paid order:', voucherError);
+          throw voucherError; // Re-throw to be handled by the outer catch
         }
       }
       
