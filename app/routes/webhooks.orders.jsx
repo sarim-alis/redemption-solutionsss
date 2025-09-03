@@ -71,40 +71,48 @@ async function processWebhook({ shop, session, topic, payload }) {
                 const variantTitle = edge.node.variant_title || edge.node.variant?.title || edge.node.title || 'Standard';
                 const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
                 const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
+                const quantity = (edge.node.quantity || 1) * packCount;
                 
                 // Get the type from metafield or default to 'voucher'
                 let type = 'voucher';
-                const metafieldValue = edge.node.variant?.product?.metafield?.value;
+                const metafield = edge.node.variant?.product?.metafield;
+                const metafieldValue = metafield?.value;
                 
-                // Parse the metafield value if it's a JSON string
-                try {
-                  if (metafieldValue) {
+                console.log('🔍 Raw metafield:', JSON.stringify(metafield, null, 2));
+                console.log('🔍 Raw metafield value:', metafieldValue);
+                
+                if (metafieldValue) {
+                  try {
                     // First try to parse as JSON (handles both string and array)
                     const parsed = JSON.parse(metafieldValue);
+                    console.log('🔍 Parsed metafield value:', parsed);
+                    
                     if (Array.isArray(parsed) && parsed.length > 0) {
                       type = parsed[0]; // Take first item if it's an array
                     } else if (typeof parsed === 'string') {
                       type = parsed;
                     }
+                  } catch (e) {
+                    console.log('⚠️ JSON parse error, using raw value');
+                    // If parsing fails, check if it's a simple string
+                    if (typeof metafieldValue === 'string') {
+                      type = metafieldValue.trim();
+                    }
                   }
-                } catch (e) {
-                  // If parsing fails, check if it's a simple string
-                  if (typeof metafieldValue === 'string' && metafieldValue.trim() !== '') {
-                    type = metafieldValue.trim();
-                  }
-                  console.log('Using type:', type);
                 }
+                
+                console.log('🔍 Final type:', type);
 
-                // Skip if not a voucher type
-                if (type.toLowerCase().trim() !== 'voucher' || edge.node.title.toLowerCase().includes('gift card')) {
-                  console.log(`⏭️ Skipping non-voucher item: ${edge.node.title} (Type: ${type})`);
+                // Check if this is a voucher item
+                const isVoucher = type && type.toLowerCase().trim() === 'voucher';
+                const isGiftCard = edge.node.title.toLowerCase().includes('gift card');
+                
+                if (!isVoucher || isGiftCard) {
+                  console.log(`⏭️ Skipping item - isVoucher: ${isVoucher}, isGiftCard: ${isGiftCard}, Title: ${edge.node.title}`);
                   return null;
                 }
                 
-                // For pack items, we want to create vouchers for each item in the pack
-                const quantity = 1; // Always create 1 line item per pack
-                
-                console.log(`📦 Processing voucher item: ${edge.node.title} (${quantity} × ${packCount} pack) - Type: ${type}`);
+                console.log(`📦 Processing voucher item: ${edge.node.title} (Quantity: ${quantity}) - Type: ${type}`);
                 
                 return {
                   title: edge.node.title,
@@ -112,7 +120,7 @@ async function processWebhook({ shop, session, topic, payload }) {
                   price: edge.node.originalUnitPriceSet?.shopMoney?.amount || 0,
                   variantTitle: variantTitle,
                   variant: edge.node.variant || {},
-                  packCount: packCount,
+                  packCount: 1,
                   type: type,
                   productId: edge.node.variant?.product?.id?.replace('gid://shopify/Product/', '') || null,
                   variantId: edge.node.variant?.id?.replace('gid://shopify/ProductVariant/', '') || null
@@ -124,40 +132,48 @@ async function processWebhook({ shop, session, topic, payload }) {
                 const variantTitle = node.variant_title || node.variant?.title || node.title || 'Standard';
                 const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
                 const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
+                const quantity = (node.quantity || 1) * packCount;
                 
                 // Get the type from metafield or default to 'voucher'
                 let type = 'voucher';
-                const metafieldValue = node.variant?.product?.metafield?.value || node.type;
+                const metafield = node.variant?.product?.metafield;
+                const metafieldValue = metafield?.value || node.type;
                 
-                // Parse the metafield value if it's a JSON string
-                try {
-                  if (metafieldValue) {
+                console.log('🔍 Raw metafield:', JSON.stringify(metafield, null, 2));
+                console.log('🔍 Raw metafield value:', metafieldValue);
+                
+                if (metafieldValue) {
+                  try {
                     // First try to parse as JSON (handles both string and array)
                     const parsed = JSON.parse(metafieldValue);
+                    console.log('🔍 Parsed metafield value:', parsed);
+                    
                     if (Array.isArray(parsed) && parsed.length > 0) {
                       type = parsed[0]; // Take first item if it's an array
                     } else if (typeof parsed === 'string') {
                       type = parsed;
                     }
+                  } catch (e) {
+                    console.log('⚠️ JSON parse error, using raw value');
+                    // If parsing fails, check if it's a simple string
+                    if (typeof metafieldValue === 'string') {
+                      type = metafieldValue.trim();
+                    }
                   }
-                } catch (e) {
-                  // If parsing fails, check if it's a simple string
-                  if (typeof metafieldValue === 'string' && metafieldValue.trim() !== '') {
-                    type = metafieldValue.trim();
-                  }
-                  console.log('Using type:', type);
                 }
+                
+                console.log('🔍 Final type:', type);
 
-                // Skip if not a voucher type or if it's a gift card
-                if (type.toLowerCase().trim() !== 'voucher' || (node.title || '').toLowerCase().includes('gift card')) {
-                  console.log(`⏭️ Skipping non-voucher item: ${node.title} (Type: ${type})`);
+                // Check if this is a voucher item
+                const isVoucher = type && type.toLowerCase().trim() === 'voucher';
+                const isGiftCard = (node.title || '').toLowerCase().includes('gift card');
+                
+                if (!isVoucher || isGiftCard) {
+                  console.log(`⏭️ Skipping item - isVoucher: ${isVoucher}, isGiftCard: ${isGiftCard}, Title: ${node.title}`);
                   return null;
                 }
                 
-                // For pack items, we want to create vouchers for each item in the pack
-                const quantity = 1; // Always create 1 line item per pack
-                
-                console.log(`📦 Processing voucher item: ${node.title} (${quantity} × ${packCount} pack) - Type: ${type}`);
+                console.log(`📦 Processing voucher item: ${node.title} (Quantity: ${quantity}) - Type: ${type}`);
                 
                 return {
                   title: node.title,
@@ -165,7 +181,7 @@ async function processWebhook({ shop, session, topic, payload }) {
                   price: node.price || node.originalUnitPriceSet?.shopMoney?.amount || 0,
                   variantTitle: variantTitle,
                   variant: node.variant || {},
-                  packCount: packCount,
+                  packCount: 1,
                   type: type,
                   productId: node.variant?.product?.id?.replace('gid://shopify/Product/', '') || null,
                   variantId: node.variant?.id?.replace('gid://shopify/ProductVariant/', '') || null
