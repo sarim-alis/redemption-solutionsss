@@ -362,28 +362,24 @@ async function saveOrderToDatabase(payload, action, session = null) {
             lineItems = savedOrder.lineItems.edges.flatMap(edge => {
               // Handle both products with and without variants
               const variantTitle = edge.node.variant_title || edge.node.variant?.title || edge.node.title || 'Standard';
-              console.log(`📦 Processing saved item: ${edge.node.title} - Variant: ${variantTitle}`);
               const variantId = edge.node.variant?.id?.replace('gid://shopify/ProductVariant/', '') || '';
+              
+              // Extract pack count from variant title (e.g., '3 Pack' -> 3)
+              const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
+              const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
+              const totalVouchers = packCount * edge.node.quantity;
+              
+              console.log(`📦 Processing saved item: ${edge.node.title} - Variant: ${variantTitle}`);
+              console.log(`🔢 Quantity Calculation: ${packCount} (pack) × ${edge.node.quantity} (qty) = ${totalVouchers} vouchers`);
               
               // Debug log variant information
               console.log('🔍 Variant Info:', {
                 variantTitle,
                 variantId,
-                nodeTitle: edge.node.title,
-                nodeVariantTitle: edge.node.variant?.title,
-                nodeVariantId: edge.node.variant?.id
+                packCount,
+                quantity: edge.node.quantity,
+                totalVouchers,
               });
-              
-              // Extract pack number from variant title (e.g., '3 Pack' -> 3, '5 Pack' -> 5)
-              const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
-              const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
-              
-              console.log(`📊 Pack Calculation: '${variantTitle}' -> Pack Count: ${packCount} × Quantity: ${edge.node.quantity} = ${packCount * edge.node.quantity} vouchers`);
-              
-              console.log(`📦 Pack Calculation: '${variantTitle}' -> ${packCount} pack(s) × ${edge.node.quantity} quantity = ${packCount * edge.node.quantity} total vouchers`);
-              
-              // Calculate total vouchers needed (pack count * quantity)
-              const totalVouchers = packCount * edge.node.quantity;
               
               // Manual type assignment based on product title
               let type = edge.node.variant?.product?.metafield?.value || 'voucher';
@@ -392,13 +388,14 @@ async function saveOrderToDatabase(payload, action, session = null) {
               }
               
               // Create array of line items with correct quantity
+              // Create one voucher entry with total quantity
               return {
                 title: edge.node.title,
-                quantity: totalVouchers, // Total vouchers needed (pack count * quantity)
+                quantity: totalVouchers, // Use total calculated vouchers
                 type: type,
                 price: edge.node.originalUnitPriceSet?.shopMoney?.amount || 0,
                 productId: edge.node.variant?.product?.id?.replace('gid://shopify/Product/', '') || '',
-                variantId: edge.node.variant?.id?.replace('gid://shopify/ProductVariant/', '') || '',
+                variantId: variantId,
                 expire: edge.node.variant?.product?.metafield_expiry?.value || null,
                 productType: edge.node.variant?.product?.metafield?.value || 'voucher',
                 variantTitle: variantTitle,
