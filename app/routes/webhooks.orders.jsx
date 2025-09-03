@@ -289,33 +289,43 @@ async function saveOrderToDatabase(payload, action, session = null) {
       metafieldsMap = await fetchProductMetafields(session.shop, session, productIds);
     }
 
-    // Prepare line items data with metafields
+    // Prepare line items data with metafields and variant info
     const lineItems = {
-      edges: payload.line_items?.map((item) => ({
-        node: {
-          title: item.title,
-          quantity: item.quantity,
-          originalUnitPriceSet: {
-            shopMoney: {
-              amount: item.price,
-              currencyCode: payload.currency
-            }
-          },
-          variant: item.variant_id ? {
-            id: `gid://shopify/ProductVariant/${item.variant_id}`,
-            product: {
-              id: `gid://shopify/Product/${item.product_id}`,
-              metafield: metafieldsMap[item.product_id] ? {
-                value: metafieldsMap[item.product_id].type
-              } : null,
-              metafield_expiry: metafieldsMap[item.product_id] ? {
-                value: metafieldsMap[item.product_id].expire
-              } : null
-            }
-          } : null
-        }
-      })) || []
+      edges: payload.line_items?.map((item) => {
+        // For products without variants, use product title as variant title
+        const variantTitle = item.variant_title || item.title || 'Standard';
+        console.log(`📦 Processing item: ${item.title} - Variant: ${variantTitle}`);
+        
+        return {
+          node: {
+            title: item.title,
+            quantity: item.quantity,
+            variant_title: variantTitle, // Add variant title explicitly
+            originalUnitPriceSet: {
+              shopMoney: {
+                amount: item.price,
+                currencyCode: payload.currency
+              }
+            },
+            variant: item.variant_id ? {
+              id: `gid://shopify/ProductVariant/${item.variant_id}`,
+              title: variantTitle, // Add variant title to variant object
+              product: {
+                id: `gid://shopify/Product/${item.product_id}`,
+                metafield: metafieldsMap[item.product_id] ? {
+                  value: metafieldsMap[item.product_id].type
+                } : null,
+                metafield_expiry: metafieldsMap[item.product_id] ? {
+                  value: metafieldsMap[item.product_id].expire
+                } : null
+              }
+            } : null
+          }
+        };
+      }) || []
     };
+    
+    console.log('🔍 Prepared line items with variant info:', JSON.stringify(lineItems, null, 2));
 
     // Create order data for database
     const orderData = {
@@ -350,8 +360,9 @@ async function saveOrderToDatabase(payload, action, session = null) {
           let lineItems = [];
           if (savedOrder.lineItems?.edges) {
             lineItems = savedOrder.lineItems.edges.flatMap(edge => {
-              // Get variant information
-              const variantTitle = edge.node.variant?.title || edge.node.title || '';
+              // Handle both products with and without variants
+              const variantTitle = edge.node.variant_title || edge.node.variant?.title || edge.node.title || 'Standard';
+              console.log(`📦 Processing saved item: ${edge.node.title} - Variant: ${variantTitle}`);
               const variantId = edge.node.variant?.id?.replace('gid://shopify/ProductVariant/', '') || '';
               
               // Debug log variant information
@@ -359,12 +370,15 @@ async function saveOrderToDatabase(payload, action, session = null) {
                 variantTitle,
                 variantId,
                 nodeTitle: edge.node.title,
-                nodeVariant: edge.node.variant
+                nodeVariantTitle: edge.node.variant?.title,
+                nodeVariantId: edge.node.variant?.id
               });
               
               // Extract pack number from variant title (e.g., '3 Pack' -> 3, '5 Pack' -> 5)
               const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
               const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
+              
+              console.log(`📊 Pack Calculation: '${variantTitle}' -> Pack Count: ${packCount} × Quantity: ${edge.node.quantity} = ${packCount * edge.node.quantity} vouchers`);
               
               console.log(`📦 Pack Calculation: '${variantTitle}' -> ${packCount} pack(s) × ${edge.node.quantity} quantity = ${packCount * edge.node.quantity} total vouchers`);
               
