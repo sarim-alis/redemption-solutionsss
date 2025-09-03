@@ -78,19 +78,26 @@ async function processWebhook({ shop, session, topic, payload }) {
                 
                 // Parse the metafield value if it's a JSON string
                 try {
-                  const parsedMetafield = metafieldValue ? JSON.parse(metafieldValue) : null;
-                  if (Array.isArray(parsedMetafield) && parsedMetafield.length > 0) {
-                    type = parsedMetafield[0]; // Take the first type if it's an array
-                  } else if (typeof parsedMetafield === 'string') {
-                    type = parsedMetafield;
+                  if (metafieldValue) {
+                    // First try to parse as JSON (handles both string and array)
+                    const parsed = JSON.parse(metafieldValue);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                      type = parsed[0]; // Take first item if it's an array
+                    } else if (typeof parsed === 'string') {
+                      type = parsed;
+                    }
                   }
                 } catch (e) {
-                  console.log('Using default type as voucher due to metafield parsing error');
+                  // If parsing fails, check if it's a simple string
+                  if (typeof metafieldValue === 'string' && metafieldValue.trim() !== '') {
+                    type = metafieldValue.trim();
+                  }
+                  console.log('Using type:', type);
                 }
 
                 // Skip if not a voucher type
-                if (type.toLowerCase() !== 'voucher' || edge.node.title.toLowerCase().includes('gift card')) {
-                  console.log(`⏭️ Skipping non-voucher item: ${edge.node.title}`);
+                if (type.toLowerCase().trim() !== 'voucher' || edge.node.title.toLowerCase().includes('gift card')) {
+                  console.log(`⏭️ Skipping non-voucher item: ${edge.node.title} (Type: ${type})`);
                   return null;
                 }
                 
@@ -124,19 +131,26 @@ async function processWebhook({ shop, session, topic, payload }) {
                 
                 // Parse the metafield value if it's a JSON string
                 try {
-                  const parsedMetafield = metafieldValue ? JSON.parse(metafieldValue) : null;
-                  if (Array.isArray(parsedMetafield) && parsedMetafield.length > 0) {
-                    type = parsedMetafield[0]; // Take the first type if it's an array
-                  } else if (typeof parsedMetafield === 'string') {
-                    type = parsedMetafield;
+                  if (metafieldValue) {
+                    // First try to parse as JSON (handles both string and array)
+                    const parsed = JSON.parse(metafieldValue);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                      type = parsed[0]; // Take first item if it's an array
+                    } else if (typeof parsed === 'string') {
+                      type = parsed;
+                    }
                   }
                 } catch (e) {
-                  console.log('Using default type as voucher due to metafield parsing error');
+                  // If parsing fails, check if it's a simple string
+                  if (typeof metafieldValue === 'string' && metafieldValue.trim() !== '') {
+                    type = metafieldValue.trim();
+                  }
+                  console.log('Using type:', type);
                 }
 
                 // Skip if not a voucher type or if it's a gift card
-                if (type.toLowerCase() !== 'voucher' || (node.title || '').toLowerCase().includes('gift card')) {
-                  console.log(`⏭️ Skipping non-voucher item: ${node.title}`);
+                if (type.toLowerCase().trim() !== 'voucher' || (node.title || '').toLowerCase().includes('gift card')) {
+                  console.log(`⏭️ Skipping non-voucher item: ${node.title} (Type: ${type})`);
                   return null;
                 }
                 
