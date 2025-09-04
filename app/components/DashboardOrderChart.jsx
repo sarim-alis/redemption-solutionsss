@@ -1,9 +1,10 @@
 // Imports
 import { useState } from "react"
 import { useLoaderData } from "@remix-run/react";
+import { type } from "os";
 
 // Frontend
-export default function DashboardOrderChart({ analytics }) {
+export default function DashboardOrderChart({ analytics, vouchers }) {
   const [filters, setFilters] = useState({
     date: "All",
     products: "All Products",
@@ -57,25 +58,60 @@ export default function DashboardOrderChart({ analytics }) {
     return filter === "All Locations" ? true : location === filter;
   }
 
+  // Transform vouchers data for display
+ const transformedVouchers = (vouchers || []).map(voucher => {
+  let product = voucher.productTitle || "";
+  let date = voucher.createdAt
+    ? new Date(voucher.createdAt).toLocaleDateString("en-US")
+    : "";
+  let location = voucher.customerEmail || "";
+
+  if (!product && voucher.order?.lineItems) {
+    try {
+      const items = Array.isArray(voucher.order.lineItems)
+        ? voucher.order.lineItems
+        : JSON.parse(voucher.order.lineItems);
+      if (Array.isArray(items) && items.length > 0) {
+        product = items[0].title || "";
+      } else if (items.edges && items.edges.length > 0) {
+        product = items.edges[0].node.title || "";
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  return {
+    product,
+    date,
+    location,
+    used: voucher.order?.statusUse || false,
+    type: voucher.type || "[voucher]",
+  };
+});
+
+
   const productSales = (allProductSales || []).filter(item =>
     isDateMatch(item.date, filters.date) &&
     isProductMatch(item.product, filters.products) &&
     isLocationMatch(item.location, filters.locations)
   );
 
-  const voucherRedemptions = (allVoucherRedemptions || []).filter(item =>
-    isDateMatch(item.date, filters.date) &&
-    isProductMatch(item.product, filters.products) &&
-    isLocationMatch(item.location, filters.locations)
-  );
+// Filter transformed vouchers into gift cards vs vouchers
+const giftCardRedemptions = transformedVouchers.filter(item =>
+  (item.product.toLowerCase().includes("gift") || item.type === "gift") &&
+  isDateMatch(item.date, filters.date) &&
+  isProductMatch(item.product, filters.products) &&
+  isLocationMatch(item.location, filters.locations)
+);
 
-  const giftCardRedemptions = [
-    { product: "$50.00", date: "01-06", location: "Ventura" },
-    { product: "$100.00", date: "01-06", location: "Woodland Hills" },
-    { product: "$100.00", date: "01-06", location: "Woodland Hills" },
-    { product: "$150.00", date: "30-05", location: "Santa Monica" },
-    { product: "$50.00", date: "30-05", location: "Pomona" },
-  ];
+const voucherRedemptions = transformedVouchers.filter(item =>
+  !(item.product.toLowerCase().includes("gift") || item.type === "gift") &&
+  isDateMatch(item.date, filters.date) &&
+  isProductMatch(item.product, filters.products) &&
+  isLocationMatch(item.location, filters.locations)
+);
+
 
   // STYLES
   const styles = {
@@ -157,7 +193,7 @@ export default function DashboardOrderChart({ analytics }) {
                   <tr key={index}>
                     <td style={styles.tableCell}>{item.product}</td>
                     <td style={styles.tableCell}>{item.date}</td>
-                    <td style={styles.tableCell}>{item.location}</td>
+                    <td style={styles.tableCell}>N/A</td>
                   </tr>
                 ))
               ) : (
