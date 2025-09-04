@@ -23,7 +23,7 @@ export const loader = async ({ request }) => {
   // Fetch products
   const response = await admin.graphql(`
     query {
-      products(first: 30) {
+      products(first: 250) {
         edges {
           node {
             id
@@ -31,7 +31,7 @@ export const loader = async ({ request }) => {
             description
             vendor
             status
-            media(first: 30) {
+            media(first: 250) {
               edges {
                 node {
                   __typename
