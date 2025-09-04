@@ -17,7 +17,8 @@
     "prisma": "prisma",
     "graphql-codegen": "graphql-codegen",
     "vite": "vite",
-    "heroku-postbuild": "npm run setup && npm run build"
+    "heroku-postbuild": "npm run setup && npm run build",
+    "postinstall": "npm prune --production"
   },
   "type": "module",
   "engines": {
@@ -85,6 +86,11 @@
     "@graphql-codegen/client-preset": "4.7.0",
     "@graphql-codegen/typescript-operations": "4.5.0",
     "minimatch": "9.0.5"
+  },
+  "config": {
+    "puppeteer": {
+      "skipDownload": true
+    }
   },
   "author": "DELL"
 }
