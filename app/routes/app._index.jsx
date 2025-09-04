@@ -23,7 +23,7 @@ export const loader = async ({ request }) => {
   // Fetch products
   const response = await admin.graphql(`
     query {
-      products(first: 30) {
+      products(first: 250) {
         edges {
           node {
             id
@@ -31,7 +31,7 @@ export const loader = async ({ request }) => {
             description
             vendor
             status
-            media(first: 30) {
+            media(first: 250) {
               edges {
                 node {
                   __typename
@@ -85,7 +85,7 @@ export const loader = async ({ request }) => {
               lastName
               email
             }
-            lineItems(first: 30) {
+            lineItems(first: 250) {
               edges {
                 node {
                   title
@@ -174,7 +174,8 @@ export const loader = async ({ request }) => {
   }, 0);
 
   // Fetch vouchers from database
-  const allVouchers = await prisma.voucher.findMany();
+  const { getAllVouchers } = await import("../models/voucher.server");
+  const allVouchers = await getAllVouchers();
   const activeVouchers = await prisma.voucher.findMany({
     where: {
       used: false
@@ -281,7 +282,8 @@ export const loader = async ({ request }) => {
       activeVouchers: activeVouchers.length
     },
     productSales,
-    voucherRedemptions: voucherRedemptionRows
+    voucherRedemptions: voucherRedemptionRows,
+    vouchers: allVouchers
   };
 };
 
@@ -353,7 +355,7 @@ export const action = async ({ request }) => {
 };
 
 export default function Index() {
-  const { orders = [], giftCards = [], analytics } = useLoaderData();
+  const { orders = [], giftCards = [], analytics, vouchers } = useLoaderData();
   // Calculate analytics from real order data
   const totalOrders = orders.length;
   const paidOrders = orders.filter(o => o.displayFinancialStatus === "PAID" || o.displayFinancialStatus === "PAID_IN_FULL").length;
@@ -375,6 +377,7 @@ export default function Index() {
           paidOrders={paidOrders} 
           unpaidOrders={unpaidOrders}
           analytics={analytics}
+          vouchers={vouchers}
         />
       </div>
     </SidebarLayout>
