@@ -17,7 +17,7 @@
     "prisma": "prisma",
     "graphql-codegen": "graphql-codegen",
     "vite": "vite",
-    "heroku-postbuild": "npm run setup && npm run build",
+    "heroku-postbuild": "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm run setup && npm run build",
     "postinstall": "npm prune --production"
   },
   "type": "module",
