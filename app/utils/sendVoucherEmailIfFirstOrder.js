@@ -1,6 +1,7 @@
 import { sendEmail } from "../utils/mail.server";
 import { generateVoucherEmailHTML } from "../utils/voucherEmailTemplateShared";
 import { generateGiftCardEmailHTML } from "./giftCardEmailTemplate";
+import { generateUnifiedEmailHTML, generateUnifiedPDFHTML } from "./unifiedEmailTemplate";
 import { htmlToPdf } from "./htmlToPdf";
 import prisma from "../db.server";
 
@@ -54,8 +55,8 @@ export async function sendVoucherEmailIfFirstOrder(order, voucher, retryCount = 
     const customerName = order.customerName || order.customer?.firstName || customerEmail.split('@')[0];
     const orderName = order.shopifyOrderId || 'your order';
     
-    // Determine if this is a gift card order
-    const isGift = order.type === 'gift' || (order.lineItems?.some(item => 
+    // Determine if this is a gift card order - check voucher type first, then order type
+    const isGift = voucher.type === 'gift' || order.type === 'gift' || (order.lineItems?.some(item => 
       item.title?.toLowerCase().includes('gift') || 
       item.type?.toLowerCase() === 'gift'
     ));
@@ -70,12 +71,14 @@ export async function sendVoucherEmailIfFirstOrder(order, voucher, retryCount = 
     if (isGift) {
       // Gift card email
       const giftCardAmount = order.totalPrice || 0;
-      emailSubject = `Your Jiffy Lube Gift - Thank You!`;
-      emailText = `Hello ${customerName},\n\nThank you for your gift purchase!\n\nGift Amount: $${giftCardAmount.toFixed(2)}\nGift Code: ${voucherCode}\n\nYou can use this gift at any Jiffy Lube location or online at checkout.\n\nThank you for choosing Jiffy Lube!`;
+      const productTitle = voucher.productTitle || 'Gift Card';
+      emailSubject = `Your Jiffy Lube ${productTitle} - Thank You!`;
+      emailText = `Hello ${customerName},\n\nThank you for your gift purchase!\n\nProduct: ${productTitle}\nGift Amount: $${giftCardAmount.toFixed(2)}\nGift Code: ${voucherCode}\n\nYou can use this gift at any Jiffy Lube location or online at checkout.\n\nThank you for choosing Jiffy Lube!`;
       emailHtml = generateGiftCardEmailHTML({ 
         code: voucherCode, 
         customerEmail,
-        amount: giftCardAmount
+        amount: giftCardAmount,
+        productTitle: productTitle
       });
       
       // Generate PDF attachment for gift card
@@ -94,9 +97,10 @@ export async function sendVoucherEmailIfFirstOrder(order, voucher, retryCount = 
       }
     } else {
       // Voucher email (default)
-      emailSubject = `Here are your Oil Change Vouchers! Where to Redeem... 🎟️`;
-      emailText = `Hello ${customerName},\n\nThank you for your order ${orderName}.\nHere is your voucher code: ${voucherCode}`;
-      emailHtml = generateVoucherEmailHTML({ ...voucher, customerEmail });
+      const productTitle = voucher.productTitle || 'Oil Change Voucher';
+      emailSubject = `Here are your ${productTitle}! Where to Redeem... 🎟️`;
+      emailText = `Hello ${customerName},\n\nThank you for your order ${orderName}.\n\nProduct: ${productTitle}\nVoucher Code: ${voucherCode}`;
+      emailHtml = generateVoucherEmailHTML({ ...voucher, customerEmail, productTitle });
       
       // Generate PDF attachment for voucher
       try {
@@ -213,7 +217,146 @@ export async function sendVoucherEmailIfFirstOrder(order, voucher, retryCount = 
 }
 
 /**
- * Batch email sending for multiple vouchers
+ * Send unified email for multiple vouchers in a single email
+ * @param {object} order - Order object
+ * @param {Array} vouchers - Array of voucher objects
+ * @returns {Promise<{success: boolean, message: string}>}
+ */
+export async function sendUnifiedVoucherEmail(order, vouchers) {
+  const customerEmail = order?.customerEmail || 'NO_EMAIL';
+  const voucherCodes = vouchers.map(v => v.code).join(', ');
+  
+  console.log(`[UnifiedEmail] 🚀 Starting unified email send for ${vouchers.length} vouchers`);
+  console.log(`[UnifiedEmail] 📧 Customer email: ${customerEmail}`);
+  console.log(`[UnifiedEmail] 🎫 Voucher codes: ${voucherCodes}`);
+  
+  // Validation checks
+  if (!order?.customerEmail) {
+    const errorMsg = `[UnifiedEmail] ❌ Missing customer email for vouchers: ${voucherCodes}`;
+    console.error(errorMsg);
+    return { success: false, message: errorMsg };
+  }
+  
+  if (!vouchers || vouchers.length === 0) {
+    const errorMsg = `[UnifiedEmail] ❌ No vouchers provided for order: ${order.shopifyOrderId}`;
+    console.error(errorMsg);
+    return { success: false, message: errorMsg };
+  }
+  
+  // Check if any voucher already has email sent
+  const alreadySentVouchers = vouchers.filter(v => v.emailSent);
+  if (alreadySentVouchers.length > 0) {
+    const msg = `[UnifiedEmail] ⏭️ Some vouchers already have emails sent: ${alreadySentVouchers.map(v => v.code).join(', ')}`;
+    console.log(msg);
+    // Continue with remaining vouchers
+  }
+  
+  try {
+    console.log(`[UnifiedEmail] 📤 Generating unified email content...`);
+    
+    // Get customer name from order or use email as fallback
+    const customerName = order.customerName || order.customer?.firstName || customerEmail.split('@')[0];
+    
+    // Generate unified email HTML
+    const emailHtml = generateUnifiedEmailHTML({ order, vouchers });
+    
+    // Generate unified PDF HTML
+    const pdfHtml = generateUnifiedPDFHTML({ order, vouchers });
+    
+    // Prepare email content
+    const emailSubject = `Your Jiffy Lube Order - ${vouchers.length} Item${vouchers.length > 1 ? 's' : ''} Ready!`;
+    const emailText = `Hello ${customerName},\n\nThank you for your order ${order.shopifyOrderId}.\n\nYou have ${vouchers.length} item${vouchers.length > 1 ? 's' : ''} ready to use:\n${vouchers.map(v => `- ${v.productTitle || 'Voucher'}: ${v.code}`).join('\n')}\n\nPlease see the email for full details and redemption instructions.`;
+    
+    console.log('[UnifiedEmail] 📧 Sending unified email with subject:', emailSubject);
+    console.log('[UnifiedEmail] 📧 Email HTML length:', emailHtml?.length);
+
+    // Generate PDF attachment
+    let attachments = [];
+    try {
+      console.log('[UnifiedEmail] 📄 Generating unified PDF attachment...');
+      const pdfBuffer = await htmlToPdf(pdfHtml);
+      attachments.push({
+        filename: `jiffy-lube-order-${order.shopifyOrderId}.pdf`,
+        content: pdfBuffer,
+        contentType: 'application/pdf'
+      });
+      console.log('[UnifiedEmail] ✅ Unified PDF generated successfully');
+    } catch (pdfError) {
+      console.error('[UnifiedEmail] ❌ Error generating unified PDF:', pdfError);
+      // Continue without PDF if generation fails
+    }
+
+    const emailData = {
+      to: customerEmail,
+      subject: emailSubject,
+      html: emailHtml,
+      text: emailText,
+      attachments
+    };
+
+    const emailResult = await sendEmail(emailData);
+    
+    console.log(`[UnifiedEmail] ✅ Unified email sent successfully! Message ID: ${emailResult.messageId}`);
+    
+    // Update all vouchers status in database with transaction safety
+    try {
+      await prisma.$transaction(async (tx) => {
+        for (const voucher of vouchers) {
+          // Double-check voucher still exists and email not sent
+          const currentVoucher = await tx.voucher.findUnique({
+            where: { code: voucher.code }
+          });
+          
+          if (!currentVoucher) {
+            console.log(`[UnifiedEmail] ⚠️ Voucher ${voucher.code} not found in database`);
+            continue;
+          }
+          
+          if (currentVoucher.emailSent) {
+            console.log(`[UnifiedEmail] ⚠️ Voucher ${voucher.code} already marked as sent, skipping update`);
+            continue;
+          }
+          
+          // Update voucher status
+          await tx.voucher.update({
+            where: { code: voucher.code },
+            data: { 
+              emailSent: true
+            },
+          });
+          
+          console.log(`[UnifiedEmail] 💾 Database updated: voucher ${voucher.code} marked as email sent`);
+        }
+      });
+      
+      const successMsg = `[UnifiedEmail] 🎉 SUCCESS: Unified email sent and ${vouchers.length} vouchers updated for ${customerEmail}`;
+      console.log(successMsg);
+      
+      return { success: true, message: successMsg };
+      
+    } catch (dbError) {
+      console.error(`[UnifiedEmail] ❌ Database update failed:`, dbError.message);
+      
+      // Email was sent but database update failed - this is critical
+      const criticalMsg = `[UnifiedEmail] 🚨 CRITICAL: Email sent but database update failed`;
+      console.error(criticalMsg);
+      
+      return { success: false, message: criticalMsg };
+    }
+    
+  } catch (emailError) {
+    console.error(`[UnifiedEmail] ❌ Unified email sending failed:`, emailError.message);
+    console.error(`[UnifiedEmail] ❌ Full email error:`, emailError);
+    
+    const failureMsg = `[UnifiedEmail] 💥 FAILED: Unified email sending failed`;
+    console.error(failureMsg);
+    
+    return { success: false, message: failureMsg };
+  }
+}
+
+/**
+ * Batch email sending for multiple vouchers (legacy function)
  * @param {Array} voucherOrders - Array of {order, voucher} objects
  * @returns {Promise<Array>} - Results for each email attempt
  */

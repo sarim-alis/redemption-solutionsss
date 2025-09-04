@@ -1,5 +1,6 @@
 import prisma from "../db.server";
 import { v4 as uuidv4 } from "uuid";
+import type { LineItem } from "./order.server";
 
 function generateVoucherCode(): string {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -10,17 +11,77 @@ function generateVoucherCode(): string {
   return `${code.slice(0, 4)}-${code.slice(4)}`;
 }
 
-export async function createVoucher({ shopifyOrderId, customerEmail }: { shopifyOrderId: string, customerEmail: string }) {
+export async function createVoucher({ 
+  shopifyOrderId, 
+  customerEmail, 
+  productTitle = null, 
+  type = null 
+}: { 
+  shopifyOrderId: string, 
+  customerEmail: string, 
+  productTitle?: string | null, 
+  type?: string | null 
+}) {
   // Generate a unique code for the voucher
-  // const code = uuidv4();
   const code = generateVoucherCode();
   return prisma.voucher.create({
     data: {
       code,
       shopifyOrderId,
       customerEmail,
+      productTitle,
+      type,
     },
   });
+}
+
+// New function to create multiple vouchers for an order (one per product)
+export async function createVouchersForOrder({ 
+  shopifyOrderId, 
+  customerEmail, 
+  lineItems 
+}: { 
+  shopifyOrderId: string, 
+  customerEmail: string, 
+  lineItems: LineItem[] 
+}) {
+  const vouchers = [];
+  
+  for (const item of lineItems) {
+    // For gift cards, use quantity as is
+    const isGiftCard = item.type === 'gift' || item.title.toLowerCase().includes('gift card');
+    
+    // The quantity is already calculated as (item.quantity * packCount) in the webhook
+    const totalVouchers = item.quantity || 1;
+    if (isGiftCard) {
+      console.log(`🎁 Creating gift card: ${item.quantity} × $${item.price} (${item.title})`);
+    } else {
+      console.log(`📦 Creating ${totalVouchers} vouchers for ${item.title} (Calculated quantity: ${totalVouchers})`);
+    }
+    
+    // Create all vouchers at once
+    const voucherPromises = Array.from({ length: totalVouchers }, async (_, index) => {
+      try {
+        const voucher = await createVoucher({
+          shopifyOrderId,
+          customerEmail,
+          productTitle: isGiftCard ? `${item.title} - $${item.price}` : item.title,
+          type: isGiftCard ? 'gift' : (item.type || 'voucher'),
+        });
+        console.log(`🎟️ Created voucher ${voucher.code} for product: ${item.title}`);
+        return voucher;
+      } catch (error) {
+        console.error(`❌ Failed to create voucher for product ${item.title}:`, error);
+        return null;
+      }
+    });
+    
+    // Wait for all vouchers to be created
+    const createdVouchers = await Promise.all(voucherPromises);
+    vouchers.push(...createdVouchers.filter(Boolean));
+  }
+  
+  return vouchers;
 }
 
 export async function getAllVouchers() {

@@ -1,10 +1,6 @@
 // app/routes/webhooks.orders.jsx
 import { authenticate } from "../shopify.server";
 import { broadcastToClients } from "./webhook-stream";
-import { saveOrder } from "../models/order.server";
-import { sendVoucherEmailIfFirstOrder } from "../utils/sendVoucherEmailIfFirstOrder";
-import { saveCustomer } from "../models/customer.server";
-import { createVoucher } from "../models/voucher.server";
 
 export const action = async ({ request }) => {
   const { shop, session, topic, payload } = await authenticate.webhook(request);
@@ -21,6 +17,11 @@ export const action = async ({ request }) => {
 
 // Separate function to handle processing & broadcasting
 async function processWebhook({ shop, session, topic, payload }) {
+  // Import server-only modules inside the function
+  const { saveOrder } = await import("../models/order.server");
+  const { sendVoucherEmailIfFirstOrder, sendUnifiedVoucherEmail } = await import("../utils/sendVoucherEmailIfFirstOrder");
+  const { saveCustomer } = await import("../models/customer.server");
+  const { createVoucher, createVouchersForOrder } = await import("../models/voucher.server");
   if (!session) {
     console.log("⚠️ No session found for shop:", shop);
     return;
@@ -57,50 +58,170 @@ async function processWebhook({ shop, session, topic, payload }) {
         // Update order payment status in database and create voucher if not exists
         const { order: paidOrder, voucher: paidVoucher } = await saveOrderToDatabase(payload, 'PAID', session);
         
-        // If order was paid but no voucher exists, create one and send email
+        // If order was paid but no voucher exists, create multiple vouchers (one per product) and send unified email
         if (paidOrder && !paidVoucher) {
           try {
-            console.log('🎟️ [Webhook] Creating voucher for paid order:', paidOrder.shopifyOrderId);
-            const newVoucher = await createVoucher({
-              shopifyOrderId: paidOrder.shopifyOrderId,
-              customerEmail: paidOrder.customerEmail || ''
-            });
-            console.log('✅ [Webhook] Voucher created for paid order:', newVoucher.code);
+            console.log('🎟️ [Webhook] Creating multiple vouchers for paid order:', paidOrder.shopifyOrderId);
             
-            // Send voucher email immediately
-            console.log(`📧 [Webhook] Sending voucher email for paid order: ${paidOrder.shopifyOrderId}`);
-            sendVoucherEmailIfFirstOrder(paidOrder, newVoucher)
+            console.log('🔍 [DEBUG] Line items structure:', JSON.stringify(paidOrder.lineItems, null, 2));
+            
+            let lineItems = [];
+            if (paidOrder.lineItems?.edges) {
+              lineItems = paidOrder.lineItems.edges.map(edge => {
+                const variantTitle = edge.node.variant_title || edge.node.variant?.title || edge.node.title || 'Standard';
+                const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
+                const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
+                const quantity = (edge.node.quantity || 1) * packCount;
+                
+                // Get the type from metafield or default to 'voucher'
+                let type = 'voucher';
+                const metafield = edge.node.variant?.product?.metafield;
+                const metafieldValue = metafield?.value;
+                
+                console.log('🔍 Raw metafield:', JSON.stringify(metafield, null, 2));
+                console.log('🔍 Raw metafield value:', metafieldValue);
+                
+                if (metafieldValue) {
+                  try {
+                    // First try to parse as JSON (handles both string and array)
+                    const parsed = JSON.parse(metafieldValue);
+                    console.log('🔍 Parsed metafield value:', parsed);
+                    
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                      type = parsed[0]; // Take first item if it's an array
+                    } else if (typeof parsed === 'string') {
+                      type = parsed;
+                    }
+                  } catch (e) {
+                    console.log('⚠️ JSON parse error, using raw value');
+                    // If parsing fails, check if it's a simple string
+                    if (typeof metafieldValue === 'string') {
+                      type = metafieldValue.trim();
+                    }
+                  }
+                }
+                
+                console.log('🔍 Final type:', type);
+
+                // Check if this is a voucher item
+                const isVoucher = type && type.toLowerCase().trim() === 'voucher';
+                const isGiftCard = edge.node.title.toLowerCase().includes('gift card');
+                
+                if (!isVoucher || isGiftCard) {
+                  console.log(`⏭️ Skipping item - isVoucher: ${isVoucher}, isGiftCard: ${isGiftCard}, Title: ${edge.node.title}`);
+                  return null;
+                }
+                
+                console.log(`📦 Processing voucher item: ${edge.node.title} (Quantity: ${quantity}) - Type: ${type}`);
+                
+                return {
+                  title: edge.node.title,
+                  quantity: quantity,
+                  price: edge.node.originalUnitPriceSet?.shopMoney?.amount || 0,
+                  variantTitle: variantTitle,
+                  variant: edge.node.variant || {},
+                  packCount: 1,
+                  type: type,
+                  productId: edge.node.variant?.product?.id?.replace('gid://shopify/Product/', '') || null,
+                  variantId: edge.node.variant?.id?.replace('gid://shopify/ProductVariant/', '') || null
+                };
+              });
+            } else if (paidOrder.lineItems?.length > 0) {
+              lineItems = paidOrder.lineItems.map(item => {
+                const node = item.node || item;
+                const variantTitle = node.variant_title || node.variant?.title || node.title || 'Standard';
+                const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
+                const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
+                const quantity = (node.quantity || 1) * packCount;
+                
+                // Get the type from metafield or default to 'voucher'
+                let type = 'voucher';
+                const metafield = node.variant?.product?.metafield;
+                const metafieldValue = metafield?.value || node.type;
+                
+                console.log('🔍 Raw metafield:', JSON.stringify(metafield, null, 2));
+                console.log('🔍 Raw metafield value:', metafieldValue);
+                
+                if (metafieldValue) {
+                  try {
+                    // First try to parse as JSON (handles both string and array)
+                    const parsed = JSON.parse(metafieldValue);
+                    console.log('🔍 Parsed metafield value:', parsed);
+                    
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                      type = parsed[0]; // Take first item if it's an array
+                    } else if (typeof parsed === 'string') {
+                      type = parsed;
+                    }
+                  } catch (e) {
+                    console.log('⚠️ JSON parse error, using raw value');
+                    // If parsing fails, check if it's a simple string
+                    if (typeof metafieldValue === 'string') {
+                      type = metafieldValue.trim();
+                    }
+                  }
+                }
+                
+                console.log('🔍 Final type:', type);
+
+                // Check if this is a voucher item
+                const isVoucher = type && type.toLowerCase().trim() === 'voucher';
+                const isGiftCard = (node.title || '').toLowerCase().includes('gift card');
+                
+                if (!isVoucher || isGiftCard) {
+                  console.log(`⏭️ Skipping item - isVoucher: ${isVoucher}, isGiftCard: ${isGiftCard}, Title: ${node.title}`);
+                  return null;
+                }
+                
+                console.log(`📦 Processing voucher item: ${node.title} (Quantity: ${quantity}) - Type: ${type}`);
+                
+                return {
+                  title: node.title,
+                  quantity: quantity,
+                  price: node.price || node.originalUnitPriceSet?.shopMoney?.amount || 0,
+                  variantTitle: variantTitle,
+                  variant: node.variant || {},
+                  packCount: 1,
+                  type: type,
+                  productId: node.variant?.product?.id?.replace('gid://shopify/Product/', '') || null,
+                  variantId: node.variant?.id?.replace('gid://shopify/ProductVariant/', '') || null
+                };
+              });
+            }
+            
+            // Filter out any null items (skipped non-voucher items)
+            lineItems = lineItems.filter(item => item !== null);
+            console.log(`📦 [Webhook] Processing ${lineItems.length} voucher items for creation`);
+            console.log('🔍 [DEBUG] Parsed voucher items:', JSON.stringify(lineItems, null, 2));
+            
+            // Create vouchers for each product
+            const newVouchers = await createVouchersForOrder({
+              shopifyOrderId: paidOrder.shopifyOrderId,
+              customerEmail: paidOrder.customerEmail || '',
+              lineItems: lineItems
+            });
+            
+            console.log(`✅ [Webhook] Created ${newVouchers.length} vouchers for paid order`);
+            
+            // Send unified email for all vouchers
+            console.log(`📧 [Webhook] Sending unified email for ${newVouchers.length} vouchers`);
+            sendUnifiedVoucherEmail(paidOrder, newVouchers)
               .then((result) => {
                 if (result.success) {
-                  console.log(`✅ [Webhook] Email sent successfully for paid order voucher: ${result.voucherCode}`);
+                  console.log(`✅ [Webhook] Unified email sent successfully for ${newVouchers.length} vouchers`);
                 } else {
-                  console.error(`❌ [Webhook] Email failed for paid order voucher: ${result.voucherCode}: ${result.message}`);
+                  console.error(`❌ [Webhook] Unified email failed: ${result.message}`);
                 }
               })
               .catch((err) => {
-                console.error('❌ [Webhook] Error sending voucher email for paid order:', err);
+                console.error(`❌ [Webhook] Error sending unified email:`, err);
               });
           } catch (voucherError) {
-            console.error('❌ [Webhook] Failed to create voucher for paid order:', voucherError);
+            console.error('❌ [Webhook] Failed to create vouchers for paid order:', voucherError);
           }
         } else if (paidOrder && paidVoucher) {
-          // Voucher already exists, send email if not sent before
-          if (!paidVoucher.emailSent) {
-            console.log(`📧 [Webhook] Sending voucher email for existing voucher: ${paidVoucher.code}`);
-            sendVoucherEmailIfFirstOrder(paidOrder, paidVoucher)
-              .then((result) => {
-                if (result.success) {
-                  console.log(`✅ [Webhook] Email sent successfully for existing voucher: ${result.voucherCode}`);
-                } else {
-                  console.error(`❌ [Webhook] Email failed for existing voucher: ${result.voucherCode}: ${result.message}`);
-                }
-              })
-              .catch((err) => {
-                console.error('❌ [Webhook] Error sending voucher email for existing voucher:', err);
-              });
-          } else {
-            console.log(`⏭️ [Webhook] Email already sent for voucher: ${paidVoucher.code}`);
-          }
+          // Voucher already exists, no need to send email again
+          console.log(`⏭️ [Webhook] Voucher already exists: ${paidVoucher.code}, email already sent`);
         }
         break;
 
@@ -220,6 +341,7 @@ async function fetchProductMetafields(shop, session, productIds) {
     }
     
     console.log(`📋 Fetched metafields for ${Object.keys(metafieldsMap).length} products`);
+    console.log('🔍 [DEBUG] Metafields map:', JSON.stringify(metafieldsMap, null, 2));
     return metafieldsMap;
   } catch (error) {
     console.error('❌ Failed to fetch product metafields:', error);
@@ -229,6 +351,11 @@ async function fetchProductMetafields(shop, session, productIds) {
 
 // Helper function to save order to database
 async function saveOrderToDatabase(payload, action, session = null) {
+  // Import server-only modules inside the function
+  const { saveOrder } = await import("../models/order.server");
+  const { saveCustomer } = await import("../models/customer.server");
+  const { createVouchersForOrder } = await import("../models/voucher.server");
+  const { sendUnifiedVoucherEmail } = await import("../utils/sendVoucherEmailIfFirstOrder");
   try {
     const numericId = payload.id.toString();
     
@@ -258,33 +385,43 @@ async function saveOrderToDatabase(payload, action, session = null) {
       metafieldsMap = await fetchProductMetafields(session.shop, session, productIds);
     }
 
-    // Prepare line items data with metafields
+    // Prepare line items data with metafields and variant info
     const lineItems = {
-      edges: payload.line_items?.map((item) => ({
-        node: {
-          title: item.title,
-          quantity: item.quantity,
-          originalUnitPriceSet: {
-            shopMoney: {
-              amount: item.price,
-              currencyCode: payload.currency
-            }
-          },
-          variant: item.variant_id ? {
-            id: `gid://shopify/ProductVariant/${item.variant_id}`,
-            product: {
-              id: `gid://shopify/Product/${item.product_id}`,
-              metafield: metafieldsMap[item.product_id] ? {
-                value: metafieldsMap[item.product_id].type
-              } : null,
-              metafield_expiry: metafieldsMap[item.product_id] ? {
-                value: metafieldsMap[item.product_id].expire
-              } : null
-            }
-          } : null
-        }
-      })) || []
+      edges: payload.line_items?.map((item) => {
+        // For products without variants, use product title as variant title
+        const variantTitle = item.variant_title || item.title || 'Standard';
+        console.log(`📦 Processing item: ${item.title} - Variant: ${variantTitle}`);
+        
+        return {
+          node: {
+            title: item.title,
+            quantity: item.quantity,
+            variant_title: variantTitle, // Add variant title explicitly
+            originalUnitPriceSet: {
+              shopMoney: {
+                amount: item.price,
+                currencyCode: payload.currency
+              }
+            },
+            variant: item.variant_id ? {
+              id: `gid://shopify/ProductVariant/${item.variant_id}`,
+              title: variantTitle, // Add variant title to variant object
+              product: {
+                id: `gid://shopify/Product/${item.product_id}`,
+                metafield: metafieldsMap[item.product_id] ? {
+                  value: metafieldsMap[item.product_id].type
+                } : null,
+                metafield_expiry: metafieldsMap[item.product_id] ? {
+                  value: metafieldsMap[item.product_id].expire
+                } : null
+              }
+            } : null
+          }
+        };
+      }) || []
     };
+    
+    console.log('🔍 Prepared line items with variant info:', JSON.stringify(lineItems, null, 2));
 
     // Create order data for database
     const orderData = {
@@ -308,18 +445,125 @@ async function saveOrderToDatabase(payload, action, session = null) {
     if (savedOrder) {
       console.log(`💾 Order ${action} saved to database via webhook: ${savedOrder.shopifyOrderId}`);
       
-      // For PAID action, if no voucher exists, create one
+      // For PAID action, if no voucher exists, create multiple vouchers
       if (action === 'PAID' && !voucher) {
         try {
-          console.log('🎟️ Creating voucher for paid order via saveOrderToDatabase:', savedOrder.shopifyOrderId);
-          const newVoucher = await createVoucher({
+          console.log('🎟️ Creating multiple vouchers for paid order via saveOrderToDatabase:', savedOrder.shopifyOrderId);
+          
+          // Parse line items from the order and extract type from metafields
+          console.log('🔍 [DEBUG] Line items structure:', JSON.stringify(savedOrder.lineItems, null, 2));
+          
+          let lineItems = [];
+          if (savedOrder.lineItems?.edges) {
+            lineItems = savedOrder.lineItems.edges.flatMap(edge => {
+              // Handle both products with and without variants
+              const variantTitle = edge.node.variant_title || edge.node.variant?.title || edge.node.title || 'Standard';
+              const variantId = edge.node.variant?.id?.replace('gid://shopify/ProductVariant/', '') || '';
+              
+              // Extract pack count from variant title (e.g., '3 Pack' -> 3)
+              const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
+              const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
+              const totalVouchers = packCount * edge.node.quantity;
+              
+              console.log(`📦 Processing saved item: ${edge.node.title} - Variant: ${variantTitle}`);
+              console.log(`🔢 Quantity Calculation: ${packCount} (pack) × ${edge.node.quantity} (qty) = ${totalVouchers} vouchers`);
+              
+              // Debug log variant information
+              console.log('🔍 Variant Info:', {
+                variantTitle,
+                variantId,
+                packCount,
+                quantity: edge.node.quantity,
+                totalVouchers,
+              });
+              
+              // Manual type assignment based on product title
+              let type = edge.node.variant?.product?.metafield?.value || 'voucher';
+              if (edge.node.title.toLowerCase().includes('gift card')) {
+                type = 'gift';
+              }
+              
+              // Create array of line items with correct quantity
+              // Create one voucher entry with total quantity
+              return {
+                title: edge.node.title,
+                quantity: totalVouchers, // Use total calculated vouchers
+                type: type,
+                price: edge.node.originalUnitPriceSet?.shopMoney?.amount || 0,
+                productId: edge.node.variant?.product?.id?.replace('gid://shopify/Product/', '') || '',
+                variantId: variantId,
+                expire: edge.node.variant?.product?.metafield_expiry?.value || null,
+                productType: edge.node.variant?.product?.metafield?.value || 'voucher',
+                variantTitle: variantTitle,
+                packCount: packCount,
+                originalQuantity: edge.node.quantity
+              };
+            }).flat();
+          } else if (savedOrder.lineItems?.length > 0) {
+            // Fallback: direct array structure
+            lineItems = savedOrder.lineItems.flatMap(item => {
+              const title = item.title || item.node?.title || '';
+              const variantTitle = item.variant?.title || item.node?.variant?.title || title;
+              const quantity = item.quantity || item.node?.quantity || 1;
+              
+              // Extract pack number from variant title (e.g., '3 Pack' -> 3, '5 Pack' -> 5)
+              const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
+              const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
+              
+              // Calculate total vouchers needed (pack count * quantity)
+              const totalVouchers = packCount * quantity;
+              
+              let type = item.type || item.node?.variant?.product?.metafield?.value || 'voucher';
+              if (title.toLowerCase().includes('gift card')) {
+                type = 'gift';
+              }
+              
+              // Return single line item with total quantity
+              return {
+                title: title,
+                quantity: totalVouchers, // Total vouchers needed (pack count * quantity)
+                type: type,
+                price: item.price || item.node?.originalUnitPriceSet?.shopMoney?.amount || 0,
+                productId: item.productId || item.node?.variant?.product?.id?.replace('gid://shopify/Product/', '') || '',
+                variantId: item.variantId || item.node?.variant?.id?.replace('gid://shopify/ProductVariant/', '') || '',
+                expire: item.expire || item.node?.variant?.product?.metafield_expiry?.value || null,
+                productType: item.type || item.node?.variant?.product?.metafield?.value || 'voucher',
+                variantTitle: variantTitle,
+                packCount: packCount,
+                originalQuantity: quantity
+              };
+            }).flat();
+          }
+          
+          console.log(`📦 Processing ${lineItems.length} line items for voucher creation`);
+          console.log('🔍 [DEBUG] Parsed line items:', JSON.stringify(lineItems, null, 2));
+          
+          // Create vouchers for each product
+          const newVouchers = await createVouchersForOrder({
             shopifyOrderId: savedOrder.shopifyOrderId,
-            customerEmail: savedOrder.customerEmail || ''
+            customerEmail: savedOrder.customerEmail || '',
+            lineItems: lineItems
           });
-          console.log('✅ Voucher created for paid order:', newVoucher.code);
-          return { order: savedOrder, voucher: newVoucher };
+          
+          console.log(`✅ Created ${newVouchers.length} vouchers for paid order`);
+          
+          // Send unified email for all vouchers
+          console.log(`📧 Sending unified email for ${newVouchers.length} vouchers`);
+          sendUnifiedVoucherEmail(savedOrder, newVouchers)
+            .then((result) => {
+              if (result.success) {
+                console.log(`✅ Unified email sent successfully for ${newVouchers.length} vouchers`);
+              } else {
+                console.error(`❌ Unified email failed: ${result.message}`);
+              }
+            })
+            .catch((err) => {
+              console.error(`❌ Error sending unified email:`, err);
+            });
+          
+          return { order: savedOrder, voucher: newVouchers[0] }; // Return first voucher for backward compatibility
         } catch (voucherError) {
-          console.error('❌ Failed to create voucher for paid order:', voucherError);
+          console.error('❌ Failed to create vouchers for paid order:', voucherError);
         }
       }
       
