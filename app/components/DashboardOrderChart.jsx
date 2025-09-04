@@ -112,7 +112,7 @@ export default function DashboardOrderChart({ analytics }) {
     tableContainer: { border: "2px solid black", borderRadius: "10px", padding: "15px", minHeight: "200px", flex: 1, overflowY: "auto" },
     tableTitle: { fontSize: "16px", fontWeight: "bold", marginBottom: "10px", textAlign: "center" },
     tablesGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "20px" },
-    exportButton: { backgroundColor: "#862633", color: "white", border: "2px solid black", borderRadius: "10px", padding: "12px 24px", cursor: "pointer", fontSize: "16px", fontWeight: "bold", alignSelf: "flex-end", maxWidth: "none",
+    exportButton: { backgroundColor: "#862633", color: "white", border: "2px solid black", borderRadius: "10px", padding: "12px 24px", cursor: "pointer", fontSize: "16px", fontWeight: "bold", alignSelf: "flex-end", maxWidth: "none"
   }
 }
 
