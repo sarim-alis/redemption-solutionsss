@@ -6,10 +6,6 @@ handle = "redemption-solutions"
 application_url = "https://redemption-solution-e005aa12f842.herokuapp.com"
 embedded = true
 
-[build]
-automatically_update_urls_on_dev = false
-include_config_on_deploy = true
-
 [webhooks]
 api_version = "2025-04"
 
@@ -22,7 +18,12 @@ api_version = "2025-04"
   uri = "/webhooks/app/uninstalled"
 
   [[webhooks.subscriptions]]
-  topics = [ "orders/paid", "orders/create", "orders/delete", "orders/edited" ]
+  topics = [
+  "orders/create",
+  "orders/delete",
+  "orders/edited",
+  "orders/paid"
+]
   uri = "/webhooks/orders"
 
   [[webhooks.subscriptions]]
@@ -31,10 +32,17 @@ api_version = "2025-04"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_cart_transforms,read_cart_transforms,read_products,read_assigned_fulfillment_orders,read_customers,read_discounts,read_gift_cards,read_inventory,read_merchant_managed_fulfillment_orders,read_orders,read_third_party_fulfillment_orders,write_assigned_fulfillment_orders,write_discounts,write_gift_cards,write_inventory,write_merchant_managed_fulfillment_orders,write_orders,write_products,write_third_party_fulfillment_orders"
+scopes = "read_assigned_fulfillment_orders,read_cart_transforms,read_customers,read_discounts,read_gift_cards,read_inventory,read_merchant_managed_fulfillment_orders,read_orders,read_products,read_third_party_fulfillment_orders,write_assigned_fulfillment_orders,write_cart_transforms,write_discounts,write_gift_cards,write_inventory,write_merchant_managed_fulfillment_orders,write_orders,write_products,write_third_party_fulfillment_orders"
 
 [auth]
-redirect_urls = ["https://redemption-solution-e005aa12f842.herokuapp.com/auth/callback", "https://redemption-solution-e005aa12f842.herokuapp.com/auth/shopify/callback", "https://redemption-solution-e005aa12f842.herokuapp.com/api/auth/callback"]
+redirect_urls = [
+  "https://redemption-solution-e005aa12f842.herokuapp.com/auth/callback",
+  "https://redemption-solution-e005aa12f842.herokuapp.com/auth/shopify/callback",
+  "https://redemption-solution-e005aa12f842.herokuapp.com/api/auth/callback"
+]
 
 [pos]
 embedded = false
+
+[build]
+automatically_update_urls_on_dev = false

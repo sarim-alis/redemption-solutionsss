@@ -3,7 +3,7 @@
 client_id = "c2f415f66df6ec14c9b7ccef564c014c"
 name = "redeem-gift"
 handle = "redeem-gift"
-application_url = "https://tragedy-lectures-excessive-gratuit.trycloudflare.com"
+application_url = "https://biotechnology-families-companion-unions.trycloudflare.com"
 embedded = true
 
 [build]
@@ -19,9 +19,9 @@ scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gi
 
 [auth]
 redirect_urls = [
-  "https://tragedy-lectures-excessive-gratuit.trycloudflare.com/auth/callback",
-  "https://tragedy-lectures-excessive-gratuit.trycloudflare.com/auth/shopify/callback",
-  "https://tragedy-lectures-excessive-gratuit.trycloudflare.com/api/auth/callback"
+  "https://biotechnology-families-companion-unions.trycloudflare.com/auth/callback",
+  "https://biotechnology-families-companion-unions.trycloudflare.com/auth/shopify/callback",
+  "https://biotechnology-families-companion-unions.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
