@@ -104,7 +104,8 @@ export default function DashboardOrderChart({ analytics }) {
     pieLegend: { marginTop: "10px", fontSize: "12px" },
     legendItem: { display: "flex", alignItems: "center", gap: "5px", marginBottom: "5px" },
     legendColor: { width: "12px", height: "12px", borderRadius: "50%" },
-    table: { width: "100%", borderCollapse: "collapse", minHeight: "150px" },
+    table: { width: "100%", borderCollapse: "collapse", minHeight: "220px" },
+    tables: { width: "100%", borderCollapse: "collapse", minHeight: "150px" },
     tableHeader: { backgroundColor: "#f0f0f0", padding: "8px", border: "1px solid black", fontSize: "12px", fontWeight: "bold" },
     tableCell: { padding: "8px", border: "1px solid black", fontSize: "12px" },
     tableContainer: { border: "2px solid black", borderRadius: "10px", padding: "15px", minHeight: "200px", flex: 1, overflowY: "auto" },
@@ -150,9 +151,21 @@ export default function DashboardOrderChart({ analytics }) {
           <div style={styles.tableContainer}>
             <div style={styles.tableTitle}>Voucher Redemptions</div>
             <table style={styles.table}><thead><tr><th style={styles.tableHeader}>Product</th><th style={styles.tableHeader}>Date</th><th style={styles.tableHeader}>Location</th></tr></thead>
-            <tbody>{voucherRedemptions.map((item, i) => <tr key={i}><td style={styles.tableCell}>{item.product}</td><td style={styles.tableCell}>{item.date}</td><td style={styles.tableCell}>{item.location}</td></tr>)}</tbody>
-            </table>
-          </div>
+            <tbody>
+              {voucherRedemptions && voucherRedemptions.length > 0 ? (
+                voucherRedemptions.map((item, index) => (
+                  <tr key={index}>
+                    <td style={styles.tableCell}>{item.product}</td>
+                    <td style={styles.tableCell}>{item.date}</td>
+                    <td style={styles.tableCell}>{item.location}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr><td style={styles.tableCell} colSpan={3}>No voucher redemptions</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
         </div>
 
         {/* Column 2: Active vs Total Vouchers + Gift Card Redemption */}
@@ -203,7 +216,7 @@ export default function DashboardOrderChart({ analytics }) {
           </div>
           <div style={styles.tableContainer}>
             <div style={styles.tableTitle}>Gift Card Redemption</div>
-            <table style={styles.table}><thead><tr><th style={styles.tableHeader}>Product</th><th style={styles.tableHeader}>Date</th><th style={styles.tableHeader}>Location</th></tr></thead>
+            <table style={styles.tables}><thead><tr><th style={styles.tableHeader}>Product</th><th style={styles.tableHeader}>Date</th><th style={styles.tableHeader}>Location</th></tr></thead>
             <tbody>{giftCardRedemptions.map((item, i) => <tr key={i}><td style={styles.tableCell}>{item.product}</td><td style={styles.tableCell}>{item.date}</td><td style={styles.tableCell}>{item.location}</td></tr>)}</tbody>
             </table>
           </div>

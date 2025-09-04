@@ -85,7 +85,7 @@ export const loader = async ({ request }) => {
               lastName
               email
             }
-            lineItems(first: 30) {
+            lineItems(first: 250) {
               edges {
                 node {
                   title
