@@ -1,7 +1,6 @@
 // Imports
 import { useState } from "react"
 import { useLoaderData } from "@remix-run/react";
-import { getAllVouchers } from "../models/voucher.server"
 
 // Frontend
 export default function DashboardOrderChart({ analytics }) {
