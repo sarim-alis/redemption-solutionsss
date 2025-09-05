@@ -643,9 +643,22 @@ async function saveOrderToDatabase(payload, action, session = null) {
               const variantTitle = item.variant?.title || item.node?.variant?.title || title;
               const quantity = item.quantity || item.node?.quantity || 1;
               
+              // Debug log the item structure
+              console.log('🔍 [SaveOrder-Fallback] Item structure:', JSON.stringify({
+                item: {
+                  ...item,
+                  variant: item.variant ? {
+                    ...item.variant,
+                    metafield_voucher_count: item.variant.metafield_voucher_count
+                  } : null
+                }
+              }, null, 2));
+              
               // Get voucher_count from variant metafield (priority method)
               let voucherCount = 1; // Default fallback
               const voucherCountMetafield = item.node?.variant?.metafield_voucher_count || item.variant?.metafield_voucher_count;
+              
+              console.log('🔍 [SaveOrder-Fallback] voucherCountMetafield:', voucherCountMetafield);
               
               if (voucherCountMetafield?.value) {
                 try {
