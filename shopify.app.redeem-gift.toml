@@ -3,12 +3,8 @@
 client_id = "c2f415f66df6ec14c9b7ccef564c014c"
 name = "redeem-gift"
 handle = "redeem-gift"
-application_url = "https://lessons-hay-quotes-sends.trycloudflare.com"
+application_url = "https://vacations-delivered-registration-briefing.trycloudflare.com"
 embedded = true
-
-[build]
-automatically_update_urls_on_dev = true
-include_config_on_deploy = true
 
 [webhooks]
 api_version = "2025-07"
@@ -19,10 +15,13 @@ scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gi
 
 [auth]
 redirect_urls = [
-  "https://lessons-hay-quotes-sends.trycloudflare.com/auth/callback",
-  "https://lessons-hay-quotes-sends.trycloudflare.com/auth/shopify/callback",
-  "https://lessons-hay-quotes-sends.trycloudflare.com/api/auth/callback"
+  "https://vacations-delivered-registration-briefing.trycloudflare.com/auth/callback",
+  "https://vacations-delivered-registration-briefing.trycloudflare.com/auth/shopify/callback",
+  "https://vacations-delivered-registration-briefing.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
 embedded = false
+
+[build]
+automatically_update_urls_on_dev = true
