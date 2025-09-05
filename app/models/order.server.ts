@@ -132,7 +132,10 @@ async function processOrderData(orderData: ShopifyOrder): Promise<ProcessResult>
           //@ts-ignore
           type: edge.node.variant?.product?.metafield?.value || null,
           //@ts-ignore
-          expire: edge.node.variant?.product?.metafield_expiry?.value || null
+          expire: edge.node.variant?.product?.metafield_expiry?.value || null,
+          // Preserve entire variant object for metafield access
+          //@ts-ignore
+          variant: edge.node.variant || null
         }));
     }
 
