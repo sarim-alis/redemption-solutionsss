@@ -287,6 +287,12 @@ export async function saveOrder(orderData: ShopifyOrder) {
                           Number(item.originalUnitPriceSet.shopMoney.amount) : 0);
             const type = item.type || 'voucher';
             const variant = item.variant || {};
+            
+            // Preserve variant metafield information if available
+            if (item.variant?.metafield_voucher_count) {
+              variant.metafield_voucher_count = item.variant.metafield_voucher_count;
+            }
+            
             const productId = item.productId || item.variant?.product?.id?.split('/').pop() || null;
             const variantId = item.variantId || item.variant?.id?.split('/').pop() || null;
             
