@@ -69,9 +69,34 @@ async function processWebhook({ shop, session, topic, payload }) {
             if (paidOrder.lineItems?.edges) {
               lineItems = paidOrder.lineItems.edges.map(edge => {
                 const variantTitle = edge.node.variant_title || edge.node.variant?.title || edge.node.title || 'Standard';
-                const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
-                const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
-                const quantity = (edge.node.quantity || 1) * packCount;
+                const baseQuantity = edge.node.quantity || 1;
+                
+                // Get voucher_count from variant metafield (new approach)
+                let voucherCount = 1; // Default fallback
+                const voucherCountMetafield = edge.node.variant?.metafield_voucher_count;
+                
+                if (voucherCountMetafield?.value) {
+                  try {
+                    const parsed = parseInt(voucherCountMetafield.value, 10);
+                    if (!isNaN(parsed) && parsed > 0) {
+                      voucherCount = parsed;
+                      console.log(`🎟️ Found voucher_count metafield: ${voucherCount} for variant: ${variantTitle}`);
+                    }
+                  } catch (e) {
+                    console.log('⚠️ Error parsing voucher_count metafield, using fallback');
+                  }
+                } else {
+                  // Fallback: Try to extract from variant title (old method)
+                  const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
+                  if (packMatch) {
+                    voucherCount = parseInt(packMatch[1], 10);
+                    console.log(`🔍 Extracted from variant title: ${voucherCount} (${variantTitle})`);
+                  }
+                }
+                
+                // Calculate total vouchers needed
+                const totalVouchers = baseQuantity * voucherCount;
+                console.log(`🧮 Voucher calculation: ${baseQuantity} (qty) × ${voucherCount} (voucher_count) = ${totalVouchers} total vouchers`);
                 
                 // Get the type from metafield or default to 'voucher'
                 let type = 'voucher';
@@ -112,15 +137,16 @@ async function processWebhook({ shop, session, topic, payload }) {
                   return null;
                 }
                 
-                console.log(`📦 Processing voucher item: ${edge.node.title} (Quantity: ${quantity}) - Type: ${type}`);
+                console.log(`📦 Processing voucher item: ${edge.node.title} (Total Vouchers: ${totalVouchers}) - Type: ${type}`);
                 
                 return {
                   title: edge.node.title,
-                  quantity: quantity,
+                  quantity: totalVouchers, // This now contains the final calculated vouchers
                   price: edge.node.originalUnitPriceSet?.shopMoney?.amount || 0,
                   variantTitle: variantTitle,
                   variant: edge.node.variant || {},
-                  packCount: 1,
+                  voucherCount: voucherCount, // Store for reference
+                  baseQuantity: baseQuantity, // Store original quantity
                   type: type,
                   productId: edge.node.variant?.product?.id?.replace('gid://shopify/Product/', '') || null,
                   variantId: edge.node.variant?.id?.replace('gid://shopify/ProductVariant/', '') || null
@@ -130,9 +156,34 @@ async function processWebhook({ shop, session, topic, payload }) {
               lineItems = paidOrder.lineItems.map(item => {
                 const node = item.node || item;
                 const variantTitle = node.variant_title || node.variant?.title || node.title || 'Standard';
-                const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
-                const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
-                const quantity = (node.quantity || 1) * packCount;
+                const baseQuantity = node.quantity || 1;
+                
+                // Get voucher_count from variant metafield (new approach)
+                let voucherCount = 1; // Default fallback
+                const voucherCountMetafield = node.variant?.metafield_voucher_count;
+                
+                if (voucherCountMetafield?.value) {
+                  try {
+                    const parsed = parseInt(voucherCountMetafield.value, 10);
+                    if (!isNaN(parsed) && parsed > 0) {
+                      voucherCount = parsed;
+                      console.log(`🎟️ Found voucher_count metafield: ${voucherCount} for variant: ${variantTitle}`);
+                    }
+                  } catch (e) {
+                    console.log('⚠️ Error parsing voucher_count metafield, using fallback');
+                  }
+                } else {
+                  // Fallback: Try to extract from variant title (old method)
+                  const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
+                  if (packMatch) {
+                    voucherCount = parseInt(packMatch[1], 10);
+                    console.log(`🔍 Extracted from variant title: ${voucherCount} (${variantTitle})`);
+                  }
+                }
+                
+                // Calculate total vouchers needed
+                const totalVouchers = baseQuantity * voucherCount;
+                console.log(`🧮 Voucher calculation: ${baseQuantity} (qty) × ${voucherCount} (voucher_count) = ${totalVouchers} total vouchers`);
                 
                 // Get the type from metafield or default to 'voucher'
                 let type = 'voucher';
@@ -173,15 +224,16 @@ async function processWebhook({ shop, session, topic, payload }) {
                   return null;
                 }
                 
-                console.log(`📦 Processing voucher item: ${node.title} (Quantity: ${quantity}) - Type: ${type}`);
+                console.log(`📦 Processing voucher item: ${node.title} (Total Vouchers: ${totalVouchers}) - Type: ${type}`);
                 
                 return {
                   title: node.title,
-                  quantity: quantity,
+                  quantity: totalVouchers, // This now contains the final calculated vouchers
                   price: node.price || node.originalUnitPriceSet?.shopMoney?.amount || 0,
                   variantTitle: variantTitle,
                   variant: node.variant || {},
-                  packCount: 1,
+                  voucherCount: voucherCount, // Store for reference
+                  baseQuantity: baseQuantity, // Store original quantity
                   type: type,
                   productId: node.variant?.product?.id?.replace('gid://shopify/Product/', '') || null,
                   variantId: node.variant?.id?.replace('gid://shopify/ProductVariant/', '') || null
@@ -247,13 +299,18 @@ async function processWebhook({ shop, session, topic, payload }) {
 
 // Helper to match Shopify GraphQL style
 async function transformOrderPayload(payload, session = null) {
-  // Extract product IDs for metafield fetching
+  // Extract product IDs and variant IDs for metafield fetching
   const productIds = payload.line_items?.map(item => item.product_id).filter(Boolean) || [];
+  const variantIds = payload.line_items?.map(item => item.variant_id).filter(Boolean) || [];
   
-  // Fetch metafields if session is available and we have product IDs
+  // Fetch metafields if session is available
   let metafieldsMap = {};
+  let variantMetafieldsMap = {};
   if (session && productIds.length > 0) {
     metafieldsMap = await fetchProductMetafields(session.shop, session, productIds);
+  }
+  if (session && variantIds.length > 0) {
+    variantMetafieldsMap = await fetchVariantMetafields(session.shop, session, variantIds);
   }
 
   return {
@@ -288,6 +345,9 @@ async function transformOrderPayload(payload, session = null) {
           },
           variant: item.variant_id ? {
             id: `gid://shopify/ProductVariant/${item.variant_id}`,
+            metafield_voucher_count: variantMetafieldsMap[item.variant_id] ? {
+              value: variantMetafieldsMap[item.variant_id].voucher_count
+            } : null,
             product: {
               id: `gid://shopify/Product/${item.product_id}`,
               metafield: metafieldsMap[item.product_id] ? {
@@ -328,15 +388,16 @@ async function fetchProductMetafields(shop, session, productIds) {
           
           metafieldsMap[productId] = {
             type: metafields.find(m => m.namespace === 'custom' && m.key === 'product_type')?.value || null,
-            expire: metafields.find(m => m.namespace === 'custom' && m.key === 'expiry_date')?.value || null
+            expire: metafields.find(m => m.namespace === 'custom' && m.key === 'expiry_date')?.value || null,
+            voucher_count: metafields.find(m => m.namespace === 'custom' && m.key === 'voucher_count')?.value || null
           };
         } else {
           console.log(`⚠️ Failed to fetch metafields for product ${productId}: ${response.status}`);
-          metafieldsMap[productId] = { type: null, expire: null };
+          metafieldsMap[productId] = { type: null, expire: null, voucher_count: null };
         }
       } catch (productError) {
         console.error(`❌ Error fetching metafields for product ${productId}:`, productError.message);
-        metafieldsMap[productId] = { type: null, expire: null };
+        metafieldsMap[productId] = { type: null, expire: null, voucher_count: null };
       }
     }
     
@@ -345,6 +406,52 @@ async function fetchProductMetafields(shop, session, productIds) {
     return metafieldsMap;
   } catch (error) {
     console.error('❌ Failed to fetch product metafields:', error);
+    return {};
+  }
+}
+
+// Helper function to fetch variant metafields using REST API
+async function fetchVariantMetafields(shop, session, variantIds) {
+  if (!variantIds || variantIds.length === 0) return {};
+  
+  try {
+    const variantMetafieldsMap = {};
+    
+    // Fetch metafields for each variant using REST API
+    for (const variantId of variantIds) {
+      try {
+        const url = `https://${shop}/admin/api/2023-10/variants/${variantId}/metafields.json`;
+        const response = await fetch(url, {
+          headers: {
+            'X-Shopify-Access-Token': session.accessToken,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const metafields = data.metafields || [];
+          
+          variantMetafieldsMap[variantId] = {
+            voucher_count: metafields.find(m => m.namespace === 'custom' && m.key === 'voucher_count')?.value || null
+          };
+          
+          console.log(`🎟️ Variant ${variantId} metafields:`, variantMetafieldsMap[variantId]);
+        } else {
+          console.log(`⚠️ Failed to fetch variant metafields for ${variantId}: ${response.status}`);
+          variantMetafieldsMap[variantId] = { voucher_count: null };
+        }
+      } catch (variantError) {
+        console.error(`❌ Error fetching variant metafields for ${variantId}:`, variantError.message);
+        variantMetafieldsMap[variantId] = { voucher_count: null };
+      }
+    }
+    
+    console.log(`📋 Fetched variant metafields for ${Object.keys(variantMetafieldsMap).length} variants`);
+    console.log('🔍 [DEBUG] Variant metafields map:', JSON.stringify(variantMetafieldsMap, null, 2));
+    return variantMetafieldsMap;
+  } catch (error) {
+    console.error('❌ Failed to fetch variant metafields:', error);
     return {};
   }
 }
@@ -376,13 +483,18 @@ async function saveOrderToDatabase(payload, action, session = null) {
       }
     }
 
-    // Extract product IDs for metafield fetching
+    // Extract product IDs and variant IDs for metafield fetching
     const productIds = payload.line_items?.map(item => item.product_id).filter(Boolean) || [];
+    const variantIds = payload.line_items?.map(item => item.variant_id).filter(Boolean) || [];
     
-    // Fetch metafields if session is available and we have product IDs
+    // Fetch metafields if session is available
     let metafieldsMap = {};
+    let variantMetafieldsMap = {};
     if (session && productIds.length > 0) {
       metafieldsMap = await fetchProductMetafields(session.shop, session, productIds);
+    }
+    if (session && variantIds.length > 0) {
+      variantMetafieldsMap = await fetchVariantMetafields(session.shop, session, variantIds);
     }
 
     // Prepare line items data with metafields and variant info
@@ -406,6 +518,9 @@ async function saveOrderToDatabase(payload, action, session = null) {
             variant: item.variant_id ? {
               id: `gid://shopify/ProductVariant/${item.variant_id}`,
               title: variantTitle, // Add variant title to variant object
+              metafield_voucher_count: variantMetafieldsMap[item.variant_id] ? {
+                value: variantMetafieldsMap[item.variant_id].voucher_count
+              } : null,
               product: {
                 id: `gid://shopify/Product/${item.product_id}`,
                 metafield: metafieldsMap[item.product_id] ? {
