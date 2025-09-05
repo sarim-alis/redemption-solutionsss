@@ -132,8 +132,8 @@ function generateGiftCard(voucher, amount = 0) {
   const formattedAmount = formatCurrency(amount);
   
   return `
-    <div style="width:600px; margin: 20px auto;">
-      <table width="600" cellpadding="0" cellspacing="0" border="0" style="border-radius:12px; background:#862633; margin:30px; color:#ffffff;">
+    <div style=" margin: 20px auto;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-radius:12px; background:#862633;  color:#ffffff;">
         <!-- Top Row -->
         <tr>
           <td align="left" style="width:60px; padding: 10px;">
@@ -314,7 +314,7 @@ export function generateUnifiedEmailHTML({ order, vouchers }) {
                 <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
                       style="background:#ffffff; margin:40px 0">
                   <tr>
-                    <td style="font-size:22px; font-weight:bold; color:#000000; border-bottom:1px solid #63666A;">
+                    <td style="font-size:22px; padding: 15px; font-weight:bold; color:#000000; border-bottom:1px solid #63666A;">
                       Billing Information:
                     </td>
                   </tr>
@@ -407,7 +407,7 @@ export function generateUnifiedPDFHTML({ order, vouchers }) {
     </head>
     <body>
       <!-- EXACT SAME STRUCTURE AS EMAIL TEMPLATE -->
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" style="font-family: 'Barlow Condensed', sans-serif; background-color:#f9f9f9; padding:20px 0;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" style="font-family: 'Barlow Condensed', sans-serif; background-color:#f9f9f9; padding:20px 0; margin:20px 0;">
         <tr>
           <td align="center">
 
