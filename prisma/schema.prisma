@@ -44,6 +44,8 @@ model Voucher {
   emailSent      Boolean  @default(false)
   username      String[] @default([])
   usedLocation  String? 
+  expire        DateTime?
+
 }
 
 model Product {
