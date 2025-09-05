@@ -193,7 +193,7 @@ const voucherRedemptions = transformedVouchers.filter(item =>
                   <tr key={index}>
                     <td style={styles.tableCell}>{item.product}</td>
                     <td style={styles.tableCell}>{item.date}</td>
-                    <td style={styles.tableCell}>N/A</td>
+                    <td style={styles.tableCell}>—</td>
                   </tr>
                 ))
               ) : (
@@ -253,7 +253,7 @@ const voucherRedemptions = transformedVouchers.filter(item =>
           <div style={styles.tableContainer}>
             <div style={styles.tableTitle}>Gift Card Redemption</div>
             <table style={styles.tables}><thead><tr><th style={styles.tableHeader}>Product</th><th style={styles.tableHeader}>Date</th><th style={styles.tableHeader}>Location</th></tr></thead>
-            <tbody>{giftCardRedemptions.map((item, i) => <tr key={i}><td style={styles.tableCell}>{item.product}</td><td style={styles.tableCell}>{item.date}</td><td style={styles.tableCell}>{item.location}</td></tr>)}</tbody>
+            <tbody>{giftCardRedemptions.map((item, i) => <tr key={i}><td style={styles.tableCell}>{item.product}</td><td style={styles.tableCell}>{item.date}</td><td style={styles.tableCell}>—</td></tr>)}</tbody>
             </table>
           </div>
         </div>
