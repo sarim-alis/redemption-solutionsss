@@ -575,21 +575,43 @@ async function saveOrderToDatabase(payload, action, session = null) {
               const variantTitle = edge.node.variant_title || edge.node.variant?.title || edge.node.title || 'Standard';
               const variantId = edge.node.variant?.id?.replace('gid://shopify/ProductVariant/', '') || '';
               
-              // Extract pack count from variant title (e.g., '3 Pack' -> 3)
-              const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
-              const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
-              const totalVouchers = packCount * edge.node.quantity;
+              // Get voucher_count from variant metafield (priority method)
+              let voucherCount = 1; // Default fallback
+              const voucherCountMetafield = edge.node.variant?.metafield_voucher_count;
+              
+              if (voucherCountMetafield?.value) {
+                try {
+                  const parsed = parseInt(voucherCountMetafield.value, 10);
+                  if (!isNaN(parsed) && parsed > 0) {
+                    voucherCount = parsed;
+                    console.log(`🎟️ [SaveOrder] Found voucher_count metafield: ${voucherCount} for variant: ${variantTitle}`);
+                  }
+                } catch (e) {
+                  console.log('⚠️ [SaveOrder] Error parsing voucher_count metafield, using fallback');
+                }
+              } else {
+                // Fallback: Try to extract from variant title (old method)
+                const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
+                if (packMatch) {
+                  voucherCount = parseInt(packMatch[1], 10);
+                  console.log(`🔍 [SaveOrder] Extracted from variant title: ${voucherCount} (${variantTitle})`);
+                }
+              }
+              
+              // Calculate total vouchers needed
+              const totalVouchers = edge.node.quantity * voucherCount;
+              console.log(`🧮 [SaveOrder] Voucher calculation: ${edge.node.quantity} (qty) × ${voucherCount} (voucher_count) = ${totalVouchers} total vouchers`);
               
               console.log(`📦 Processing saved item: ${edge.node.title} - Variant: ${variantTitle}`);
-              console.log(`🔢 Quantity Calculation: ${packCount} (pack) × ${edge.node.quantity} (qty) = ${totalVouchers} vouchers`);
               
               // Debug log variant information
-              console.log('🔍 Variant Info:', {
+              console.log('🔍 [SaveOrder] Variant Info:', {
                 variantTitle,
                 variantId,
-                packCount,
+                voucherCount,
                 quantity: edge.node.quantity,
                 totalVouchers,
+                metafield: edge.node.variant?.metafield_voucher_count
               });
               
               // Manual type assignment based on product title
@@ -610,7 +632,7 @@ async function saveOrderToDatabase(payload, action, session = null) {
                 expire: edge.node.variant?.product?.metafield_expiry?.value || null,
                 productType: edge.node.variant?.product?.metafield?.value || 'voucher',
                 variantTitle: variantTitle,
-                packCount: packCount,
+                voucherCount: voucherCount,
                 originalQuantity: edge.node.quantity
               };
             }).flat();
@@ -621,12 +643,32 @@ async function saveOrderToDatabase(payload, action, session = null) {
               const variantTitle = item.variant?.title || item.node?.variant?.title || title;
               const quantity = item.quantity || item.node?.quantity || 1;
               
-              // Extract pack number from variant title (e.g., '3 Pack' -> 3, '5 Pack' -> 5)
-              const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
-              const packCount = packMatch ? parseInt(packMatch[1], 10) : 1;
+              // Get voucher_count from variant metafield (priority method)
+              let voucherCount = 1; // Default fallback
+              const voucherCountMetafield = item.node?.variant?.metafield_voucher_count || item.variant?.metafield_voucher_count;
               
-              // Calculate total vouchers needed (pack count * quantity)
-              const totalVouchers = packCount * quantity;
+              if (voucherCountMetafield?.value) {
+                try {
+                  const parsed = parseInt(voucherCountMetafield.value, 10);
+                  if (!isNaN(parsed) && parsed > 0) {
+                    voucherCount = parsed;
+                    console.log(`🎟️ [SaveOrder-Fallback] Found voucher_count metafield: ${voucherCount} for variant: ${variantTitle}`);
+                  }
+                } catch (e) {
+                  console.log('⚠️ [SaveOrder-Fallback] Error parsing voucher_count metafield, using fallback');
+                }
+              } else {
+                // Fallback: Try to extract from variant title (old method)
+                const packMatch = variantTitle.match(/(\d+)\s*Pack/i);
+                if (packMatch) {
+                  voucherCount = parseInt(packMatch[1], 10);
+                  console.log(`🔍 [SaveOrder-Fallback] Extracted from variant title: ${voucherCount} (${variantTitle})`);
+                }
+              }
+              
+              // Calculate total vouchers needed
+              const totalVouchers = quantity * voucherCount;
+              console.log(`🧮 [SaveOrder-Fallback] Voucher calculation: ${quantity} (qty) × ${voucherCount} (voucher_count) = ${totalVouchers} total vouchers`);
               
               let type = item.type || item.node?.variant?.product?.metafield?.value || 'voucher';
               if (title.toLowerCase().includes('gift card')) {
@@ -644,7 +686,7 @@ async function saveOrderToDatabase(payload, action, session = null) {
                 expire: item.expire || item.node?.variant?.product?.metafield_expiry?.value || null,
                 productType: item.type || item.node?.variant?.product?.metafield?.value || 'voucher',
                 variantTitle: variantTitle,
-                packCount: packCount,
+                voucherCount: voucherCount,
                 originalQuantity: quantity
               };
             }).flat();
