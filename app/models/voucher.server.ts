@@ -51,12 +51,12 @@ export async function createVouchersForOrder({
     // For gift cards, use quantity as is
     const isGiftCard = item.type === 'gift' || item.title.toLowerCase().includes('gift card');
     
-    // Each line item now represents a single voucher
-    const totalVouchers = 1;
+    // Use the actual quantity from line item (already includes pack count calculations)
+    const totalVouchers = item.quantity || 1;
     if (isGiftCard) {
-      console.log(`🎁 Creating gift card: ${item.quantity} × $${item.price} (${item.title})`);
+      console.log(`🎁 Creating ${totalVouchers} gift card(s): ${item.quantity} × $${item.price} (${item.title})`);
     } else {
-      console.log(`📦 Creating 1 voucher for: ${item.title}`);
+      console.log(`📦 Creating ${totalVouchers} voucher(s) for: ${item.title}`);
     }
     
     // Create all vouchers at once
