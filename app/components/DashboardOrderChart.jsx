@@ -144,7 +144,7 @@ const voucherRedemptions = transformedVouchers.filter(item =>
     tables: { width: "100%", borderCollapse: "collapse", minHeight: "150px" },
     tableHeader: { backgroundColor: "#f0f0f0", padding: "8px", border: "1px solid black", fontSize: "12px", fontWeight: "bold" },
     tableCell: { padding: "8px", border: "1px solid black", fontSize: "12px" },
-    tableContainer: { border: "2px solid black", borderRadius: "10px", padding: "15px", minHeight: "200px", flex: 1, overflowY: "auto" },
+    tableContainer: { border: "2px solid black", borderRadius: "10px", padding: "15px", maxHeight: "250px", flex: 1, overflowY: "auto" },
     tableTitle: { fontSize: "16px", fontWeight: "bold", marginBottom: "10px", textAlign: "center" },
     tablesGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "20px" },
     exportButton: { backgroundColor: "#862633", color: "white", border: "2px solid black", borderRadius: "10px", padding: "12px 24px", cursor: "pointer", fontSize: "16px", fontWeight: "bold", alignSelf: "flex-end", maxWidth: "none"

@@ -363,19 +363,25 @@ export function generateUnifiedEmailHTML({ order, vouchers }) {
 
 // Generate unified PDF HTML (EXACTLY same as email template)
 export function generateUnifiedPDFHTML({ order, vouchers }) {
+  // Use EXACTLY the same logic as email template
   const customerName = formatCustomerName(order?.customerEmail);
   
-  // Separate vouchers by type
+  // Debug: Log voucher types (same as email)
+  console.log('🔍 [UnifiedPDF] Voucher types:', vouchers.map(v => ({ code: v.code, type: v.type, productTitle: v.productTitle })));
+  
+  // Separate vouchers by type (same as email)
   const voucherVouchers = vouchers.filter(v => v.type !== 'gift');
   const giftVouchers = vouchers.filter(v => v.type === 'gift');
+  
+  console.log(`🔍 [UnifiedPDF] Found ${voucherVouchers.length} vouchers and ${giftVouchers.length} gift cards`);
   
   // Generate voucher cards HTML (same as email)
   const voucherCardsHTML = voucherVouchers.map(voucher => generateVoucherCard(voucher)).join('');
   
   // Generate gift cards HTML (same as email)
   const giftCardsHTML = giftVouchers.map(voucher => generateGiftCard(voucher, order?.totalPrice || 0)).join('');
-  
-  // Return EXACT same HTML as email template with PDF-specific styles
+
+  // Return EXACTLY the same HTML as email template
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -483,11 +489,12 @@ export function generateUnifiedPDFHTML({ order, vouchers }) {
                   </tr>
                   <tr>
                     <td align="center">
-                      <div style="display:block; background:#862633; color:#ffffff; 
+                      <a href="https://redemption-portal-487066d362b4.herokuapp.com" 
+                        style="display:block; background:#862633; color:#ffffff; 
                                 text-decoration:none; font-size:16px; font-weight:bold; 
-                                padding:14px 30px; border-radius:6px; width:100%; box-sizing:border-box; text-align:center;">
+                                padding:14px 30px; border-radius:6px; width:100%; box-sizing:border-box">
                         FIND A LOCATION
-                      </div>
+                      </a>
                     </td>
                   </tr>
                 </table>
@@ -521,7 +528,7 @@ export function generateUnifiedPDFHTML({ order, vouchers }) {
                 <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
                       style="background:#ffffff; margin:40px 0">
                   <tr>
-                    <td style="font-size:22px; font-weight:bold; color:#000000; border-bottom:1px solid #63666A;">
+                    <td style="font-size:22px; padding: 15px; font-weight:bold; color:#000000; border-bottom:1px solid #63666A;">
                       Billing Information:
                     </td>
                   </tr>
@@ -557,13 +564,9 @@ export function generateUnifiedPDFHTML({ order, vouchers }) {
                 </span>
               </td>
             </tr>
-            <tr>
-              <td>
-                <div style="color: black; font-size: 11px; line-height: 1.4; max-width: 500px; margin: 0 auto; font-style: italic; text-align:center; padding-top:10px;">
-                  *Valid for up to 5 quarts of oil, extra fee for additional quarts. Not valid with any other offer for same service. Only valid at participating ACE Jiffy Lube locations. Shop supply fees and applicable taxes are not included and must be paid at time of service.
-                </div>
-              </td>
-            </tr>
+            <div style="color: black; font-size: 11px; line-height: 1.4; max-width: 500px; margin: 0 auto; font-style: italic; text-align:center; padding-top:10px;">
+              *Valid for up to 5 quarts of oil, extra fee for additional quarts. Not valid with any other offer for same service. Only valid at participating ACE Jiffy Lube locations. Shop supply fees and applicable taxes are not included and must be paid at time of service.
+            </div>
           </td>
         </tr>
       </table>
