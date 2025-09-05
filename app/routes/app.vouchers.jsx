@@ -344,14 +344,9 @@ export default function VouchersPage() {
                       })()}
                     </td>
                     <td style={cellStyle}>
-                      <a
-                        href={`https://${v.shopifyOrderId.split('/')[0]}/admin/orders/${v.shopifyOrderId.split('/')[1]}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: '#1976d2', textDecoration: 'none' }}
-                      >
+                     
                         {v.shopifyOrderId}
-                      </a>
+                    
                     </td>
                     <td style={cellStyle}>{v.customerEmail}</td>
                     <td style={cellStyle}>
@@ -366,7 +361,7 @@ export default function VouchersPage() {
                           fontSize: 12,
                           textTransform: 'uppercase',
                         }}>
-                        {v.order?.statusUse ? "USED" : "NO"}
+                        {v.order?.statusUse ? "USED" : "UNUSED"}
                       </span>
                     </td>
                     <td style={cellStyle}>
