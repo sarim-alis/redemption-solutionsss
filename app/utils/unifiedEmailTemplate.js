@@ -361,7 +361,7 @@ export function generateUnifiedEmailHTML({ order, vouchers }) {
   `;
 }
 
-// Generate unified PDF HTML (uses same email template design)
+// Generate unified PDF HTML (EXACTLY same as email template)
 export function generateUnifiedPDFHTML({ order, vouchers }) {
   const customerName = formatCustomerName(order?.customerEmail);
   
@@ -375,6 +375,7 @@ export function generateUnifiedPDFHTML({ order, vouchers }) {
   // Generate gift cards HTML (same as email)
   const giftCardsHTML = giftVouchers.map(voucher => generateGiftCard(voucher, order?.totalPrice || 0)).join('');
   
+  // Return EXACT same HTML as email template with PDF-specific styles
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -386,38 +387,31 @@ export function generateUnifiedPDFHTML({ order, vouchers }) {
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
       <style>
-        body { 
-          font-family: 'Barlow Condensed', sans-serif; 
-          margin: 0; 
-          padding: 20px; 
-          background-color: #f9f9f9; 
-          color: #333; 
+        /* PDF-specific styles only for better rendering */
+        @media print {
+          .voucher-container { 
+            page-break-inside: avoid; 
+          }
+          .page-break { 
+            page-break-before: always; 
+          }
         }
-        /* PDF-specific styles for better rendering */
+        /* Ensure proper table rendering in PDF */
         table { 
-          border-collapse: collapse; 
-          width: 100%; 
+          border-collapse: collapse !important; 
         }
         td { 
-          vertical-align: top; 
-        }
-        .page-break { 
-          page-break-before: always; 
-        }
-        /* Ensure voucher cards don't break across pages */
-        .voucher-container { 
-          page-break-inside: avoid; 
-          margin-bottom: 20px; 
+          vertical-align: top !important; 
         }
       </style>
     </head>
     <body>
-      <!-- Use exact same email template structure -->
+      <!-- EXACT SAME STRUCTURE AS EMAIL TEMPLATE -->
       <table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" style="font-family: 'Barlow Condensed', sans-serif; background-color:#f9f9f9; padding:20px 0;">
         <tr>
           <td align="center">
 
-            <!-- Header (same as email) -->
+            <!-- Header -->
             <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:#862633; padding:10px; text-align:center;">
               <tr>
                 <td style="color:white; text-align:center;">
@@ -426,7 +420,7 @@ export function generateUnifiedPDFHTML({ order, vouchers }) {
               </tr>
             </table>
 
-            <!-- Main Content (same as email) -->
+            <!-- Main Content -->
             <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:white; padding:35px 30px;">
               <tr>
                 <td align="center" style="color:#000000; font-size:28px; font-weight:bold; padding-bottom:10px;">
@@ -446,7 +440,7 @@ export function generateUnifiedPDFHTML({ order, vouchers }) {
             </table>
 
             ${voucherVouchers.length > 0 ? `
-            <!-- Vouchers Section (same as email) -->
+            <!-- Vouchers Section -->
             <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:white; padding:20px;">
               <tr>
                 <td align="center" style="color:#000000; font-size:24px; font-weight:bold; padding-bottom:20px;">
@@ -462,7 +456,7 @@ export function generateUnifiedPDFHTML({ order, vouchers }) {
             ` : ''}
 
             ${giftVouchers.length > 0 ? `
-            <!-- Gift Cards Section (same as email) -->
+            <!-- Gift Cards Section -->
             <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:white; padding:20px;">
               <tr>
                 <td align="center" style="color:#000000; font-size:24px; font-weight:bold; padding-bottom:20px;">
@@ -477,7 +471,7 @@ export function generateUnifiedPDFHTML({ order, vouchers }) {
             </table>
             ` : ''}
 
-            <!-- Find a Location Section (same as email) -->
+            <!-- Find a Location Section -->
             <tr>
               <td align="center">
                 <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
@@ -500,7 +494,7 @@ export function generateUnifiedPDFHTML({ order, vouchers }) {
               </td>
             </tr>
 
-            <!-- How to Redeem Section (same as email) -->
+            <!-- How to Redeem Section -->
             <tr>
               <td align="center">
                 <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
@@ -521,7 +515,41 @@ export function generateUnifiedPDFHTML({ order, vouchers }) {
               </td>
             </tr>
 
-            <!-- Footer (same as email) -->
+            <!-- Billing Information -->
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
+                      style="background:#ffffff; margin:40px 0">
+                  <tr>
+                    <td style="font-size:22px; font-weight:bold; color:#000000; border-bottom:1px solid #63666A;">
+                      Billing Information:
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:15px;">
+                      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <!-- Billing Address -->
+                          <td width="50%" valign="top" style="font-size:16px; color:#000000;">
+                            <strong style="display:block; margin-bottom:6px;">Billing Address</strong>
+                            Full Name <br/>
+                            Street <br/>
+                            City, State, Zip Code
+                          </td>
+                          <!-- Payment Method -->
+                          <td width="50%" valign="top" style="font-size:16px; color:#000000;">
+                            <strong style="display:block; margin-bottom:6px;">Payment Method</strong>
+                            Apple Pay
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Footer -->
             <tr style="margin-top:20px;">
               <td style="color:white; font-size:24px; font-weight:bold; text-align:center;">
                 <span style="display:inline-block;">
