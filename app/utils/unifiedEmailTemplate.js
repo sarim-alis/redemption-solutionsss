@@ -132,8 +132,8 @@ function generateGiftCard(voucher, amount = 0) {
   const formattedAmount = formatCurrency(amount);
   
   return `
-    <div style="width:600px; margin: 20px auto;">
-      <table width="600" cellpadding="0" cellspacing="0" border="0" style="border-radius:12px; background:#862633; margin:30px; color:#ffffff;">
+    <div style=" margin: 20px auto;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-radius:12px; background:#862633;  color:#ffffff;">
         <!-- Top Row -->
         <tr>
           <td align="left" style="width:60px; padding: 10px;">
@@ -314,7 +314,7 @@ export function generateUnifiedEmailHTML({ order, vouchers }) {
                 <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
                       style="background:#ffffff; margin:40px 0">
                   <tr>
-                    <td style="font-size:22px; font-weight:bold; color:#000000; border-bottom:1px solid #63666A;">
+                    <td style="font-size:22px; padding: 15px; font-weight:bold; color:#000000; border-bottom:1px solid #63666A;">
                       Billing Information:
                     </td>
                   </tr>
@@ -361,20 +361,27 @@ export function generateUnifiedEmailHTML({ order, vouchers }) {
   `;
 }
 
-// Generate unified PDF HTML (same content as email but optimized for PDF)
+// Generate unified PDF HTML (EXACTLY same as email template)
 export function generateUnifiedPDFHTML({ order, vouchers }) {
+  // Use EXACTLY the same logic as email template
   const customerName = formatCustomerName(order?.customerEmail);
   
-  // Separate vouchers by type
+  // Debug: Log voucher types (same as email)
+  console.log('🔍 [UnifiedPDF] Voucher types:', vouchers.map(v => ({ code: v.code, type: v.type, productTitle: v.productTitle })));
+  
+  // Separate vouchers by type (same as email)
   const voucherVouchers = vouchers.filter(v => v.type !== 'gift');
   const giftVouchers = vouchers.filter(v => v.type === 'gift');
   
-  // Generate voucher cards HTML
+  console.log(`🔍 [UnifiedPDF] Found ${voucherVouchers.length} vouchers and ${giftVouchers.length} gift cards`);
+  
+  // Generate voucher cards HTML (same as email)
   const voucherCardsHTML = voucherVouchers.map(voucher => generateVoucherCard(voucher)).join('');
   
-  // Generate gift cards HTML
+  // Generate gift cards HTML (same as email)
   const giftCardsHTML = giftVouchers.map(voucher => generateGiftCard(voucher, order?.totalPrice || 0)).join('');
-  
+
+  // Return EXACTLY the same HTML as email template
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -382,132 +389,187 @@ export function generateUnifiedPDFHTML({ order, vouchers }) {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Jiffy Lube - Your Order Details</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
       <style>
-        body { 
-          font-family: Arial, sans-serif; 
-          margin: 0; 
-          padding: 20px; 
-          background-color: white; 
-          color: #333; 
+        /* PDF-specific styles only for better rendering */
+        @media print {
+          .voucher-container { 
+            page-break-inside: avoid; 
+          }
+          .page-break { 
+            page-break-before: always; 
+          }
         }
-        .header { 
-          background-color: #862633; 
-          color: white; 
-          padding: 20px; 
-          text-align: center; 
-          border-radius: 8px; 
-          margin-bottom: 20px; 
+        /* Ensure proper table rendering in PDF */
+        table { 
+          border-collapse: collapse !important; 
         }
-        .main-content { 
-          background-color: white; 
-          padding: 20px; 
-          margin-bottom: 20px; 
-          border: 1px solid #ddd; 
-          border-radius: 8px; 
-        }
-        .voucher-section { 
-          margin-bottom: 30px; 
-        }
-        .gift-section { 
-          margin-bottom: 30px; 
-        }
-        .section-title { 
-          font-size: 24px; 
-          font-weight: bold; 
-          color: #000000; 
-          margin-bottom: 20px; 
-          text-align: center; 
-        }
-        .voucher-card { 
-          width: 100%; 
-          background-color: #862633; 
-          color: white; 
-          padding: 20px; 
-          margin: 20px 0; 
-          border-radius: 8px; 
-          page-break-inside: avoid; 
-        }
-        .gift-card { 
-          width: 100%; 
-          background-color: #862633; 
-          color: white; 
-          padding: 20px; 
-          margin: 20px 0; 
-          border-radius: 8px; 
-          page-break-inside: avoid; 
-        }
-        .voucher-code { 
-          background-color: #edf2f7; 
-          color: #862633; 
-          padding: 10px; 
-          border-radius: 8px; 
-          text-align: center; 
-          font-size: 18px; 
-          font-weight: bold; 
-          margin: 15px 0; 
-        }
-        .info-row { 
-          display: flex; 
-          justify-content: space-between; 
-          margin: 10px 0; 
-        }
-        .footer { 
-          text-align: center; 
-          font-size: 11px; 
-          color: #666; 
-          margin-top: 30px; 
-          font-style: italic; 
-        }
-        .page-break { 
-          page-break-before: always; 
+        td { 
+          vertical-align: top !important; 
         }
       </style>
     </head>
     <body>
-      <!-- Header -->
-      <div class="header">
-        <h1 style="margin: 0; font-size: 28px;">Jiffy Lube</h1>
-        <p style="margin: 10px 0 0 0; font-size: 16px;">Thank you for your purchase!</p>
-      </div>
+      <!-- EXACT SAME STRUCTURE AS EMAIL TEMPLATE -->
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" align="center" style="font-family: 'Barlow Condensed', sans-serif; background-color:#f9f9f9; padding:20px 0; margin:20px 0;">
+        <tr>
+          <td align="center">
 
-      <!-- Main Content -->
-      <div class="main-content">
-        <h2 style="text-align: center; color: #862633; margin-bottom: 15px;">Your Jiffy Lube® items are ready to use</h2>
-        <p style="text-align: center; margin-bottom: 20px;">
-          You'll find your voucher(s) and gift card(s) below—just bring them with you on your next visit to a participating location.
-        </p>
-      </div>
+            <!-- Header -->
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:#862633; padding:10px; text-align:center;">
+              <tr>
+                <td style="color:white; text-align:center;">
+                  <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1756224071/gtgy8nrnhkbcemgyh1ps.png" width="50%" height="40" style="margin-right:10px; object-fit: contain;" />
+                </td>
+              </tr>
+            </table>
 
-      ${voucherVouchers.length > 0 ? `
-      <!-- Vouchers Section -->
-      <div class="voucher-section">
-        <h2 class="section-title">Your Vouchers</h2>
-        ${voucherCardsHTML.replace(/<div[^>]*>/g, '<div class="voucher-card">')}
-      </div>
-      ` : ''}
+            <!-- Main Content -->
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:white; padding:35px 30px;">
+              <tr>
+                <td align="center" style="color:#000000; font-size:28px; font-weight:bold; padding-bottom:10px;">
+                  <span style="color:#862633;">Thank you </span> for your purchase!
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="color:#000000; font-size:16px; padding-bottom:10px; font-weight:500;">
+                  Your Jiffy Lube® items are ready to use.
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="color:#000000; font-size:16px; line-height:1.5; padding-bottom:5px; font-weight:400;">
+                  You'll find your voucher(s) and gift card(s) below—just bring them with you on your next visit to a participating location.
+                </td>
+              </tr>
+            </table>
 
-      ${giftVouchers.length > 0 ? `
-      <!-- Gift Cards Section -->
-      <div class="gift-section">
-        <h2 class="section-title">Your Gift Cards</h2>
-        ${giftCardsHTML.replace(/<table[^>]*>/g, '<div class="gift-card">').replace(/<\/table>/g, '</div>')}
-      </div>
-      ` : ''}
+            ${voucherVouchers.length > 0 ? `
+            <!-- Vouchers Section -->
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:white; padding:20px;">
+              <tr>
+                <td align="center" style="color:#000000; font-size:24px; font-weight:bold; padding-bottom:20px;">
+                  Your Vouchers
+                </td>
+              </tr>
+              <tr>
+                <td align="center" class="voucher-container">
+                  ${voucherCardsHTML}
+                </td>
+              </tr>
+            </table>
+            ` : ''}
 
-      <!-- Instructions -->
-      <div class="main-content">
-        <h3 style="color: #862633; margin-bottom: 15px;">How to Redeem?</h3>
-        <p>
-          Keep them all for yourself or share with friends and family. 
-          It's a smart way to save and help others stay road-ready too. 
-          Look forward to seeing you soon at your local Jiffy Lube!
-        </p>
-      </div>
+            ${giftVouchers.length > 0 ? `
+            <!-- Gift Cards Section -->
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:white; padding:20px;">
+              <tr>
+                <td align="center" style="color:#000000; font-size:24px; font-weight:bold; padding-bottom:20px;">
+                  Your Gift Cards
+                </td>
+              </tr>
+              <tr>
+                <td align="center" class="voucher-container">
+                  ${giftCardsHTML}
+                </td>
+              </tr>
+            </table>
+            ` : ''}
 
-      <!-- Footer -->
-      <div class="footer">
-        *Valid for up to 5 quarts of oil, extra fee for additional quarts. Not valid with any other offer for same service. Only valid at participating ACE Jiffy Lube locations. Shop supply fees and applicable taxes are not included and must be paid at time of service.
-      </div>
+            <!-- Find a Location Section -->
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
+                      style="background:#f5f5f5; border-radius:8px; padding:30px 20px; margin:40px 0">
+                  <tr>
+                    <td align="center" style="font-size:20px; font-weight:bold; color:#000000; padding-bottom:20px;">
+                      Find a Participating Location Near You
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="center">
+                      <a href="https://redemption-portal-487066d362b4.herokuapp.com" 
+                        style="display:block; background:#862633; color:#ffffff; 
+                                text-decoration:none; font-size:16px; font-weight:bold; 
+                                padding:14px 30px; border-radius:6px; width:100%; box-sizing:border-box">
+                        FIND A LOCATION
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- How to Redeem Section -->
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
+                      style="background:#ffffff; padding:20px; border-left:3px solid #862633;">
+                  <tr>
+                    <td align="left" style="font-size:24px; font-weight:bold; color:#000000; padding-bottom:10px;">
+                      How to Redeem?
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="font-size:14px; color:#555555; line-height:1.6; text-align:left;">
+                      Keep them all for yourself or share with friends and family. 
+                      It's a smart way to save and help others stay road-ready too. 
+                      Look forward to seeing you soon at your local Jiffy Lube!
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Billing Information -->
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
+                      style="background:#ffffff; margin:40px 0">
+                  <tr>
+                    <td style="font-size:22px; padding: 15px; font-weight:bold; color:#000000; border-bottom:1px solid #63666A;">
+                      Billing Information:
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:15px;">
+                      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <!-- Billing Address -->
+                          <td width="50%" valign="top" style="font-size:16px; color:#000000;">
+                            <strong style="display:block; margin-bottom:6px;">Billing Address</strong>
+                            Full Name <br/>
+                            Street <br/>
+                            City, State, Zip Code
+                          </td>
+                          <!-- Payment Method -->
+                          <td width="50%" valign="top" style="font-size:16px; color:#000000;">
+                            <strong style="display:block; margin-bottom:6px;">Payment Method</strong>
+                            Apple Pay
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr style="margin-top:20px;">
+              <td style="color:white; font-size:24px; font-weight:bold; text-align:center;">
+                <span style="display:inline-block;">
+                  <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1756224350/kuc37dmifsg42ojqxwc1.png" width="50%" height="60" style="margin-right:10px; object-fit: contain;" />
+                </span>
+              </td>
+            </tr>
+            <div style="color: black; font-size: 11px; line-height: 1.4; max-width: 500px; margin: 0 auto; font-style: italic; text-align:center; padding-top:10px;">
+              *Valid for up to 5 quarts of oil, extra fee for additional quarts. Not valid with any other offer for same service. Only valid at participating ACE Jiffy Lube locations. Shop supply fees and applicable taxes are not included and must be paid at time of service.
+            </div>
+          </td>
+        </tr>
+      </table>
     </body>
     </html>
   `;

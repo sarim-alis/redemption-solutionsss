@@ -13,51 +13,6 @@ export const loader = async () => {
   return json({ vouchers });
 };
 
-
-// Helper function to get voucher type
-const getVoucherType = (lineItems) => {
-  if (!lineItems) return '--';
-  
-  try {
-    // If lineItems is already an object, use it directly
-    const items = typeof lineItems === 'string' ? JSON.parse(lineItems) : lineItems;
-    
-    // Debug log the line items structure
-    console.log('Line items:', JSON.stringify(items, null, 2));
-    
-    // Handle different possible structures
-    let firstItem;
-    if (Array.isArray(items)) {
-      firstItem = items[0];
-    } else if (items?.edges?.[0]?.node) {
-      firstItem = items.edges[0].node;
-    } else if (items?.line_items?.[0]) {
-      // Shopify's line_items format
-      firstItem = items.line_items[0];
-    } else if (items?.length > 0) {
-      firstItem = items[0];
-    } else if (typeof items === 'object') {
-      firstItem = items;
-    }
-    
-    // Debug log the first item
-    console.log('First item:', JSON.stringify(firstItem, null, 2));
-    
-    // Try different possible type fields
-    const type = firstItem?.type || 
-                firstItem?.product_type || 
-                firstItem?.productType ||
-                firstItem?.properties?.find(p => p.name === 'type' || p.name === 'product_type')?.value ||
-                (firstItem?.title?.toLowerCase().includes('gift') ? 'Gift Card' : 'Voucher');
-    
-    return type || 'Voucher';
-  } catch (e) {
-    console.error('Error parsing line items:', e);
-    console.log('Line items data:', lineItems);
-    return '--';
-  }
-};
-
 // Frontend.
 export default function VouchersPage() {
   const { vouchers } = useLoaderData();
@@ -72,14 +27,11 @@ export default function VouchersPage() {
   // Calculate summary counts
   const summary = React.useMemo(() => {
     return vouchers.reduce((acc, v) => {
-      let type = getVoucherType(v.order?.lineItems);
-      // Clean up the type display
-      if (type.startsWith('["') && type.endsWith('"]')) {
-        type = type.slice(2, -2);
-      }
-      console.log('Voucher type for order', v.order?.shopifyOrderId, ':', type);
+      // Use direct type from voucher table instead of parsing line items
+      const type = v.type || 'voucher'; // Default to 'voucher' if type is null
+      console.log('Voucher type from table:', type, 'for voucher:', v.code);
       const isGift = type.toLowerCase().includes('gift');
-      const isVoucher = !isGift && type !== '--';
+      const isVoucher = !isGift;
       const isUsed = v.order?.statusUse;
       
       // Total counts
@@ -142,7 +94,8 @@ export default function VouchersPage() {
       const code = (v.code || "").toLowerCase();
       const orderId = (v.shopifyOrderId || "").toLowerCase();
       const email = (v.customerEmail || "").toLowerCase();
-      const type = getVoucherType(v.order?.lineItems).toLowerCase();
+      // Use direct type from voucher table
+      const type = (v.type || 'voucher').toLowerCase();
       const isGift = type.includes('gift');
       
       const matchesSearch = code.includes(q) || orderId.includes(q) || email.includes(q);
@@ -334,24 +287,12 @@ export default function VouchersPage() {
                   >
                     <td style={cellStyle}>{v.code}</td>
                     <td style={cellStyle}>
-                      {(() => {
-                        let type = getVoucherType(v.order?.lineItems);
-                        // Clean up the type display
-                        if (type.startsWith('["') && type.endsWith('"]')) {
-                          type = type.slice(2, -2);
-                        }
-                        return type === '--' ? 'Voucher' : type;
-                      })()}
+                      {v.type || 'voucher'}
                     </td>
                     <td style={cellStyle}>
-                      <a
-                        href={`https://${v.shopifyOrderId.split('/')[0]}/admin/orders/${v.shopifyOrderId.split('/')[1]}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: '#1976d2', textDecoration: 'none' }}
-                      >
+                     
                         {v.shopifyOrderId}
-                      </a>
+                    
                     </td>
                     <td style={cellStyle}>{v.customerEmail}</td>
                     <td style={cellStyle}>
@@ -366,7 +307,7 @@ export default function VouchersPage() {
                           fontSize: 12,
                           textTransform: 'uppercase',
                         }}>
-                        {v.order?.statusUse ? "USED" : "NO"}
+                        {v.order?.statusUse ? "USED" : "UNUSED"}
                       </span>
                     </td>
                     <td style={cellStyle}>

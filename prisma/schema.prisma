@@ -43,6 +43,9 @@ model Voucher {
   order         Order    @relation(fields: [shopifyOrderId], references: [shopifyOrderId])
   emailSent      Boolean  @default(false)
   username      String[] @default([])
+  usedLocation  String? 
+  expire        DateTime?
+
 }
 
 model Product {

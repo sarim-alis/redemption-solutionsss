@@ -1,0 +1,10 @@
+*.psd
+*.pdf
+test/
+spec/
+features/
+doc/
+docs/
+README.md
+.env.example
+node_modules/.cache/
