@@ -60,6 +60,8 @@ export const loader = async ({ request }) => {
                       metafield_expiry: metafield(namespace: "custom", key: "expiry_date") {
                         value
                       }
+                      metafield_expiry_dates: metafield(namespace: "custom", key: "expiry_dates") {
+                        value
                     }
                   }
                 }
@@ -135,6 +137,7 @@ export const loader = async ({ request }) => {
                 id: edge.node.variant?.product?.id,
                 metafield: {value: edge.node.variant?.product?.metafield?.value ?? null},
                 metafield_expiry: { value: edge.node.variant?.product?.metafield_expiry?.value ?? null },
+                metafield_expiry_dates: { value: edge.node.variant?.product?.metafield_expiry_dates?.value ?? null },
               }
             }
           }

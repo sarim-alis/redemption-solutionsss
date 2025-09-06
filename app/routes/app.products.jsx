@@ -37,6 +37,9 @@ export const loader = async ({ request }) => {
             productType: metafield(namespace: "custom", key: "product_type") {
               value
             }
+            expiryDates: metafield(namespace: "custom", key: "expiry_dates") {
+              value
+            }
             createdAt
             totalInventory
             category {
