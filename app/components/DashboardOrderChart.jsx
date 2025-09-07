@@ -161,7 +161,14 @@ const voucherRedemptions = transformedVouchers.filter(item =>
           <option>All</option><option>Today</option><option>Yesterday</option><option>This Week</option><option>This Month</option>
         </select>
         <select style={styles.select} value={filters.products} onChange={e => setFilters(f => ({ ...f, products: e.target.value }))}>
-          <option>All Products</option><option>Oil Change</option><option>Gift Cards</option>
+          <option>All Products</option>
+          {[...new Set([
+          ...allProductSales.map(p => p.product),
+          ...((vouchers || []).map(v => v.productTitle).filter(Boolean)),
+          ...((analytics?.allProducts || []).map(p => p.title))
+          ])].map((product, idx) => (
+          <option key={idx} value={product}>{product}</option>
+          ))}
         </select>
         <select style={styles.select} value={filters.locations} onChange={e => setFilters(f => ({ ...f, locations: e.target.value }))}>
           <option>All Locations</option><option>Pomona</option><option>Ventura</option>

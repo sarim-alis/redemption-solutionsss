@@ -229,11 +229,21 @@ export const loader = async ({ request }) => {
       });
     }
   });
-  const productSales = Object.entries(productSalesMap).map(([product, data]) => ({
-    product,
-    sales: data.sales,
-    revenue: data.revenue
-  }));
+  // const productSales = Object.entries(productSalesMap).map(([product, data]) => ({
+  //   product,
+  //   sales: data.sales,
+  //   revenue: data.revenue
+  // }));
+
+  const productSales = (products || []).map(p => {
+  const stats = productSalesMap[p.title] || { sales: 0, revenue: 0 };
+  return {
+    product: p.title,
+    sales: stats.sales,
+    revenue: stats.revenue,
+    expire: p.expire ? new Date(p.expire).toLocaleDateString() : "No Expiry"
+  };
+});
 
   // Voucher Redemptions (dynamic)
   // Join voucher with order and lineItems
@@ -279,7 +289,8 @@ export const loader = async ({ request }) => {
       totalProductSales,
       totalGiftCardBalance,
       totalVouchers: allVouchers.length,
-      activeVouchers: activeVouchers.length
+      activeVouchers: activeVouchers.length,
+      allProducts: products
     },
     productSales,
     voucherRedemptions: voucherRedemptionRows,
