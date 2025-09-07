@@ -60,9 +60,6 @@ export const loader = async ({ request }) => {
                       metafield_expiry: metafield(namespace: "custom", key: "expiry_date") {
                         value
                       }
-                      metafield_expiry_dates: metafield(namespace: "custom", key: "expiry_dates") {
-                        value
-                    }
                   }
                 }
               }
