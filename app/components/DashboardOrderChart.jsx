@@ -4,7 +4,7 @@ import { useLoaderData } from "@remix-run/react";
 import { type } from "os";
 
 // Frontend
-export default function DashboardOrderChart({ analytics, vouchers }) {
+export default function DashboardOrderChart({ analytics, vouchers, locations }) {
   const [filters, setFilters] = useState({
     date: "All",
     products: "All Products",
@@ -171,7 +171,12 @@ const voucherRedemptions = transformedVouchers.filter(item =>
           ))}
         </select>
         <select style={styles.select} value={filters.locations} onChange={e => setFilters(f => ({ ...f, locations: e.target.value }))}>
-          <option>All Locations</option><option>Pomona</option><option>Ventura</option>
+          <option>All Locations</option>
+          {(locations || []).map((loc, idx) => (
+          <option key={idx} value={loc.name || loc}>
+            {loc.name || loc}
+          </option>
+          ))}
         </select>
         {isFilterActive && <button style={styles.resetButton} onClick={() => setFilters({ date: "All", products: "All Products", locations: "All Locations" })}>Reset</button>}
       </div>

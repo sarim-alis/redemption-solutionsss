@@ -175,6 +175,8 @@ export const loader = async ({ request }) => {
 
   // Fetch vouchers from database
   const { getAllVouchers } = await import("../models/voucher.server");
+  const { getAllLocations } = await import("../models/location.server");
+  const locations = await getAllLocations();
   const allVouchers = await getAllVouchers();
   const activeVouchers = await prisma.voucher.findMany({
     where: {
@@ -294,7 +296,8 @@ export const loader = async ({ request }) => {
     },
     productSales,
     voucherRedemptions: voucherRedemptionRows,
-    vouchers: allVouchers
+    vouchers: allVouchers,
+    locations: locations
   };
 };
 
@@ -366,7 +369,7 @@ export const action = async ({ request }) => {
 };
 
 export default function Index() {
-  const { orders = [], giftCards = [], analytics, vouchers } = useLoaderData();
+  const { orders = [], giftCards = [], analytics, vouchers, locations } = useLoaderData();
   // Calculate analytics from real order data
   const totalOrders = orders.length;
   const paidOrders = orders.filter(o => o.displayFinancialStatus === "PAID" || o.displayFinancialStatus === "PAID_IN_FULL").length;
@@ -389,6 +392,7 @@ export default function Index() {
           unpaidOrders={unpaidOrders}
           analytics={analytics}
           vouchers={vouchers}
+          locations={locations}
         />
       </div>
     </SidebarLayout>
