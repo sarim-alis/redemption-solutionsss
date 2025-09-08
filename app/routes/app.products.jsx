@@ -205,8 +205,13 @@ export default function ProductsPage() {
           break;
         case 6: // Expiry Date
           const getExpiryValue = (product) => {
-            if (!product.expiryDate?.value) return new Date('1900-01-01');
-            return new Date(product.expiryDate.value);
+            if (!product.expiryDate?.value) return 0;
+            try {
+              const days = parseInt(product.expiryDate.value);
+              return isNaN(days) ? 0 : days;
+            } catch (error) {
+              return 0;
+            }
           };
           aValue = getExpiryValue(a);
           bValue = getExpiryValue(b);
@@ -224,16 +229,21 @@ export default function ProductsPage() {
   };
 
 const getExpiryFromPurchase = (createdAt, expiryDate) => {
-  if (!createdAt || !expiryDate) return "—";
+  if (!expiryDate) return "—";
 
-  const purchase = new Date(createdAt);
-  const expiry = new Date(expiryDate);
+  try {
+    // Parse expiry as integer (days)
+    const days = parseInt(expiryDate);
+    if (isNaN(days)) {
+      console.log('⚠️ Invalid expiry days:', expiryDate);
+      return "—";
+    }
 
-  // Calculate difference in days.
-  const diffMs = expiry - purchase;
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  return `${diffDays} days from purchase`;
+    return `${days} days from purchase`;
+  } catch (error) {
+    console.log('⚠️ Error parsing expiry days:', error.message);
+    return "—";
+  }
 };
 
 
@@ -248,8 +258,8 @@ const getExpiryFromPurchase = (createdAt, expiryDate) => {
     else productType = value;
     }
 let expiryDate = "—";
-if (product.expiryDate?.value && product.createdAt) {
-  expiryDate = getExpiryFromPurchase(product.createdAt, product.expiryDate.value);
+if (product.expiryDate?.value) {
+  expiryDate = getExpiryFromPurchase(null, product.expiryDate.value);
 }
 
 

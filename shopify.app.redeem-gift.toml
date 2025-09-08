@@ -3,7 +3,7 @@
 client_id = "c2f415f66df6ec14c9b7ccef564c014c"
 name = "redeem-gift"
 handle = "redeem-gift"
-application_url = "https://edge-hitachi-selective-beverly.trycloudflare.com"
+application_url = "https://guitar-michael-handhelds-description.trycloudflare.com"
 embedded = true
 
 [build]
@@ -18,9 +18,9 @@ scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gi
 
 [auth]
 redirect_urls = [
-  "https://edge-hitachi-selective-beverly.trycloudflare.com/auth/callback",
-  "https://edge-hitachi-selective-beverly.trycloudflare.com/auth/shopify/callback",
-  "https://edge-hitachi-selective-beverly.trycloudflare.com/api/auth/callback"
+  "https://guitar-michael-handhelds-description.trycloudflare.com/auth/callback",
+  "https://guitar-michael-handhelds-description.trycloudflare.com/auth/shopify/callback",
+  "https://guitar-michael-handhelds-description.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
