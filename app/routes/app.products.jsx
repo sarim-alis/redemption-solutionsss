@@ -206,7 +206,12 @@ export default function ProductsPage() {
         case 6: // Expiry Date
           const getExpiryValue = (product) => {
             if (!product.expiryDate?.value) return new Date('1900-01-01');
-            return new Date(product.expiryDate.value);
+            try {
+              const date = new Date(product.expiryDate.value);
+              return isNaN(date.getTime()) ? new Date('1900-01-01') : date;
+            } catch (error) {
+              return new Date('1900-01-01');
+            }
           };
           aValue = getExpiryValue(a);
           bValue = getExpiryValue(b);
@@ -226,14 +231,24 @@ export default function ProductsPage() {
 const getExpiryFromPurchase = (createdAt, expiryDate) => {
   if (!createdAt || !expiryDate) return "—";
 
-  const purchase = new Date(createdAt);
-  const expiry = new Date(expiryDate);
+  try {
+    const purchase = new Date(createdAt);
+    const expiry = new Date(expiryDate);
 
-  // Calculate difference in days.
-  const diffMs = expiry - purchase;
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    // Check if dates are valid
+    if (isNaN(purchase.getTime()) || isNaN(expiry.getTime())) {
+      return "—";
+    }
 
-  return `${diffDays} days from purchase`;
+    // Calculate difference in days.
+    const diffMs = expiry - purchase;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    return `${diffDays} days from purchase`;
+  } catch (error) {
+    console.log('⚠️ Error calculating expiry from purchase:', error.message);
+    return "—";
+  }
 };
 
 
