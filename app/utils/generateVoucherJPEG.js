@@ -81,12 +81,17 @@ export async function generateIndividualVoucherJPEGs(vouchers, order) {
                   <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:white; padding:35px 30px;">
                     <tr>
                       <td align="center" style="color:#000000; font-size:28px; font-weight:bold; padding-bottom:10px;">
-                        <span style="color:#862633;">Your </span> ${cardType}
+                        <span style="color:#862633;">Thank you </span> for your purchase!
                       </td>
                     </tr>
                     <tr>
-                      <td align="center" style="color:#000000; font-size:16px; padding-bottom:20px; font-weight:500;">
-                        Ready to use at participating locations
+                      <td align="center" style="color:#000000; font-size:16px; padding-bottom:10px; font-weight:500;">
+                        Your Jiffy Lube® ${cardType.toLowerCase()} is ready to use.
+                      </td>
+                    </tr>
+                    <tr>
+                      <td align="center" style="color:#000000; font-size:16px; line-height:1.5; padding-bottom:5px; font-weight:400;">
+                        Just bring this with you on your next visit to a participating location.
                       </td>
                     </tr>
                   </table>
@@ -100,14 +105,51 @@ export async function generateIndividualVoucherJPEGs(vouchers, order) {
                     </tr>
                   </table>
 
+                  <!-- Find a Location Section -->
+                  <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" style="background:#f5f5f5; border-radius:8px; padding:30px 20px; margin:40px 0">
+                    <tr>
+                      <td align="center" style="font-size:20px; font-weight:bold; color:#000000; padding-bottom:20px;">
+                        Find a Participating Location Near You
+                      </td>
+                    </tr>
+                    <tr>
+                      <td align="center">
+                        <a href="https://redemption-portal-487066d362b4.herokuapp.com" 
+                          style="display:block; background:#862633; color:#ffffff; 
+                                  text-decoration:none; font-size:16px; font-weight:bold; 
+                                  padding:14px 30px; border-radius:6px; width:100%; box-sizing:border-box">
+                          FIND A LOCATION
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <!-- How to Redeem Section -->
+                  <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" style="background:#ffffff; padding:20px; border-left:3px solid #862633; margin:20px 0;">
+                    <tr>
+                      <td align="left" style="font-size:24px; font-weight:bold; color:#000000; padding-bottom:10px;">
+                        How to Redeem?
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="font-size:14px; color:#555555; line-height:1.6; text-align:left;">
+                        Keep this for yourself or share with friends and family. 
+                        It's a smart way to save and help others stay road-ready too. 
+                        Look forward to seeing you soon at your local Jiffy Lube!
+                      </td>
+                    </tr>
+                  </table>
+
                   <!-- Email Footer - SAME AS EMAIL -->
-                  <tr style="margin-top:20px;">
-                    <td style="color:white; font-size:24px; font-weight:bold; text-align:center;">
-                      <span style="display:inline-block;">
-                        <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1756224350/kuc37dmifsg42ojqxwc1.png" width="50%" height="60" style="margin-right:10px; object-fit: contain;" />
-                      </span>
-                    </td>
-                  </tr>
+                  <table width="600" cellpadding="0" cellspacing="0" border="0" style="margin-top:20px;">
+                    <tr>
+                      <td style="color:white; font-size:24px; font-weight:bold; text-align:center;">
+                        <span style="display:inline-block;">
+                          <img src="https://res.cloudinary.com/dgk3gaml0/image/upload/v1756224350/kuc37dmifsg42ojqxwc1.png" width="50%" height="60" style="margin-right:10px; object-fit: contain;" />
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
                   <div style="color: black; font-size: 11px; line-height: 1.4; max-width: 500px; margin: 0 auto; font-style: italic; text-align:center; padding-top:10px;">
                     *Valid for up to 5 quarts of oil, extra fee for additional quarts. Not valid with any other offer for same service. Only valid at participating ACE Jiffy Lube locations. Shop supply fees and applicable taxes are not included and must be paid at time of service.
                   </div>
