@@ -37,50 +37,72 @@ function exportToCSV(filename, data) {
 
 // Frontend.
 export default function DashboardOrderChart({ analytics, vouchers, locations }) {
-  const [filters, setFilters] = useState({
-    date: "All",
-    products: "All Products",
-    locations: "All Locations",
-  });
-
-  const isFilterActive =
-    filters.date !== "All" ||
-    filters.products !== "All Products" ||
-    filters.locations !== "All Locations";
-
+  const [dateFilter, setDateFilter] = useState("All");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+  const [filters, setFilters] = useState({ products: "All Products", locations: "All Locations"});
+  const isFilterActive = filters.date !== "All" || filters.products !== "All Products" || filters.locations !== "All Locations";
   const { productSales: allProductSales, voucherRedemptions: allVoucherRedemptions } = useLoaderData();
 
-  // Helper functions (date, product, location filters)
-  function isDateMatch(dateString, filter) {
-    if (filter === "All") return true;
-    if (!dateString) return false;
-    let norm = dateString;
-    if (/^\d{4}-\d{2}-\d{2}/.test(dateString)) norm = dateString.slice(0, 10);
-    else if (/^\d{2}-\d{2}-\d{4}$/.test(dateString)) {
-      const [d, m, y] = dateString.split('-'); norm = `${y}-${m}-${d}`;
-    } else if (/^\d{2}-\d{2}$/.test(dateString)) {
-      const [m, d] = dateString.split('-');
-      norm = `${new Date().getFullYear()}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-    }
-    const date = new Date(norm);
-    if (isNaN(date.getTime())) return false;
-    const today = new Date(); today.setHours(0,0,0,0);
-    if (filter === "Today") return date.toDateString() === today.toDateString();
-    if (filter === "Yesterday") {
-      const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
-      return date.toDateString() === yesterday.toDateString();
-    }
-    if (filter === "This Week") {
-      const firstDayOfWeek = new Date(today);
-      firstDayOfWeek.setDate(today.getDate() - ((today.getDay() + 6) % 7));
-      firstDayOfWeek.setHours(0,0,0,0);
-      const lastDayOfWeek = new Date(firstDayOfWeek); lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
-      lastDayOfWeek.setHours(23,59,59,999);
-      return date >= firstDayOfWeek && date <= lastDayOfWeek;
-    }
-    if (filter === "This Month") return date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth();
+// Is date match.
+function isDateMatch(dateString, filter, customStart, customEnd) {
+  if (filter === "All") return true;
+  if (!dateString) return false;
+
+  // Normalize date formats
+  let norm = dateString;
+  if (/^\d{4}-\d{2}-\d{2}/.test(dateString)) norm = dateString.slice(0, 10);
+  else if (/^\d{2}-\d{2}-\d{4}$/.test(dateString)) {
+    const [d, m, y] = dateString.split("-");
+    norm = `${y}-${m}-${d}`;
+  } else if (/^\d{2}-\d{2}$/.test(dateString)) {
+    const [m, d] = dateString.split("-");
+    norm = `${new Date().getFullYear()}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+  }
+
+  const date = new Date(norm);
+  if (isNaN(date.getTime())) return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Today
+  if (filter === "Today") {
+    return date.toDateString() === today.toDateString();
+  }
+
+  // Last Week (7 days ago till today)
+  if (filter === "Last Week") {
+    const lastWeek = new Date(today);
+    lastWeek.setDate(today.getDate() - 7);
+    return date >= lastWeek && date <= today;
+  }
+
+  // Last Month (30 days ago till today)
+  if (filter === "Last Month") {
+    const lastMonth = new Date(today);
+    lastMonth.setMonth(today.getMonth() - 1);
+    return date >= lastMonth && date <= today;
+  }
+
+  // Last Year (365 days ago till today)
+  if (filter === "Last Year") {
+    const lastYear = new Date(today);
+    lastYear.setFullYear(today.getFullYear() - 1);
+    return date >= lastYear && date <= today;
+  }
+
+  // Custom Range
+  if (filter === "Custom Range" && customStart && customEnd) {
+    const start = new Date(customStart);
+    const end = new Date(customEnd);
+    end.setHours(23, 59, 59, 999);
+    return date >= start && date <= end;
+  }
+
     return true;
   }
+
 
   function isProductMatch(product, filter) {
     return filter === "All Products" ? true : product === filter;
@@ -123,23 +145,22 @@ export default function DashboardOrderChart({ analytics, vouchers, locations }) 
 });
 
 
-  const productSales = (allProductSales || []).filter(item =>
-    isDateMatch(item.date, filters.date) &&
-    isProductMatch(item.product, filters.products) &&
-    isLocationMatch(item.location, filters.locations)
-  );
-
-// Filter transformed vouchers into gift cards vs vouchers
-const giftCardRedemptions = transformedVouchers.filter(item =>
-  (item.product.toLowerCase().includes("gift") || item.type === "gift") &&
-  isDateMatch(item.date, filters.date) &&
+const productSales = (allProductSales || []).filter(item =>
+  isDateMatch(item.date, dateFilter, customStart, customEnd) &&
   isProductMatch(item.product, filters.products) &&
   isLocationMatch(item.location, filters.locations)
 );
 
 const voucherRedemptions = transformedVouchers.filter(item =>
   !(item.product.toLowerCase().includes("gift") || item.type === "gift") &&
-  isDateMatch(item.date, filters.date) &&
+  isDateMatch(item.date, dateFilter, customStart, customEnd) &&
+  isProductMatch(item.product, filters.products) &&
+  isLocationMatch(item.location, filters.locations)
+);
+
+const giftCardRedemptions = transformedVouchers.filter(item =>
+  (item.product.toLowerCase().includes("gift") || item.type === "gift") &&
+  isDateMatch(item.date, dateFilter, customStart, customEnd) &&
   isProductMatch(item.product, filters.products) &&
   isLocationMatch(item.location, filters.locations)
 );
@@ -189,8 +210,15 @@ const voucherRedemptions = transformedVouchers.filter(item =>
 
       <div style={styles.filterSection}>
         <span style={styles.filterLabel}>Filter by:</span>
-        <select style={styles.select} value={filters.date} onChange={e => setFilters(f => ({ ...f, date: e.target.value }))}>
-          <option>All</option><option>Today</option><option>Yesterday</option><option>This Week</option><option>This Month</option>
+        <select style={styles.select} value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
+        <option value="All">All</option><option value="Today">Today</option><option value="Last Week">Last Week</option><option value="Last Month">Last Month</option><option value="Last Year">Last Year</option><option value="Custom Range">Custom Range</option>
+
+        {dateFilter === "Custom Range" && (
+          <div style={{ marginTop: "0.5rem" }}>
+            <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)}/>
+            <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)}/>
+          </div>
+        )}
         </select>
         <select style={styles.select} value={filters.products} onChange={e => setFilters(f => ({ ...f, products: e.target.value }))}>
           <option>All Products</option>
@@ -210,7 +238,9 @@ const voucherRedemptions = transformedVouchers.filter(item =>
           </option>
           ))}
         </select>
-        {isFilterActive && <button style={styles.resetButton} onClick={() => setFilters({ date: "All", products: "All Products", locations: "All Locations" })}>Reset</button>}
+        {isFilterActive && <button style={styles.resetButton} onClick={() => { setDateFilter("All"); setCustomStart(""); setCustomEnd(""); setFilters({ products: "All Products", locations: "All Locations" })}}>
+          Reset
+        </button>}
       </div>
 
       <div style={styles.metricsGrid}>
@@ -270,12 +300,7 @@ const voucherRedemptions = transformedVouchers.filter(item =>
                 {analytics?.totalVouchers > 0 && analytics.activeVouchers > 0 && analytics.activeVouchers < analytics.totalVouchers && (
                   <>
                     <circle cx="50" cy="50" r="40" fill="#dc3545" stroke="white" strokeWidth="2" />
-                    <path 
-                      d={`M 50 10 A 40 40 0 ${analytics.activeVouchers / analytics.totalVouchers > 0.5 ? 1 : 0} 1 ${50 + 40 * Math.sin(2 * Math.PI * analytics.activeVouchers / analytics.totalVouchers)} ${50 - 40 * Math.cos(2 * Math.PI * analytics.activeVouchers / analytics.totalVouchers)} L 50 50 Z`} 
-                      fill="#28a745" 
-                      stroke="white" 
-                      strokeWidth="2" 
-                    />
+                    <path d={`M 50 10 A 40 40 0 ${analytics.activeVouchers / analytics.totalVouchers > 0.5 ? 1 : 0} 1 ${50 + 40 * Math.sin(2 * Math.PI * analytics.activeVouchers / analytics.totalVouchers)} ${50 - 40 * Math.cos(2 * Math.PI * analytics.activeVouchers / analytics.totalVouchers)} L 50 50 Z`}  fill="#28a745"  stroke="white"  strokeWidth="2" />
                   </>
                 )}
               </svg>
