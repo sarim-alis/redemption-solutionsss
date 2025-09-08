@@ -56,7 +56,7 @@ model Product {
   categoryName    String?
   type            String?
   createdAt       DateTime @default(now())
-  expire          DateTime? @default(now())
+  expire          Int?
 }
 model Order {
   id                String   @id @default(cuid())
