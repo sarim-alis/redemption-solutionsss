@@ -31,10 +31,10 @@ function formatCurrency(amount) {
 }
 
 // Generate voucher card HTML
-function generateVoucherCard(voucher) {
-  const validThrough = voucher?.createdAt
-    ? formatDate(addMonths(voucher.createdAt, 3))
-    : "08/16/2026";
+export function generateVoucherCard(voucher) {
+  const validThrough = voucher?.expire
+    ? formatDate(voucher.expire)
+    : (voucher?.createdAt ? formatDate(addMonths(voucher.createdAt, 3)) : "08/16/2026");
   const issuedOn = voucher?.createdAt
     ? formatDate(voucher.createdAt)
     : "03/16/2025";
@@ -128,7 +128,7 @@ function generateVoucherCard(voucher) {
 }
 
 // Generate gift card HTML - Using original gift card design
-function generateGiftCard(voucher, amount = 0) {
+export function generateGiftCard(voucher, amount = 0) {
   const formattedAmount = formatCurrency(amount);
   
   return `

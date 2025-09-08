@@ -2,6 +2,7 @@ import { sendEmail } from "../utils/mail.server";
 import { generateVoucherEmailHTML } from "../utils/voucherEmailTemplateShared";
 import { generateGiftCardEmailHTML } from "./giftCardEmailTemplate";
 import { generateUnifiedEmailHTML, generateUnifiedPDFHTML } from "./unifiedEmailTemplate";
+import { generateIndividualVoucherJPEGs } from "./generateVoucherJPEG";
 import { htmlToPdf } from "./htmlToPdf";
 import prisma from "../db.server";
 
@@ -284,6 +285,17 @@ export async function sendUnifiedVoucherEmail(order, vouchers) {
     } catch (pdfError) {
       console.error('[UnifiedEmail] ❌ Error generating unified PDF:', pdfError);
       // Continue without PDF if generation fails
+    }
+
+    // Generate individual voucher JPEG attachments
+    try {
+      console.log('[UnifiedEmail] 🖼️ Generating individual voucher JPEGs...');
+      const jpegAttachments = await generateIndividualVoucherJPEGs(vouchers, order);
+      attachments.push(...jpegAttachments);
+      console.log(`[UnifiedEmail] ✅ Generated ${jpegAttachments.length} individual JPEG attachments`);
+    } catch (jpegError) {
+      console.error('[UnifiedEmail] ❌ Error generating individual JPEGs:', jpegError);
+      // Continue without individual JPEGs if generation fails
     }
 
     const emailData = {

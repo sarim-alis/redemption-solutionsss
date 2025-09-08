@@ -201,6 +201,7 @@ export interface LineItem {
   variantTitle: string;
   variant: any;
   packCount: number;
+  expire?: string | number | null;
 }
 
 interface LineItemInput {

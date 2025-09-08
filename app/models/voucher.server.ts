@@ -15,15 +15,34 @@ export async function createVoucher({
   shopifyOrderId, 
   customerEmail, 
   productTitle = null, 
-  type = null 
+  type = null,
+  expireDays = null
 }: { 
   shopifyOrderId: string, 
   customerEmail: string, 
   productTitle?: string | null, 
-  type?: string | null 
+  type?: string | null,
+  expireDays?: number | string | null
 }) {
   // Generate a unique code for the voucher
   const code = generateVoucherCode();
+  
+  // Calculate expire date from expireDays
+  let expireDate = null;
+  if (expireDays) {
+    try {
+      const days = parseInt(expireDays.toString());
+      if (!isNaN(days)) {
+        const currentDate = new Date();
+        currentDate.setDate(currentDate.getDate() + days);
+        expireDate = currentDate;
+        console.log(`🗓️ Calculated expire date: ${expireDate.toISOString()} (${days} days from now)`);
+      }
+    } catch (err) {
+      console.log(`⚠️ Error calculating expire date from ${expireDays}:`, (err as Error).message);
+    }
+  }
+  
   return prisma.voucher.create({
     data: {
       code,
@@ -31,6 +50,7 @@ export async function createVoucher({
       customerEmail,
       productTitle,
       type,
+      expire: expireDate,
     },
   });
 }
@@ -67,8 +87,9 @@ export async function createVouchersForOrder({
           customerEmail,
           productTitle: isGiftCard ? `${item.title} - $${item.price}` : item.title,
           type: isGiftCard ? 'gift' : (item.type || 'voucher'),
+          expireDays: item.expire || null, // Pass expire days from lineItem
         });
-        console.log(`🎟️ Created voucher ${voucher.code} for product: ${item.title}`);
+        console.log(`🎟️ Created voucher ${voucher.code} for product: ${item.title} (expires in ${item.expire || 'no'} days)`);
         return voucher;
       } catch (error) {
         console.error(`❌ Failed to create voucher for product ${item.title}:`, error);
