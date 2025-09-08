@@ -1,19 +1,14 @@
 // Imports.
-import { Page, Layout, Text, Card, BlockStack } from "@shopify/polaris";
-import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
 import SidebarLayout from "../components/SidebarLayout";
-import { useEffect, useRef } from "react";
 import { useLoaderData } from "@remix-run/react";
-import { FaShoppingCart, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import DashboardOrderChart from '../components/DashboardOrderChart';
-
-// Loader.
-
 import { parse } from "url";
 import { parse as parseQuery } from "querystring";
 
+
+// Loader.
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
   const urlObj = parse(request.url);
@@ -377,14 +372,7 @@ export default function Index() {
 
   return (
     <SidebarLayout>
-      <div style={{ 
-        margin: 0, 
-        padding: 0, 
-        backgroundColor: "white",
-        color: "black",
-        minHeight: "100vh",
-        border: "2px solid black",
-        borderRadius: "10px"
+      <div style={{ margin: 0, padding: 0, backgroundColor: "white",color: "black",minHeight: "100vh",border: "2px solid black",borderRadius: "10px"
        
       }}>
         <DashboardOrderChart 
