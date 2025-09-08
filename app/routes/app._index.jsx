@@ -185,6 +185,22 @@ export const loader = async ({ request }) => {
   // Transform and save products to database.
   const transformedProducts = products.map((p) => {
     const media = p.media?.edges.find(edge => edge.node.__typename === "MediaImage");
+    
+    // Handle expire date safely to avoid Invalid Date errors
+    let expireDate = null;
+    if (p.expiryDate?.value) {
+      try {
+        const date = new Date(p.expiryDate.value);
+        if (!isNaN(date.getTime())) {
+          expireDate = date;
+        } else {
+          console.log(`⚠️ Invalid expiry date for product ${p.title}: ${p.expiryDate.value}`);
+        }
+      } catch (error) {
+        console.log(`⚠️ Error parsing expiry date for product ${p.title}:`, error.message);
+      }
+    }
+    
     return {
       shopifyId: p.id,
       title: p.title,
@@ -197,7 +213,7 @@ export const loader = async ({ request }) => {
       categoryId: p.category?.id || null,
       categoryName: p.category?.name || null,
       type: p.productType?.value || null,
-      expire: p.expiryDate?.value ? new Date(p.expiryDate.value) : null,
+      expire: expireDate,
     };
   });
 
