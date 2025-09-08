@@ -1,9 +1,41 @@
-// Imports
+// Imports.
 import { useState } from "react"
 import { useLoaderData } from "@remix-run/react";
-import { type } from "os";
 
-// Frontend
+
+// Export to csv.
+function exportToCSV(filename, data) {
+  if (!data || data.length === 0) return;
+
+  const csvRows = [];
+  const headers = Object.keys(data[0]);
+  csvRows.push(headers.join(","));
+
+  for (const row of data) {
+    const values = headers.map((h) => {
+      let val = row[h] ?? "";
+      if (typeof val === "string") {
+        val = `"${val.replace(/"/g, '""')}"`;
+      }
+      return val;
+    });
+    csvRows.push(values.join(","));
+  }
+
+  const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.setAttribute("hidden", "");
+  a.setAttribute("href", url);
+  a.setAttribute("download", filename);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+
+// Frontend.
 export default function DashboardOrderChart({ analytics, vouchers, locations }) {
   const [filters, setFilters] = useState({
     date: "All",
@@ -278,7 +310,9 @@ const voucherRedemptions = transformedVouchers.filter(item =>
             <tbody>{productSales.map((item, i) => <tr key={i}><td style={styles.tableCell}>{item.product}</td><td style={styles.tableCell}>{item.sales}</td><td style={styles.tableCell}>${item.revenue.toFixed(2)}</td></tr>)}</tbody>
             </table>
           </div>
-          <button style={styles.exportButton}>Export</button>
+          <button style={styles.exportButton} onClick={() => { const csvData = [...productSales.map((p) => ({ Type: "Product Sale", Product: p.product, Sales: p.sales, Revenue: p.revenue.toFixed(2), Date: p.date || "", Location: p.location || ""})), ...voucherRedemptions.map((v) => ({ Type: "Voucher Redemption", Product: v.product, Sales: "", Revenue: "", Date: v.date, Location: v.location})), ...giftCardRedemptions.map((g) => ({ Type: "Gift Card Redemption", Product: g.product, Sales: "", Revenue: "", Date: g.date, Location: g.location}))]; exportToCSV("sales_vouchers_report.csv", csvData)}}>
+            Export
+          </button>
         </div>
       </div>
     </div>
