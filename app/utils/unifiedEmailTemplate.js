@@ -32,9 +32,9 @@ function formatCurrency(amount) {
 
 // Generate voucher card HTML
 export function generateVoucherCard(voucher) {
-  const validThrough = voucher?.createdAt
-    ? formatDate(addMonths(voucher.createdAt, 3))
-    : "08/16/2026";
+  const validThrough = voucher?.expire
+    ? formatDate(voucher.expire)
+    : (voucher?.createdAt ? formatDate(addMonths(voucher.createdAt, 3)) : "08/16/2026");
   const issuedOn = voucher?.createdAt
     ? formatDate(voucher.createdAt)
     : "03/16/2025";
