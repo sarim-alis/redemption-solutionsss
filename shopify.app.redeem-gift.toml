@@ -3,7 +3,7 @@
 client_id = "c2f415f66df6ec14c9b7ccef564c014c"
 name = "redeem-gift"
 handle = "redeem-gift"
-application_url = "https://peak-operation-shift-flex.trycloudflare.com"
+application_url = "https://july-brought-render-va.trycloudflare.com"
 embedded = true
 
 [build]
@@ -18,9 +18,9 @@ scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gi
 
 [auth]
 redirect_urls = [
-  "https://peak-operation-shift-flex.trycloudflare.com/auth/callback",
-  "https://peak-operation-shift-flex.trycloudflare.com/auth/shopify/callback",
-  "https://peak-operation-shift-flex.trycloudflare.com/api/auth/callback"
+  "https://july-brought-render-va.trycloudflare.com/auth/callback",
+  "https://july-brought-render-va.trycloudflare.com/auth/shopify/callback",
+  "https://july-brought-render-va.trycloudflare.com/api/auth/callback"
 ]
 
 [pos]
