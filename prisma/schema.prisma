@@ -41,6 +41,10 @@ model Voucher {
   username      String[] @default([])
   usedLocation  String?
   expire        DateTime?
+  totalPrice        Float?
+  remainingBalance  Float?
+  cashHistory       Float[]   @default([])
+  currency          String?
 }
 model Product {
   id              String   @id @default(cuid())
