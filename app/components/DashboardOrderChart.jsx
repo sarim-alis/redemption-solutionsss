@@ -66,33 +66,64 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const weekDay = today.getDay();
 
   // Today
   if (filter === "Today") {
     return date.toDateString() === today.toDateString();
   }
-
-  // Last Week (7 days ago till today)
+  // Yesterday
+  if (filter === "Yesterday") {
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    return date.toDateString() === yesterday.toDateString();
+  }
+  // This Week (Sunday to Saturday)
+  if (filter === "This Week") {
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - weekDay);
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
+    return date >= weekStart && date <= weekEnd;
+  }
+  // Last Week (previous full week Sunday to Saturday)
   if (filter === "Last Week") {
-    const lastWeek = new Date(today);
-    lastWeek.setDate(today.getDate() - 7);
-    return date >= lastWeek && date <= today;
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - weekDay - 7);
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
+    return date >= weekStart && date <= weekEnd;
   }
-
-  // Last Month (30 days ago till today)
+  // This Month (full current month)
+  if (filter === "This Month") {
+    const monthStart = new Date(year, month, 1);
+    const monthEnd = new Date(year, month + 1, 0, 23, 59, 59, 999);
+    return date >= monthStart && date <= monthEnd;
+  }
+  // Last Month (full previous month)
   if (filter === "Last Month") {
-    const lastMonth = new Date(today);
-    lastMonth.setMonth(today.getMonth() - 1);
-    return date >= lastMonth && date <= today;
+    const lastMonthStart = new Date(year, month - 1, 1);
+    const lastMonthEnd = new Date(year, month, 0, 23, 59, 59, 999);
+    return date >= lastMonthStart && date <= lastMonthEnd;
   }
-
-  // Last Year (365 days ago till today)
+  // This Year (full current year)
+  if (filter === "This Year") {
+    const yearStart = new Date(year, 0, 1);
+    const yearEnd = new Date(year, 11, 31, 23, 59, 59, 999);
+    return date >= yearStart && date <= yearEnd;
+  }
+  // Last Year (full previous year)
   if (filter === "Last Year") {
-    const lastYear = new Date(today);
-    lastYear.setFullYear(today.getFullYear() - 1);
-    return date >= lastYear && date <= today;
+    const lastYearStart = new Date(year - 1, 0, 1);
+    const lastYearEnd = new Date(year - 1, 11, 31, 23, 59, 59, 999);
+    return date >= lastYearStart && date <= lastYearEnd;
   }
-
   // Custom Range
   if (filter === "Custom Range" && customStart && customEnd) {
     const start = new Date(customStart);
@@ -100,9 +131,8 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
     end.setHours(23, 59, 59, 999);
     return date >= start && date <= end;
   }
-
-    return true;
-  }
+  return true;
+}
 
 
   function isProductMatch(product, filter) {
@@ -113,58 +143,72 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
     return filter === "All Locations" ? true : location === filter;
   }
 
+
   // Transform vouchers data for display
- const transformedVouchers = (vouchers || []).map(voucher => {
-  let product = voucher.productTitle || "";
-  let date = voucher.createdAt
-    ? new Date(voucher.createdAt).toLocaleDateString("en-US")
-    : "";
-  let location = voucher.customerEmail || "";
+  const transformedVouchers = (vouchers || []).map(voucher => {
+    let product = voucher.productTitle || "";
+    let date = voucher.createdAt
+      ? new Date(voucher.createdAt).toLocaleDateString("en-US")
+      : "";
+    let location = voucher.customerEmail || "";
 
-  if (!product && voucher.order?.lineItems) {
-    try {
-      const items = Array.isArray(voucher.order.lineItems)
-        ? voucher.order.lineItems
-        : JSON.parse(voucher.order.lineItems);
-      if (Array.isArray(items) && items.length > 0) {
-        product = items[0].title || "";
-      } else if (items.edges && items.edges.length > 0) {
-        product = items.edges[0].node.title || "";
+    if (!product && voucher.order?.lineItems) {
+      try {
+        const items = Array.isArray(voucher.order.lineItems)
+          ? voucher.order.lineItems
+          : JSON.parse(voucher.order.lineItems);
+        if (Array.isArray(items) && items.length > 0) {
+          product = items[0].title || "";
+        } else if (items.edges && items.edges.length > 0) {
+          product = items.edges[0].node.title || "";
+        }
+      } catch (e) {
+        // ignore
       }
-    } catch (e) {
-      // ignore
     }
-  }
 
-  return {
-    product,
-    date,
-    location,
-    used: voucher.order?.statusUse || false,
-    type: voucher.type || "[voucher]",
-  };
-});
+    return {
+      product,
+      date,
+      location,
+      used: voucher.order?.statusUse || false,
+      type: voucher.type || "[voucher]",
+      createdAt: voucher.createdAt,
+      balance: voucher.balance || 0,
+    };
+  });
 
+  // Filtered vouchers by date
+  const filteredVouchers = transformedVouchers.filter(item =>
+    isDateMatch(item.date, dateFilter, customStart, customEnd)
+  );
 
-const productSales = (allProductSales || []).filter(item =>
-  isDateMatch(item.date, dateFilter, customStart, customEnd) &&
-  isProductMatch(item.product, filters.products) &&
-  isLocationMatch(item.location, filters.locations)
-);
+  // Filtered product sales
+  const productSales = (allProductSales || []).filter(item =>
+    isDateMatch(item.date, dateFilter, customStart, customEnd) &&
+    isProductMatch(item.product, filters.products) &&
+    isLocationMatch(item.location, filters.locations)
+  );
 
-const voucherRedemptions = transformedVouchers.filter(item =>
-  !(item.product.toLowerCase().includes("gift") || item.type === "gift") &&
-  isDateMatch(item.date, dateFilter, customStart, customEnd) &&
-  isProductMatch(item.product, filters.products) &&
-  isLocationMatch(item.location, filters.locations)
-);
+  // Filtered voucher redemptions
+  const voucherRedemptions = filteredVouchers.filter(item =>
+    !(item.product.toLowerCase().includes("gift") || item.type === "gift") &&
+    isProductMatch(item.product, filters.products) &&
+    isLocationMatch(item.location, filters.locations)
+  );
 
-const giftCardRedemptions = transformedVouchers.filter(item =>
-  (item.product.toLowerCase().includes("gift") || item.type === "gift") &&
-  isDateMatch(item.date, dateFilter, customStart, customEnd) &&
-  isProductMatch(item.product, filters.products) &&
-  isLocationMatch(item.location, filters.locations)
-);
+  // Filtered gift card redemptions
+  const giftCardRedemptions = filteredVouchers.filter(item =>
+    (item.product.toLowerCase().includes("gift") || item.type === "gift") &&
+    isProductMatch(item.product, filters.products) &&
+    isLocationMatch(item.location, filters.locations)
+  );
+
+  // Filtered metrics
+  const totalProductSales = productSales.reduce((sum, item) => sum + (item.revenue || 0), 0);
+  const totalGiftCardBalance = filteredVouchers.reduce((sum, v) => sum + (v.balance || 0), 0);
+  const totalVouchers = filteredVouchers.length;
+  const activeVouchers = filteredVouchers.filter(v => !v.used).length;
 
 
   return (
@@ -174,15 +218,23 @@ const giftCardRedemptions = transformedVouchers.filter(item =>
       <div style={styles.filterSection}>
         <span style={styles.filterLabel}>Filter by:</span>
         <select style={styles.select} value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
-        <option value="All">All</option><option value="Today">Today</option><option value="Last Week">Last Week</option><option value="Last Month">Last Month</option><option value="Last Year">Last Year</option><option value="Custom Range">Custom Range</option>
-
+          <option value="All">All</option>
+          <option value="Today">Today</option>
+          <option value="Yesterday">Yesterday</option>
+          <option value="This Week">This Week</option>
+          <option value="Last Week">Last Week</option>
+          <option value="This Month">This Month</option>
+          <option value="Last Month">Last Month</option>
+          <option value="This Year">This Year</option>
+          <option value="Last Year">Last Year</option>
+          <option value="Custom Range">Custom Range</option>
+        </select>
         {dateFilter === "Custom Range" && (
           <div style={{ marginTop: "0.5rem" }}>
             <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)}/>
             <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)}/>
           </div>
         )}
-        </select>
         <select style={styles.select} value={filters.products} onChange={e => setFilters(f => ({ ...f, products: e.target.value }))}>
           <option>All Products</option>
           {[...new Set([
