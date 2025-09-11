@@ -287,7 +287,7 @@ export default function VouchersPage() {
                   >
                     <td style={cellStyle}>{v.code}</td>
                     <td style={cellStyle}>
-                      {v.type || 'voucher'}
+                      {Array.isArray(v.type) ? v.type[0] : (typeof v.type === 'string' ? v.type.replace(/\[|\]|"/g, '') : 'voucher')}
                     </td>
                     <td style={cellStyle}>
                      
