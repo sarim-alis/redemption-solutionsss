@@ -39,8 +39,15 @@ model Voucher {
   order         Order    @relation(fields: [shopifyOrderId], references: [shopifyOrderId])
   emailSent      Boolean  @default(false)
   username      String[] @default([])
-  usedLocation  String?
+  locationUsed  String[]
+  redeemedAt    DateTime[]
+  statusUse     Boolean  @default(false)
+  status        String?
   expire        DateTime?
+  totalPrice        Float?
+  remainingBalance  Float?
+  cashHistory       Float[]   @default([])
+  currency          String?
 }
 model Product {
   id              String   @id @default(cuid())
