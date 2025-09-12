@@ -12,8 +12,8 @@ const navItems = [
   { label: "Customers", url: "/app/customers", icon: ProfileIcon },
   { label: "Employees", url: "/app/users", icon: PersonFilledIcon },
   { label: "Login", url: "/app/login", icon: LockFilledIcon },
-  { label: "Voucher", url: "/app/voucher", icon: CashDollarFilledIcon },
-  { label: "Gift", url: "/app/gift", icon: GiftCardFilledIcon },
+  // { label: "Voucher", url: "/app/voucher", icon: CashDollarFilledIcon },
+  // { label: "Gift", url: "/app/gift", icon: GiftCardFilledIcon },
 ];
 
 
