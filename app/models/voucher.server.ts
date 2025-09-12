@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import prisma from "../db.server";
 import { v4 as uuidv4 } from "uuid";
 import type { LineItem } from "./order.server";
@@ -94,7 +94,7 @@ export async function createVouchersForOrder({
           productTitle: isGiftCard ? `${item.title} - $${item.price}` : item.title,
           type: isGiftCard ? 'gift' : (item.type || 'voucher'),
           expireDays: item.expire || null, // Pass expire days from lineItem
-          totalPrice: totalPrice ?? null,
+          totalPrice: item.price ?? null,
         });
         console.log(`🎟️ Created voucher ${voucher.code} for product: ${item.title} (expires in ${item.expire || 'no'} days)`);
         return voucher;
