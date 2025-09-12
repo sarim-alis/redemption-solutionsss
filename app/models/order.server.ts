@@ -323,7 +323,7 @@ export async function saveOrder(orderData: ShopifyOrder) {
           shopifyOrderId: updated.shopifyOrderId,
           customerEmail: updated.customerEmail || '',
           lineItems,
-          totalPrice: updated.totalPrice || null
+          totalPrice: updated.totalPrice
         });
         
         console.log(`✅ Created ${newVouchers.length} vouchers for paid order`);
@@ -405,7 +405,7 @@ export async function updateOrderStatus(shopifyOrderId: string, newStatus: strin
               shopifyOrderId,
               customerEmail: updated.customerEmail || '',
               lineItems,
-              totalPrice: updated.totalPrice || null
+              totalPrice: updated.totalPrice
             });
             
             console.log(`✅ Created ${newVouchers.length} vouchers for paid order`);

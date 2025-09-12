@@ -1,4 +1,4 @@
-//@ts-nocheck
+// @ts-nocheck
 import prisma from "../db.server";
 import { v4 as uuidv4 } from "uuid";
 import type { LineItem } from "./order.server";
