@@ -60,7 +60,6 @@ interface ShopifyOrder {
   processed_at?: string;
   processedAt?: string;
   created_at?: string;
-  billingAddress?: any;
 }
 
 interface OrderData {
@@ -75,7 +74,6 @@ interface OrderData {
   processedAt: Date;
   lineItems: string;
   type?: string;
-  billingAddress?: any;
 }
 
 interface ProcessResult {
@@ -244,7 +242,6 @@ export async function saveOrder(orderData: ShopifyOrder) {
     itemQuantity: info.itemQuantity,
     processedAt: info.processedAt,
     lineItems: JSON.parse(info.lineItems),
-    billingAddress: orderData.billingAddress ? orderData.billingAddress : null,
   };
 
   // Check if order already exists
@@ -325,7 +322,8 @@ export async function saveOrder(orderData: ShopifyOrder) {
         const newVouchers = await createVouchersForOrder({
           shopifyOrderId: updated.shopifyOrderId,
           customerEmail: updated.customerEmail || '',
-          lineItems
+          lineItems,
+          totalPrice: updated.totalPrice || null
         });
         
         console.log(`✅ Created ${newVouchers.length} vouchers for paid order`);
@@ -406,7 +404,8 @@ export async function updateOrderStatus(shopifyOrderId: string, newStatus: strin
             const newVouchers = await createVouchersForOrder({
               shopifyOrderId,
               customerEmail: updated.customerEmail || '',
-              lineItems
+              lineItems,
+              totalPrice: updated.totalPrice || null
             });
             
             console.log(`✅ Created ${newVouchers.length} vouchers for paid order`);
