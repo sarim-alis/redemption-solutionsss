@@ -7,6 +7,8 @@ interface ShopifyCustomer {
   lastName?: string;
   first_name?: string;
   last_name?: string;
+  billing_address?: any;
+  billingAddress?: any;
 }
 
 interface ShopifyLineItem {
@@ -28,6 +30,7 @@ interface ShopifyLineItem {
       id?: string;
     };
   };
+  billingAddress?: any;
 }
 
 interface ShopifyOrder {
@@ -60,6 +63,8 @@ interface ShopifyOrder {
   processed_at?: string;
   processedAt?: string;
   created_at?: string;
+  billing_address?: any;
+  billingAddress?: any;
 }
 
 interface OrderData {
@@ -74,6 +79,7 @@ interface OrderData {
   processedAt: Date;
   lineItems: string;
   type?: string;
+  billingAddress?: any;
 }
 
 interface ProcessResult {
@@ -183,6 +189,7 @@ async function processOrderData(orderData: ShopifyOrder): Promise<ProcessResult>
       // @ts-ignore
       lineItems: JSON.stringify(processedLineItems),
       type: orderType, // Include the determined order type
+      billingAddress: orderData.billing_address || orderData.billingAddress || orderData.customer?.billing_address || orderData.customer?.billingAddress || null,
     };
 
     return { success: true, orderInfo };
@@ -242,6 +249,7 @@ export async function saveOrder(orderData: ShopifyOrder) {
     itemQuantity: info.itemQuantity,
     processedAt: info.processedAt,
     lineItems: JSON.parse(info.lineItems),
+    billingAddress: info.billingAddress || null,
   };
 
   // Check if order already exists
@@ -322,7 +330,8 @@ export async function saveOrder(orderData: ShopifyOrder) {
         const newVouchers = await createVouchersForOrder({
           shopifyOrderId: updated.shopifyOrderId,
           customerEmail: updated.customerEmail || '',
-          lineItems
+          lineItems,
+          totalPrice: updated.totalPrice
         });
         
         console.log(`✅ Created ${newVouchers.length} vouchers for paid order`);
@@ -403,7 +412,8 @@ export async function updateOrderStatus(shopifyOrderId: string, newStatus: strin
             const newVouchers = await createVouchersForOrder({
               shopifyOrderId,
               customerEmail: updated.customerEmail || '',
-              lineItems
+              lineItems,
+              totalPrice: updated.totalPrice
             });
             
             console.log(`✅ Created ${newVouchers.length} vouchers for paid order`);
