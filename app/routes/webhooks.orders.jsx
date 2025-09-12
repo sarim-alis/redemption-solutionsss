@@ -554,7 +554,8 @@ async function saveOrderToDatabase(payload, action, session = null) {
         }
       },
       processedAt: payload.processed_at || payload.created_at,
-      lineItems: lineItems
+      lineItems: lineItems,
+      billingAddress: payload.billing_address || payload.billingAddress || null,
     };
 
     const { order: savedOrder, voucher } = await saveOrder(orderData);
