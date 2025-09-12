@@ -259,10 +259,10 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
       </div>
 
       <div style={styles.metricsGrid}>
-        <div style={styles.metricCard}><div style={styles.metricLabel}>Total Product Sales</div><div style={styles.metricValue}>{productSales.reduce((sum, item) => sum + (item.revenue || 0), 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div></div>
-        <div style={styles.metricCard}><div style={styles.metricLabel}>Total Gift Card Balances</div><div style={styles.metricValue}>${analytics?.totalGiftCardBalance?.toFixed(2) || '0.00'}</div></div>
-        <div style={styles.metricCard}><div style={styles.metricLabel}>Total Vouchers</div><div style={styles.metricValue}>{analytics?.totalVouchers || 0}</div></div>
-        <div style={styles.metricCard}><div style={styles.metricLabel}>Active Vouchers</div><div style={styles.metricValue}>{analytics?.activeVouchers || 0}</div></div>
+        <div style={styles.metricCard}><div style={styles.metricLabel}>Total Product Sales</div><div style={styles.metricValue}>{totalProductSales.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div></div>
+        <div style={styles.metricCard}><div style={styles.metricLabel}>Total Gift Card Balances</div><div style={styles.metricValue}>${totalGiftCardBalance.toFixed(2)}</div></div>
+        <div style={styles.metricCard}><div style={styles.metricLabel}>Total Vouchers</div><div style={styles.metricValue}>{totalVouchers}</div></div>
+        <div style={styles.metricCard}><div style={styles.metricLabel}>Active Vouchers</div><div style={styles.metricValue}>{activeVouchers}</div></div>
       </div>
 
       {/* Charts Grid */}
@@ -300,22 +300,22 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
             <div style={styles.pieChart}><div style={styles.pieContainer}>
                 <svg width="100" height="100" viewBox="0 0 100 100">
                 {/* Agar totalVouchers 0 hai to gray circle dikhaye */}
-                {(!analytics?.totalVouchers || analytics.totalVouchers === 0) && (
+                {(totalVouchers === 0) && (
                   <circle cx="50" cy="50" r="40" fill="#888" stroke="white" strokeWidth="2" />
                 )}
                 {/* Agar 100% active hai to green circle dikhaye */}
-                {analytics?.totalVouchers > 0 && analytics.activeVouchers === analytics.totalVouchers && (
+                {totalVouchers > 0 && activeVouchers === totalVouchers && (
                   <circle cx="50" cy="50" r="40" fill="#28a745" stroke="white" strokeWidth="2" />
                 )}
                 {/* Agar 0% active hai to red circle dikhaye */}
-                {analytics?.totalVouchers > 0 && analytics.activeVouchers === 0 && (
+                {totalVouchers > 0 && activeVouchers === 0 && (
                   <circle cx="50" cy="50" r="40" fill="#dc3545" stroke="white" strokeWidth="2" />
                 )}
                 {/* Agar kuch active hain kuch inactive hain to proportion dikhaye */}
-                {analytics?.totalVouchers > 0 && analytics.activeVouchers > 0 && analytics.activeVouchers < analytics.totalVouchers && (
+                {totalVouchers > 0 && activeVouchers > 0 && activeVouchers < totalVouchers && (
                   <>
                     <circle cx="50" cy="50" r="40" fill="#dc3545" stroke="white" strokeWidth="2" />
-                    <path d={`M 50 10 A 40 40 0 ${analytics.activeVouchers / analytics.totalVouchers > 0.5 ? 1 : 0} 1 ${50 + 40 * Math.sin(2 * Math.PI * analytics.activeVouchers / analytics.totalVouchers)} ${50 - 40 * Math.cos(2 * Math.PI * analytics.activeVouchers / analytics.totalVouchers)} L 50 50 Z`}  fill="#28a745"  stroke="white"  strokeWidth="2" />
+                    <path d={`M 50 10 A 40 40 0 ${activeVouchers / totalVouchers > 0.5 ? 1 : 0} 1 ${50 + 40 * Math.sin(2 * Math.PI * activeVouchers / totalVouchers)} ${50 - 40 * Math.cos(2 * Math.PI * activeVouchers / totalVouchers)} L 50 50 Z`}  fill="#28a745"  stroke="white"  strokeWidth="2" />
                   </>
                 )}
               </svg>
@@ -326,11 +326,11 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
               <div style={styles.pieLegend}>
       <div style={styles.legendItem}>
         <div style={{ ...styles.legendColor, backgroundColor: "#dc3545" }}></div>
-        <span>{analytics?.totalVouchers > 0 ? Math.round(((analytics.totalVouchers - analytics.activeVouchers) / analytics.totalVouchers) * 100) : 0}% Inactive</span>
+        <span>{totalVouchers > 0 ? Math.round(((totalVouchers - activeVouchers) / totalVouchers) * 100) : 0}% Inactive</span>
       </div>
       <div style={styles.legendItem}>
         <div style={{ ...styles.legendColor, backgroundColor: "#28a745" }}></div>
-        <span>{analytics?.totalVouchers > 0 ? Math.round((analytics.activeVouchers / analytics.totalVouchers) * 100) : 0}% Active</span>
+        <span>{totalVouchers > 0 ? Math.round((activeVouchers / totalVouchers) * 100) : 0}% Active</span>
       </div>
     </div>
           </div>
