@@ -251,10 +251,25 @@ export const loader = async ({ request }) => {
 
   const productSales = (products || []).map(p => {
   const stats = productSalesMap[p.title] || { sales: 0, revenue: 0 };
+  // Find the most recent order for this product
+  let date = null;
+  for (const order of orders) {
+    if (order.lineItems && order.lineItems.edges) {
+      for (const itemEdge of order.lineItems.edges) {
+        const item = itemEdge.node;
+        if (item.title === p.title) {
+          date = order.processedAt;
+          break;
+        }
+      }
+    }
+    if (date) break;
+  }
   return {
     product: p.title,
     sales: stats.sales,
     revenue: stats.revenue,
+    date: date,
     expire: p.expire ? new Date(p.expire).toLocaleDateString() : "No Expiry"
   };
 });
