@@ -332,6 +332,7 @@ async function transformOrderPayload(payload, session = null) {
       email: payload.customer.email,
       createdAt: payload.customer.created_at
     } : null,
+    billingAddress: payload.billing_address ? payload.billing_address : null,
     lineItems: {
       edges: payload.line_items?.map(item => ({
         node: {

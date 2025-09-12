@@ -60,6 +60,7 @@ interface ShopifyOrder {
   processed_at?: string;
   processedAt?: string;
   created_at?: string;
+  billingAddress?: any;
 }
 
 interface OrderData {
@@ -74,6 +75,7 @@ interface OrderData {
   processedAt: Date;
   lineItems: string;
   type?: string;
+  billingAddress?: any;
 }
 
 interface ProcessResult {
@@ -242,6 +244,7 @@ export async function saveOrder(orderData: ShopifyOrder) {
     itemQuantity: info.itemQuantity,
     processedAt: info.processedAt,
     lineItems: JSON.parse(info.lineItems),
+    billingAddress: orderData.billingAddress ? orderData.billingAddress : null,
   };
 
   // Check if order already exists

@@ -79,6 +79,7 @@ model Order {
   itemQuantity      Int
   processedAt       DateTime
   lineItems         Json?    // Store line items as JSON
+  billingAddress    Json?    // Store billing address as JSON
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   vouchers          Voucher[] // Relation to vouchers
