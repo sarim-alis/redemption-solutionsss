@@ -184,11 +184,18 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
   );
 
   // Filtered product sales
-  const productSales = (allProductSales || []).filter(item =>
-    isDateMatch(item.date, dateFilter, customStart, customEnd) &&
-    isProductMatch(item.product, filters.products) &&
-    isLocationMatch(item.location, filters.locations)
-  );
+  const productSales = (allProductSales || []).filter(item => {
+    let normDate = item.date;
+    if (item.date) {
+      const d = new Date(item.date);
+      if (!isNaN(d.getTime())) {
+        normDate = d.toISOString().slice(0, 10);
+      }
+    }
+    return isDateMatch(normDate, dateFilter, customStart, customEnd)
+      && isProductMatch(item.product, filters.products)
+      && isLocationMatch(item.location, filters.locations);
+  });
 
   // Filtered voucher redemptions
   const voucherRedemptions = filteredVouchers.filter(item =>
