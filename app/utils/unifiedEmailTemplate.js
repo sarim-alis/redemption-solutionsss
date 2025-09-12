@@ -325,9 +325,10 @@ export function generateUnifiedEmailHTML({ order, vouchers }) {
                           <!-- Billing Address -->
                           <td width="50%" valign="top" style="font-size:16px; color:#000000;">
                             <strong style="display:block; margin-bottom:6px;">Billing Address</strong>
-                            Full Name <br/>
-                            Street <br/>
-                            City, State, Zip Code
+                            ${order?.billingAddress?.name || `${order?.billingAddress?.first_name || ''} ${order?.billingAddress?.last_name || ''}` || 'N/A'}<br/>
+                            ${order?.billingAddress?.address1 || ''} ${order?.billingAddress?.address2 ? ', ' + order.billingAddress.address2 : ''}<br/>
+                            ${order?.billingAddress?.city || ''}${order?.billingAddress?.province ? ', ' + order.billingAddress.province : ''} ${order?.billingAddress?.zip || ''}<br/>
+                            ${order?.billingAddress?.country || ''}
                           </td>
                           <!-- Payment Method -->
                           <td width="50%" valign="top" style="font-size:16px; color:#000000;">
