@@ -267,7 +267,7 @@ export function generateUnifiedEmailHTML({ order, vouchers }) {
             <tr>
               <td align="center">
                 <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
-                      style="background:#f5f5f5; border-radius:8px; padding:30px 20px; margin:40px 0">
+                      style="background:#F5F5F5 ; border-radius:8px; padding:30px 20px; margin:40px 0">
                   <tr>
                     <td align="center" style="font-size:20px; font-weight:bold; color:#000000; padding-bottom:20px;">
                       Find a Participating Location Near You
@@ -291,17 +291,15 @@ export function generateUnifiedEmailHTML({ order, vouchers }) {
             <tr>
               <td align="center">
                 <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
-                      style="background:#ffffff; padding:20px; border-left:3px solid #862633;">
+                      style="background:#ffffff; padding:0px 20px; border-left:3px solid #862633;">
                   <tr>
                     <td align="left" style="font-size:24px; font-weight:bold; color:#000000; padding-bottom:10px;">
                       How to Redeem?
                     </td>
                   </tr>
                   <tr>
-                    <td style="font-size:14px; color:#555555; line-height:1.6; text-align:left;">
-                      Keep them all for yourself or share with friends and family. 
-                      It's a smart way to save and help others stay road-ready too. 
-                      Look forward to seeing you soon at your local Jiffy Lube!
+                    <td style="font-size:14px; color: #63666A; line-height:1.6; text-align:left;">
+                    Simply bring this voucher to any participating ACE Jiffy Lube location and present to your cashier at time of purchase. Keep them for yourself or share with friends and family. It's a great way to save and help others stay road ready too. Looking forward to seeing you soon.
                     </td>
                   </tr>
                 </table>
@@ -314,17 +312,17 @@ export function generateUnifiedEmailHTML({ order, vouchers }) {
                 <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
                       style="background:#ffffff; margin:40px 0">
                   <tr>
-                    <td style="font-size:22px; padding: 15px; font-weight:bold; color:#000000; border-bottom:1px solid #63666A;">
+                    <td style="font-size:22px; padding-bottom: 10px; font-weight:bold; color:#000000; border-bottom:1px solid #63666A;">
                       Billing Information:
                     </td>
                   </tr>
                   <tr>
-                    <td style="padding:15px;">
+                    <td style="padding-top:10px;">
                       <table width="100%" cellpadding="0" cellspacing="0" border="0">
                         <tr>
                           <!-- Billing Address -->
-                          <td width="50%" valign="top" style="font-size:16px; color:#000000;">
-                            <strong style="display:block; margin-bottom:6px;">Billing Address</strong>
+                          <td width="50%" valign="top" style="font-size:16px; color:#63666A;">
+                            <strong style="display:block; margin-bottom:6px; color:#000000;">Billing Address</strong>
                             ${order?.billingAddress?.name || `${order?.billingAddress?.first_name || ''} ${order?.billingAddress?.last_name || ''}` || 'N/A'}<br/>
                             ${order?.billingAddress?.address1 || ''} ${order?.billingAddress?.address2 ? ', ' + order.billingAddress.address2 : ''}<br/>
                             ${order?.billingAddress?.city || ''}${order?.billingAddress?.province ? ', ' + order.billingAddress.province : ''} ${order?.billingAddress?.zip || ''}<br/>
