@@ -5,8 +5,6 @@ import { getAllVouchers } from "../models/voucher.server";
 import prisma from "../db.server";
 import { generateVoucherEmailHTML } from "../utils/voucherEmailTemplateShareds.js";
 
-// 🔥 Shared function to build PDF
-async function buildPdf(vouchers, singleId = null) {
 // 🔥 Shared function to build CSV
 async function buildCsv(vouchers) {
   const { Parser } = await import("json2csv");
@@ -27,6 +25,9 @@ async function buildCsv(vouchers) {
     },
   });
 }
+
+// 🔥 Shared function to build PDF
+async function buildPdf(vouchers, singleId = null) {
   let html;
 
   if (singleId) {
@@ -112,9 +113,7 @@ export const loader = async ({ request }) => {
       where: { id: String(id) },
     });
     if (!voucher) throw new Response("Not Found", { status: 404 });
-    if (format === "csv") {
-      return await buildCsv([voucher]);
-    }
+    // Single voucher: always PDF
     return buildPdf([voucher], id);
   }
 
