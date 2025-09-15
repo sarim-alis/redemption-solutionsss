@@ -1,6 +1,6 @@
 // /app/routes/vouchers.export.jsx
 import puppeteer from "puppeteer";
-import { Parser } from "json2csv";
+// import { Parser } from "json2csv"; // moved to dynamic import
 import { getAllVouchers } from "../models/voucher.server";
 import prisma from "../db.server";
 import { generateVoucherEmailHTML } from "../utils/voucherEmailTemplateShareds.js";
@@ -8,7 +8,8 @@ import { generateVoucherEmailHTML } from "../utils/voucherEmailTemplateShareds.j
 // 🔥 Shared function to build PDF
 async function buildPdf(vouchers, singleId = null) {
 // 🔥 Shared function to build CSV
-function buildCsv(vouchers) {
+async function buildCsv(vouchers) {
+  const { Parser } = await import("json2csv");
   const fields = [
     { label: "Voucher Code", value: "code" },
     { label: "Order ID", value: "shopifyOrderId" },
@@ -112,7 +113,7 @@ export const loader = async ({ request }) => {
     });
     if (!voucher) throw new Response("Not Found", { status: 404 });
     if (format === "csv") {
-      return buildCsv([voucher]);
+      return await buildCsv([voucher]);
     }
     return buildPdf([voucher], id);
   }
@@ -120,7 +121,7 @@ export const loader = async ({ request }) => {
   // No ID → export all
   const vouchers = await getAllVouchers();
   if (format === "csv") {
-    return buildCsv(vouchers);
+    return await buildCsv(vouchers);
   }
   return buildPdf(vouchers);
 };
@@ -131,7 +132,7 @@ export const action = async ({ request }) => {
   const format = url.searchParams.get("format");
   const vouchers = await getAllVouchers();
   if (format === "csv") {
-    return buildCsv(vouchers);
+    return await buildCsv(vouchers);
   }
   return buildPdf(vouchers);
 };
