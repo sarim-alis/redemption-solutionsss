@@ -1,11 +1,31 @@
 // /app/routes/vouchers.export.jsx
 import puppeteer from "puppeteer";
+import { Parser } from "json2csv";
 import { getAllVouchers } from "../models/voucher.server";
 import prisma from "../db.server";
 import { generateVoucherEmailHTML } from "../utils/voucherEmailTemplateShareds.js";
 
 // 🔥 Shared function to build PDF
 async function buildPdf(vouchers, singleId = null) {
+// 🔥 Shared function to build CSV
+function buildCsv(vouchers) {
+  const fields = [
+    { label: "Voucher Code", value: "code" },
+    { label: "Order ID", value: "shopifyOrderId" },
+    { label: "Customer Email", value: "customerEmail" },
+    { label: "Used", value: row => row.used ? "Yes" : "No" },
+    { label: "Created At", value: row => new Date(row.createdAt).toLocaleString() },
+  ];
+  const parser = new Parser({ fields });
+  const csv = parser.parse(vouchers);
+  return new Response(csv, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/csv",
+      "Content-Disposition": `attachment; filename=vouchers.csv`,
+    },
+  });
+}
   let html;
 
   if (singleId) {
@@ -84,23 +104,34 @@ async function buildPdf(vouchers, singleId = null) {
 export const loader = async ({ request }) => {
   const url = new URL(request.url);
   const id = url.searchParams.get("id");
+  const format = url.searchParams.get("format");
 
   if (id) {
     const voucher = await prisma.voucher.findUnique({
       where: { id: String(id) },
     });
-
     if (!voucher) throw new Response("Not Found", { status: 404 });
+    if (format === "csv") {
+      return buildCsv([voucher]);
+    }
     return buildPdf([voucher], id);
   }
 
   // No ID → export all
   const vouchers = await getAllVouchers();
+  if (format === "csv") {
+    return buildCsv(vouchers);
+  }
   return buildPdf(vouchers);
 };
 
 // 🔹 Action handles POST requests (export all)
-export const action = async () => {
+export const action = async ({ request }) => {
+  const url = new URL(request.url);
+  const format = url.searchParams.get("format");
   const vouchers = await getAllVouchers();
+  if (format === "csv") {
+    return buildCsv(vouchers);
+  }
   return buildPdf(vouchers);
 };
