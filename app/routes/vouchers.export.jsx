@@ -1,30 +1,8 @@
 // /app/routes/vouchers.export.jsx
 import puppeteer from "puppeteer";
-// import { Parser } from "json2csv"; // moved to dynamic import
 import { getAllVouchers } from "../models/voucher.server";
 import prisma from "../db.server";
 import { generateVoucherEmailHTML } from "../utils/voucherEmailTemplateShareds.js";
-
-// 🔥 Shared function to build CSV
-async function buildCsv(vouchers) {
-  const { Parser } = await import("json2csv");
-  const fields = [
-    { label: "Voucher Code", value: "code" },
-    { label: "Order ID", value: "shopifyOrderId" },
-    { label: "Customer Email", value: "customerEmail" },
-    { label: "Used", value: row => row.used ? "Yes" : "No" },
-    { label: "Created At", value: row => new Date(row.createdAt).toLocaleString() },
-  ];
-  const parser = new Parser({ fields });
-  const csv = parser.parse(vouchers);
-  return new Response(csv, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/csv",
-      "Content-Disposition": `attachment; filename=vouchers.csv`,
-    },
-  });
-}
 
 // 🔥 Shared function to build PDF
 async function buildPdf(vouchers, singleId = null) {
@@ -106,32 +84,23 @@ async function buildPdf(vouchers, singleId = null) {
 export const loader = async ({ request }) => {
   const url = new URL(request.url);
   const id = url.searchParams.get("id");
-  const format = url.searchParams.get("format");
 
   if (id) {
     const voucher = await prisma.voucher.findUnique({
       where: { id: String(id) },
     });
+
     if (!voucher) throw new Response("Not Found", { status: 404 });
-    // Single voucher: always PDF
     return buildPdf([voucher], id);
   }
 
   // No ID → export all
   const vouchers = await getAllVouchers();
-  if (format === "csv") {
-    return await buildCsv(vouchers);
-  }
   return buildPdf(vouchers);
 };
 
 // 🔹 Action handles POST requests (export all)
-export const action = async ({ request }) => {
-  const url = new URL(request.url);
-  const format = url.searchParams.get("format");
+export const action = async () => {
   const vouchers = await getAllVouchers();
-  if (format === "csv") {
-    return await buildCsv(vouchers);
-  }
   return buildPdf(vouchers);
 };
