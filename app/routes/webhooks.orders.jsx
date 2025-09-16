@@ -229,7 +229,7 @@ async function processWebhook({ shop, session, topic, payload }) {
                 return {
                   title: node.title,
                   quantity: totalVouchers, // This now contains the final calculated vouchers
-                  price: node.price || node.originalUnitPriceSet?.shopMoney?.amount || 0,
+                  price: (node.price || node.originalUnitPriceSet?.shopMoney?.amount || 0) * (node.quantity || 1),
                   variantTitle: variantTitle,
                   variant: node.variant || {},
                   voucherCount: voucherCount, // Store for reference
