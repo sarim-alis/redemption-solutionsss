@@ -18,14 +18,16 @@ export async function createVoucher({
   productTitle = null, 
   type = null,
   expireDays = null,
-  totalPrice = null
+  totalPrice = null,
+  afterExpiredPrice = null
 }: { 
   shopifyOrderId: string, 
   customerEmail: string, 
   productTitle?: string | null, 
   type?: string | null,
   expireDays?: number | string | null,
-  totalPrice?: number | null
+  totalPrice?: number | null,
+  afterExpiredPrice?: number | null
 }) {
   // Generate a unique code for the voucher
   const code = generateVoucherCode();
@@ -55,6 +57,7 @@ export async function createVoucher({
       type,
       expire: expireDate,
       totalPrice: totalPrice ?? undefined,
+      afterExpiredPrice: afterExpiredPrice ?? undefined,
     },
   });
 }
@@ -85,6 +88,16 @@ export async function createVouchersForOrder({
       console.log(`📦 Creating ${totalVouchers} voucher(s) for: ${item.title}`);
     }
     
+    // Calculate afterExpiredPrice for each voucher
+    let afterExpiredPrice = null;
+    if (item.price && totalVouchers && item.quantity) {
+      // item.price is unit price, item.quantity is number of packs, totalVouchers = packCount * quantity
+      const totalProductPrice = Number(item.price) * Number(item.quantity);
+      afterExpiredPrice = totalProductPrice / Number(totalVouchers);
+    } else if (item.price && totalVouchers) {
+      // fallback for single quantity
+      afterExpiredPrice = Number(item.price) / Number(totalVouchers);
+    }
     // Create all vouchers at once
     const voucherPromises = Array.from({ length: totalVouchers }, async (_, index) => {
       try {
@@ -95,6 +108,7 @@ export async function createVouchersForOrder({
           type: isGiftCard ? 'gift' : (item.type || 'voucher'),
           expireDays: item.expire || null, // Pass expire days from lineItem
           totalPrice: item.price ?? null,
+          afterExpiredPrice: afterExpiredPrice ?? null,
         });
         console.log(`🎟️ Created voucher ${voucher.code} for product: ${item.title} (expires in ${item.expire || 'no'} days)`);
         return voucher;

@@ -32,13 +32,24 @@ function formatCurrency(amount) {
 
 // Generate voucher card HTML
 export function generateVoucherCard(voucher) {
+
   const validThrough = voucher?.expire
     ? formatDate(voucher.expire)
     : (voucher?.createdAt ? formatDate(addMonths(voucher.createdAt, 3)) : "08/16/2026");
   const issuedOn = voucher?.createdAt
     ? formatDate(voucher.createdAt)
     : "03/16/2025";
-  
+
+  // Use afterExpiredPrice from voucher if available
+  let expiredValue = voucher?.afterExpiredPrice ?? null;
+  // Always show 2 decimal places, no rounding up
+  function formatExpiredValue(val) {
+    if (typeof val !== 'number') return '';
+    // Truncate to 2 decimal places (no rounding)
+    const truncated = Math.trunc(val * 100) / 100;
+    return truncated.toFixed(2);
+  }
+
   return `
     <div style="width:350px; padding:5px; background-color:#862633; margin: 20px auto;">
       <table width="350" cellpadding="0" cellspacing="0" border="0" style="border:2px solid #ffffff; border-style:dashed; background:#862633; padding:20px; border-radius:0 8px 8px 8px;">
@@ -66,6 +77,9 @@ export function generateVoucherCard(voucher) {
             </table>
           </td>
         </tr>
+
+        <!-- Expired Value Message -->
+        ${expiredValue ? `<tr><td style="padding:5px 0 10px 0;"><div style="font-size:14px; color:#fff; background:#60131e; border-radius:6px; padding:8px 10px; text-align:left;"> If unused by that date, it retains a redeemable value of <b>$${formatExpiredValue(expiredValue)}</b>.</div></td></tr>` : ''}
 
         <!-- Issued on -->
         <tr>
@@ -185,7 +199,7 @@ export function generateUnifiedEmailHTML({ order, vouchers }) {
   const voucherCardsHTML = voucherVouchers.map(voucher => generateVoucherCard(voucher)).join('');
   
   // Generate gift cards HTML
-  const giftCardsHTML = giftVouchers.map(voucher => generateGiftCard(voucher, order?.totalPrice || 0)).join('');
+  const giftCardsHTML = giftVouchers.map(voucher => generateGiftCard(voucher, voucher.totalPrice || 0)).join('');
 
   return `
     <!DOCTYPE html>
@@ -267,7 +281,7 @@ export function generateUnifiedEmailHTML({ order, vouchers }) {
             <tr>
               <td align="center">
                 <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
-                      style="background:#f5f5f5; border-radius:8px; padding:30px 20px; margin:40px 0">
+                      style="background:#F5F5F5 ; border-radius:8px; padding:30px 20px; margin:40px 0">
                   <tr>
                     <td align="center" style="font-size:20px; font-weight:bold; color:#000000; padding-bottom:20px;">
                       Find a Participating Location Near You
@@ -291,17 +305,15 @@ export function generateUnifiedEmailHTML({ order, vouchers }) {
             <tr>
               <td align="center">
                 <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
-                      style="background:#ffffff; padding:20px; border-left:3px solid #862633;">
+                      style="background:#ffffff; padding:0px 20px; border-left:3px solid #862633;">
                   <tr>
                     <td align="left" style="font-size:24px; font-weight:bold; color:#000000; padding-bottom:10px;">
                       How to Redeem?
                     </td>
                   </tr>
                   <tr>
-                    <td style="font-size:14px; color:#555555; line-height:1.6; text-align:left;">
-                      Keep them all for yourself or share with friends and family. 
-                      It's a smart way to save and help others stay road-ready too. 
-                      Look forward to seeing you soon at your local Jiffy Lube!
+                    <td style="font-size:14px; color: #63666A; line-height:1.6; text-align:left;">
+                    Simply bring this voucher to any participating ACE Jiffy Lube location and present to your cashier at time of purchase. Keep them for yourself or share with friends and family. It's a great way to save and help others stay road ready too. Looking forward to seeing you soon.
                     </td>
                   </tr>
                 </table>
@@ -314,20 +326,21 @@ export function generateUnifiedEmailHTML({ order, vouchers }) {
                 <table width="600" cellpadding="0" cellspacing="0" border="0" align="center" 
                       style="background:#ffffff; margin:40px 0">
                   <tr>
-                    <td style="font-size:22px; padding: 15px; font-weight:bold; color:#000000; border-bottom:1px solid #63666A;">
+                    <td style="font-size:22px; padding-bottom: 10px; font-weight:bold; color:#000000; border-bottom:1px solid #63666A;">
                       Billing Information:
                     </td>
                   </tr>
                   <tr>
-                    <td style="padding:15px;">
+                    <td style="padding-top:10px;">
                       <table width="100%" cellpadding="0" cellspacing="0" border="0">
                         <tr>
                           <!-- Billing Address -->
-                          <td width="50%" valign="top" style="font-size:16px; color:#000000;">
-                            <strong style="display:block; margin-bottom:6px;">Billing Address</strong>
-                            Full Name <br/>
-                            Street <br/>
-                            City, State, Zip Code
+                          <td width="50%" valign="top" style="font-size:16px; color:#63666A;">
+                            <strong style="display:block; margin-bottom:6px; color:#000000;">Billing Address</strong>
+                            ${order?.billingAddress?.name || `${order?.billingAddress?.first_name || ''} ${order?.billingAddress?.last_name || ''}` || 'N/A'}<br/>
+                            ${order?.billingAddress?.address1 || ''} ${order?.billingAddress?.address2 ? ', ' + order.billingAddress.address2 : ''}<br/>
+                            ${order?.billingAddress?.city || ''}${order?.billingAddress?.province ? ', ' + order.billingAddress.province : ''} ${order?.billingAddress?.zip || ''}<br/>
+                            ${order?.billingAddress?.country || ''}
                           </td>
                           <!-- Payment Method -->
                           <td width="50%" valign="top" style="font-size:16px; color:#000000;">

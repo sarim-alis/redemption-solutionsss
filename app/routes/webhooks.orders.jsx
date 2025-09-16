@@ -332,6 +332,7 @@ async function transformOrderPayload(payload, session = null) {
       email: payload.customer.email,
       createdAt: payload.customer.created_at
     } : null,
+    billingAddress: payload.billing_address ? payload.billing_address : null,
     lineItems: {
       edges: payload.line_items?.map(item => ({
         node: {
@@ -553,7 +554,8 @@ async function saveOrderToDatabase(payload, action, session = null) {
         }
       },
       processedAt: payload.processed_at || payload.created_at,
-      lineItems: lineItems
+      lineItems: lineItems,
+      billingAddress: payload.billing_address || payload.billingAddress || null,
     };
 
     const { order: savedOrder, voucher } = await saveOrder(orderData);
