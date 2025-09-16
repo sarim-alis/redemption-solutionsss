@@ -32,13 +32,32 @@ function formatCurrency(amount) {
 
 // Generate voucher card HTML
 export function generateVoucherCard(voucher) {
+
   const validThrough = voucher?.expire
     ? formatDate(voucher.expire)
     : (voucher?.createdAt ? formatDate(addMonths(voucher.createdAt, 3)) : "08/16/2026");
   const issuedOn = voucher?.createdAt
     ? formatDate(voucher.createdAt)
     : "03/16/2025";
-  
+
+  // Calculate expired value: product price / number of packs
+  // Try to extract price and pack count from voucher object
+  let expiredValue = null;
+  let price = voucher?.totalPrice || voucher?.price || null;
+  let packCount = voucher?.packCount || voucher?.quantity || 1;
+  // Try to parse from productTitle if not present
+  if ((!price || !packCount) && voucher?.productTitle) {
+    // e.g. "3 Pack Gift Card - $45"
+    const match = voucher.productTitle.match(/(\d+)\s*Pack.*\$([\d.]+)/i);
+    if (match) {
+      packCount = parseInt(match[1], 10);
+      price = parseFloat(match[2]);
+    }
+  }
+  if (price && packCount) {
+    expiredValue = price / packCount;
+  }
+
   return `
     <div style="width:350px; padding:5px; background-color:#862633; margin: 20px auto;">
       <table width="350" cellpadding="0" cellspacing="0" border="0" style="border:2px solid #ffffff; border-style:dashed; background:#862633; padding:20px; border-radius:0 8px 8px 8px;">
@@ -66,6 +85,9 @@ export function generateVoucherCard(voucher) {
             </table>
           </td>
         </tr>
+
+        <!-- Expired Value Message -->
+        ${expiredValue ? `<tr><td style="padding:5px 0 10px 0;"><div style="font-size:14px; color:#fff; background:#a94442; border-radius:6px; padding:8px 10px; text-align:center;">This voucher is valid until <b>${validThrough}</b>. If unused by that date, it retains a redeemable value of <b>$${expiredValue.toFixed(2)}</b>.</div></td></tr>` : ''}
 
         <!-- Issued on -->
         <tr>
