@@ -45,7 +45,9 @@ export function generateVoucherCard(voucher) {
   // Always show 2 decimal places, no rounding up
   function formatExpiredValue(val) {
     if (typeof val !== 'number') return '';
-    return val.toFixed(2);
+    // Truncate to 2 decimal places (no rounding)
+    const truncated = Math.trunc(val * 100) / 100;
+    return truncated.toFixed(2);
   }
 
   return `
@@ -77,7 +79,7 @@ export function generateVoucherCard(voucher) {
         </tr>
 
         <!-- Expired Value Message -->
-  ${expiredValue ? `<tr><td style="padding:5px 0 10px 0;"><div style="font-size:14px; color:#fff; background:#60131e; border-radius:6px; padding:8px 10px; text-align:left;"> If unused by that date, it retains a redeemable value of <b>$${formatExpiredValue(expiredValue)}</b>.</div></td></tr>` : ''}
+        ${expiredValue ? `<tr><td style="padding:5px 0 10px 0;"><div style="font-size:14px; color:#fff; background:#60131e; border-radius:6px; padding:8px 10px; text-align:left;"> If unused by that date, it retains a redeemable value of <b>$${formatExpiredValue(expiredValue)}</b>.</div></td></tr>` : ''}
 
         <!-- Issued on -->
         <tr>
