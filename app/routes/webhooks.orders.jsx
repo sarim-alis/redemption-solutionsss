@@ -146,7 +146,8 @@ async function processWebhook({ shop, session, topic, payload }) {
                   variantTitle: variantTitle,
                   variant: edge.node.variant || {},
                   voucherCount: voucherCount, // Store for reference
-                  baseQuantity: baseQuantity, // Store original quantity
+                  originalQuantity: edge.node.quantity || baseQuantity, // Always send original quantity
+                  unitPrice: edge.node.originalUnitPriceSet?.shopMoney?.amount || 0, // Always send unit price
                   type: type,
                   productId: edge.node.variant?.product?.id?.replace('gid://shopify/Product/', '') || null,
                   variantId: edge.node.variant?.id?.replace('gid://shopify/ProductVariant/', '') || null
@@ -233,7 +234,8 @@ async function processWebhook({ shop, session, topic, payload }) {
                   variantTitle: variantTitle,
                   variant: node.variant || {},
                   voucherCount: voucherCount, // Store for reference
-                  baseQuantity: baseQuantity, // Store original quantity
+                  originalQuantity: node.quantity || baseQuantity, // Always send original quantity
+                  unitPrice: node.price || node.originalUnitPriceSet?.shopMoney?.amount || 0, // Always send unit price
                   type: type,
                   productId: node.variant?.product?.id?.replace('gid://shopify/Product/', '') || null,
                   variantId: node.variant?.id?.replace('gid://shopify/ProductVariant/', '') || null
