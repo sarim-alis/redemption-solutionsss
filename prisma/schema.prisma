@@ -48,6 +48,7 @@ model Voucher {
   remainingBalance  Float?
   cashHistory       Float[]   @default([])
   currency          String?
+  afterExpiredPrice Float?
 }
 model Product {
   id              String   @id @default(cuid())
