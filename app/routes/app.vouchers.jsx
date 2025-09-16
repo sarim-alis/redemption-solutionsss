@@ -1,4 +1,34 @@
 // Imports.
+// Export to CSV utility
+function exportToCSV(filename, data) {
+  if (!data || data.length === 0) return;
+
+  const csvRows = [];
+  const headers = Object.keys(data[0]);
+  csvRows.push(headers.join(","));
+
+  for (const row of data) {
+    const values = headers.map((h) => {
+      let val = row[h] ?? "";
+      if (typeof val === "string") {
+        val = `"${val.replace(/"/g, '""')}"`;
+      }
+      return val;
+    });
+    csvRows.push(values.join(","));
+  }
+
+  const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.setAttribute("hidden", "");
+  a.setAttribute("href", url);
+  a.setAttribute("download", filename);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
 import React from "react";
 import { useLoaderData, useNavigation } from "@remix-run/react";
 import SidebarLayout from "../components/SidebarLayout";
@@ -201,23 +231,13 @@ export default function VouchersPage() {
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <form method="post" action="/vouchers/export">
-              <button type="submit" style={exportButtonStyle}>
-                Export
-              </button>
-            </form>
+            <button type="button" style={exportButtonStyle} onClick={() => {const csvData = filteredVouchers.map(v => ({ Code: v.code, Type: Array.isArray(v.type) ? v.type[0] : (typeof v.type === 'string' ? v.type.replace(/\[|\]|"/g, '') : 'voucher'), OrderID: v.shopifyOrderId, CustomerEmail: v.customerEmail, Used: v.order?.statusUse ? "USED" : "UNUSED", CreatedAt: v.createdAt }));exportToCSV("all_vouchers.csv", csvData);}}>
+              Export
+            </button>
           </div>
         </div>
-        <div
-          style={containerStyle}
-        >
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: 13,
-            }}
-          >
+        <div style={containerStyle}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead style={{ background: "#f3f4f6" }}>
               <tr>
                 <th style={headStyle}>Code</th>
