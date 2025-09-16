@@ -247,6 +247,7 @@ async function processWebhook({ shop, session, topic, payload }) {
             console.log('🔍 [DEBUG] Parsed voucher items:', JSON.stringify(lineItems, null, 2));
             
             // Create vouchers for each product
+            console.log('🟢 [DEBUG] lineItems sent to createVouchersForOrder:', JSON.stringify(lineItems, null, 2));
             const newVouchers = await createVouchersForOrder({
               shopifyOrderId: paidOrder.shopifyOrderId,
               customerEmail: paidOrder.customerEmail || '',

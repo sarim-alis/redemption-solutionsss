@@ -91,9 +91,8 @@ export async function createVouchersForOrder({
     // Calculate afterExpiredPrice for each voucher
     let afterExpiredPrice = null;
     if (item.price && totalVouchers && item.quantity) {
-      // item.price is unit price, item.quantity is number of packs, totalVouchers = packCount * quantity
-      const totalProductPrice = Number(item.price) * Number(item.quantity);
-      afterExpiredPrice = totalProductPrice / Number(totalVouchers);
+  // item.price is already (unit price × quantity), so just divide by totalVouchers
+  afterExpiredPrice = Number(item.price) / Number(totalVouchers);
     } else if (item.price && totalVouchers) {
       // fallback for single quantity
       afterExpiredPrice = Number(item.price) / Number(totalVouchers);
