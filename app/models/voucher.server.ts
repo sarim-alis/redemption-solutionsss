@@ -90,8 +90,10 @@ export async function createVouchersForOrder({
     
     // Calculate afterExpiredPrice for each voucher
     let afterExpiredPrice = null;
-    if (item.price && totalVouchers) {
-      afterExpiredPrice = Number(item.price) / Number(totalVouchers);
+    if (item.price && totalVouchers && item.quantity) {
+      // item.price is unit price, item.quantity is number of packs, totalVouchers = packCount * quantity
+      const totalProductPrice = Number(item.price) * Number(item.quantity);
+      afterExpiredPrice = totalProductPrice / Number(totalVouchers);
     }
     // Create all vouchers at once
     const voucherPromises = Array.from({ length: totalVouchers }, async (_, index) => {
