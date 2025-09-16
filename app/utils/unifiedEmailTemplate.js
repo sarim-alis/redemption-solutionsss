@@ -42,6 +42,11 @@ export function generateVoucherCard(voucher) {
 
   // Use afterExpiredPrice from voucher if available
   let expiredValue = voucher?.afterExpiredPrice ?? null;
+  // Always show 2 decimal places, no rounding up
+  function formatExpiredValue(val) {
+    if (typeof val !== 'number') return '';
+    return val.toFixed(2);
+  }
 
   return `
     <div style="width:350px; padding:5px; background-color:#862633; margin: 20px auto;">
@@ -72,7 +77,7 @@ export function generateVoucherCard(voucher) {
         </tr>
 
         <!-- Expired Value Message -->
-        ${expiredValue ? `<tr><td style="padding:5px 0 10px 0;"><div style="font-size:14px; color:#fff; background:#a94442; border-radius:6px; padding:8px 10px; text-align:center;">This voucher is valid until <b>${validThrough}</b>. If unused by that date, it retains a redeemable value of <b>$${expiredValue.toFixed(2)}</b>.</div></td></tr>` : ''}
+  ${expiredValue ? `<tr><td style="padding:5px 0 10px 0;"><div style="font-size:14px; color:#fff; background:#60131e; border-radius:6px; padding:8px 10px; text-align:left;"> If unused by that date, it retains a redeemable value of <b>$${formatExpiredValue(expiredValue)}</b>.</div></td></tr>` : ''}
 
         <!-- Issued on -->
         <tr>
