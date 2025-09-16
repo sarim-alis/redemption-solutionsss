@@ -185,7 +185,7 @@ export function generateUnifiedEmailHTML({ order, vouchers }) {
   const voucherCardsHTML = voucherVouchers.map(voucher => generateVoucherCard(voucher)).join('');
   
   // Generate gift cards HTML
-  const giftCardsHTML = giftVouchers.map(voucher => generateGiftCard(voucher, voucher.amount || 0)).join('');
+  const giftCardsHTML = giftVouchers.map(voucher => generateGiftCard(voucher, voucher.totalPrice || 0)).join('');
 
   return `
     <!DOCTYPE html>
