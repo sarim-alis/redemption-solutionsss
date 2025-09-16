@@ -90,13 +90,16 @@ export async function createVouchersForOrder({
     
     // Calculate afterExpiredPrice for each voucher
     let afterExpiredPrice = null;
+    // Debug log for calculation
+    console.log('[VoucherCreate] item.price:', item.price, 'item.quantity:', item.quantity, 'voucherCount:', (item as any).voucherCount, 'totalVouchers:', totalVouchers);
     if (item.price && totalVouchers && item.quantity) {
-  // item.price is already (unit price × quantity), so just divide by totalVouchers
-  afterExpiredPrice = Number(item.price) / Number(totalVouchers);
+      // item.price is already (unit price × quantity), so just divide by totalVouchers
+      afterExpiredPrice = Number(item.price) / Number(totalVouchers);
     } else if (item.price && totalVouchers) {
       // fallback for single quantity
       afterExpiredPrice = Number(item.price) / Number(totalVouchers);
     }
+    console.log('[VoucherCreate] Calculated afterExpiredPrice:', afterExpiredPrice);
     // Create all vouchers at once
     const voucherPromises = Array.from({ length: totalVouchers }, async (_, index) => {
       try {
