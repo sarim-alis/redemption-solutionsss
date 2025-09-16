@@ -40,23 +40,8 @@ export function generateVoucherCard(voucher) {
     ? formatDate(voucher.createdAt)
     : "03/16/2025";
 
-  // Calculate expired value: product price / number of packs
-  // Try to extract price and pack count from voucher object
-  let expiredValue = null;
-  let price = voucher?.totalPrice || voucher?.price || null;
-  let packCount = voucher?.packCount || voucher?.quantity || 1;
-  // Try to parse from productTitle if not present
-  if ((!price || !packCount) && voucher?.productTitle) {
-    // e.g. "3 Pack Gift Card - $45"
-    const match = voucher.productTitle.match(/(\d+)\s*Pack.*\$([\d.]+)/i);
-    if (match) {
-      packCount = parseInt(match[1], 10);
-      price = parseFloat(match[2]);
-    }
-  }
-  if (price && packCount) {
-    expiredValue = price / packCount;
-  }
+  // Use afterExpiredPrice from voucher if available
+  let expiredValue = voucher?.afterExpiredPrice ?? null;
 
   return `
     <div style="width:350px; padding:5px; background-color:#862633; margin: 20px auto;">
