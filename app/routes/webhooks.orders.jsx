@@ -142,7 +142,7 @@ async function processWebhook({ shop, session, topic, payload }) {
                 return {
                   title: edge.node.title,
                   quantity: totalVouchers, // This now contains the final calculated vouchers
-                  price: edge.node.originalUnitPriceSet?.shopMoney?.amount || 0,
+                  price: (edge.node.originalUnitPriceSet?.shopMoney?.amount || 0) * (edge.node.quantity || 1),
                   variantTitle: variantTitle,
                   variant: edge.node.variant || {},
                   voucherCount: voucherCount, // Store for reference
