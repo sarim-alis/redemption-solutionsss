@@ -246,7 +246,7 @@ export const loader = async ({ request }) => {
   const voucherRedemptionRows = voucherRedemptions.map(voucher => {
   let product = "";
   let locationUsed = voucher.locationUsed || "";
-  let date = voucher.createdAt.toISOString().slice(0, 10);s
+  let date = voucher.createdAt.toISOString().slice(0, 10);
     if (voucher.order && voucher.order.lineItems) {
       try {
         const items = Array.isArray(voucher.order.lineItems) ? voucher.order.lineItems : JSON.parse(voucher.order.lineItems);
