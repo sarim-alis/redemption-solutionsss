@@ -150,7 +150,7 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
     let date = voucher.createdAt
       ? new Date(voucher.createdAt).toLocaleDateString("en-US")
       : "";
-    let location = voucher.locationUsed || "";
+    let location = voucher.locationUsed || "—";
 
     if (!product && voucher.order?.lineItems) {
       try {
@@ -170,7 +170,7 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
     return {
       product,
       date,
-      locationUsed: voucher.locationUsed || "-",
+      locationUsed: voucher.locationUsed || "—",
       used: voucher.order?.statusUse || false,
       type: voucher.type || "[voucher]",
       createdAt: voucher.createdAt,
