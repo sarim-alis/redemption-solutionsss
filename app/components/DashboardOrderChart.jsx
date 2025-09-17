@@ -153,6 +153,7 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
     let location = Array.isArray(voucher.locationUsed)
       ? voucher.locationUsed.filter(Boolean).join(", ")
       : (voucher.locationUsed || "—");
+    let balance = voucher.totalPrice;
 
     if (!product && voucher.order?.lineItems) {
       try {
@@ -169,7 +170,7 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
       }
     }
 
-    return { product, date, locationUsed: location, used: voucher.order?.statusUse || false, type: voucher.type || "[voucher]", createdAt: voucher.createdAt, balance: voucher.balance || 0 };
+    return { product, date, locationUsed: location, used: voucher.order?.statusUse || false, type: voucher.type || "[voucher]", createdAt: voucher.createdAt, balance: voucher.totalPrice || 0 };
   });
 
   // Filtered vouchers by date
@@ -333,8 +334,8 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
           </div>
           <div style={styles.tableContainer}>
             <div style={styles.tableTitle}>Gift Card Redemption</div>
-            <table style={styles.tables}><thead><tr><th style={styles.tableHeader}>Product</th><th style={styles.tableHeader}>Date</th><th style={styles.tableHeader}>Location</th></tr></thead>
-            <tbody>{giftCardRedemptions.map((item, i) => <tr key={i}><td style={styles.tableCell}>{item.product || "—"}</td><td style={styles.tableCell}>{item.date || "—"}</td><td style={styles.tableCell}>{item.locationUsed || "—"}</td></tr>)}</tbody>
+            <table style={styles.tables}><thead><tr><th style={styles.tableHeader}>Product</th><th style={styles.tableHeader}>Date</th><th style={styles.tableHeader}>Location</th><th style={styles.tableHeader}>Balance</th></tr></thead>
+            <tbody>{giftCardRedemptions.map((item, i) => (<tr key={i}><td style={styles.tableCell}>{item.product || "—"}</td><td style={styles.tableCell}>{item.date || "—"}</td><td style={styles.tableCell}>{item.locationUsed || "—"}</td><td style={styles.tableCell}>{item.balance !== undefined ? item.balance.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "$0.00"}</td></tr>))}</tbody>
             </table>
           </div>
         </div>
