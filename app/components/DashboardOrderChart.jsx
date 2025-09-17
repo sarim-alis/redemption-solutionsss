@@ -150,7 +150,7 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
     let date = voucher.createdAt
       ? new Date(voucher.createdAt).toLocaleDateString("en-US")
       : "";
-    let location = voucher.customerEmail || "";
+    let location = voucher.locationUsed ||  "—";
 
     if (!product && voucher.order?.lineItems) {
       try {
@@ -287,9 +287,9 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
               {voucherRedemptions && voucherRedemptions.length > 0 ? (
                 voucherRedemptions.map((item, index) => (
                   <tr key={index}>
-                    <td style={styles.tableCell}>{item.product}</td>
-                    <td style={styles.tableCell}>{item.date}</td>
-                    <td style={styles.tableCell}>—</td>
+                    <td style={styles.tableCell}>{item.product || '—'}</td>
+                    <td style={styles.tableCell}>{item.date || '—'}</td>
+                    <td style={styles.tableCell}>{item.locationUsed || '—'}</td>
                   </tr>
                 ))
               ) : (
@@ -344,7 +344,7 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
           <div style={styles.tableContainer}>
             <div style={styles.tableTitle}>Gift Card Redemption</div>
             <table style={styles.tables}><thead><tr><th style={styles.tableHeader}>Product</th><th style={styles.tableHeader}>Date</th><th style={styles.tableHeader}>Location</th></tr></thead>
-            <tbody>{giftCardRedemptions.map((item, i) => <tr key={i}><td style={styles.tableCell}>{item.product}</td><td style={styles.tableCell}>{item.date}</td><td style={styles.tableCell}>—</td></tr>)}</tbody>
+            <tbody>{giftCardRedemptions.map((item, i) => <tr key={i}><td style={styles.tableCell}>{item.product}</td><td style={styles.tableCell}>{item.date}</td><td style={styles.tableCell}>{item.locationUsed || '—'}</td></tr>)}</tbody>
             </table>
           </div>
         </div>
