@@ -150,7 +150,9 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
     let date = voucher.createdAt
       ? new Date(voucher.createdAt).toLocaleDateString("en-US")
       : "";
-    let location = voucher.locationUsed || "—";
+    let location = Array.isArray(voucher.locationUsed)
+      ? voucher.locationUsed.filter(Boolean).join(", ")
+      : (voucher.locationUsed || "—");
 
     if (!product && voucher.order?.lineItems) {
       try {
@@ -167,15 +169,7 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
       }
     }
 
-    return {
-      product,
-      date,
-      locationUsed: voucher.locationUsed || "—",
-      used: voucher.order?.statusUse || false,
-      type: voucher.type || "[voucher]",
-      createdAt: voucher.createdAt,
-      balance: voucher.balance || 0,
-    };
+    return { product, date, locationUsed: location, used: voucher.order?.statusUse || false, type: voucher.type || "[voucher]", createdAt: voucher.createdAt, balance: voucher.balance || 0 };
   });
 
   // Filtered vouchers by date
