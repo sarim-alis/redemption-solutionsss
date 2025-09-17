@@ -170,7 +170,7 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
     return {
       product,
       date,
-      location,
+      locationUsed: voucher.locationUsed || "-",
       used: voucher.order?.statusUse || false,
       type: voucher.type || "[voucher]",
       createdAt: voucher.createdAt,

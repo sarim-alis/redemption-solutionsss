@@ -286,7 +286,7 @@ export const loader = async ({ request }) => {
   // For each voucher, try to get product name from order.lineItems (JSON)
   const voucherRedemptionRows = voucherRedemptions.map(voucher => {
   let product = "";
-  let location = voucher.locationUsed || voucher.customerEmail || "";
+  let locationUsed = voucher.locationUsed || "";
   let date = voucher.createdAt.toISOString().slice(0, 10);
     // Try to get product from order.lineItems
     if (voucher.order && voucher.order.lineItems) {
@@ -306,7 +306,7 @@ export const loader = async ({ request }) => {
     return {
       product,
       date,
-      location
+      locationUsed
     };
   });
 
