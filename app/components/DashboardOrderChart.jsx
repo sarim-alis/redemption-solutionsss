@@ -150,7 +150,10 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
     let date = voucher.createdAt
       ? new Date(voucher.createdAt).toLocaleDateString("en-US")
       : "";
-    let location = voucher.customerEmail || "";
+    let location = Array.isArray(voucher.locationUsed)
+      ? voucher.locationUsed.filter(Boolean).join(", ")
+      : (voucher.locationUsed || "—");
+    let balance = voucher.totalPrice;
 
     if (!product && voucher.order?.lineItems) {
       try {
@@ -167,15 +170,7 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
       }
     }
 
-    return {
-      product,
-      date,
-      location,
-      used: voucher.order?.statusUse || false,
-      type: voucher.type || "[voucher]",
-      createdAt: voucher.createdAt,
-      balance: voucher.balance || 0,
-    };
+    return { product, date, locationUsed: location, used: voucher.order?.statusUse || false, type: voucher.type || "[voucher]", createdAt: voucher.createdAt, balance: voucher.totalPrice || 0 };
   });
 
   // Filtered vouchers by date
@@ -286,11 +281,7 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
             <tbody>
               {voucherRedemptions && voucherRedemptions.length > 0 ? (
                 voucherRedemptions.map((item, index) => (
-                  <tr key={index}>
-                    <td style={styles.tableCell}>{item.product}</td>
-                    <td style={styles.tableCell}>{item.date}</td>
-                    <td style={styles.tableCell}>—</td>
-                  </tr>
+                  <tr key={index}><td style={styles.tableCell}>{item.product || "—"}</td><td style={styles.tableCell}>{item.date || "—"}</td><td style={styles.tableCell}>{item.locationUsed || "—"}</td></tr>
                 ))
               ) : (
                 <tr><td style={styles.tableCell} colSpan={3}>No voucher redemptions</td></tr>
@@ -343,8 +334,8 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
           </div>
           <div style={styles.tableContainer}>
             <div style={styles.tableTitle}>Gift Card Redemption</div>
-            <table style={styles.tables}><thead><tr><th style={styles.tableHeader}>Product</th><th style={styles.tableHeader}>Date</th><th style={styles.tableHeader}>Location</th></tr></thead>
-            <tbody>{giftCardRedemptions.map((item, i) => <tr key={i}><td style={styles.tableCell}>{item.product}</td><td style={styles.tableCell}>{item.date}</td><td style={styles.tableCell}>—</td></tr>)}</tbody>
+            <table style={styles.tables}><thead><tr><th style={styles.tableHeader}>Product</th><th style={styles.tableHeader}>Date</th><th style={styles.tableHeader}>Location</th><th style={styles.tableHeader}>Balance</th></tr></thead>
+            <tbody>{giftCardRedemptions.map((item, i) => (<tr key={i}><td style={styles.tableCell}>{item.product || "—"}</td><td style={styles.tableCell}>{item.date || "—"}</td><td style={styles.tableCell}>{item.locationUsed || "—"}</td><td style={styles.tableCell}>{item.balance !== undefined ? item.balance.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "$0.00"}</td></tr>))}</tbody>
             </table>
           </div>
         </div>
@@ -354,7 +345,7 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
           <div style={styles.chartContainerss}>
             <div style={styles.chartTitle}>Group Product Sales</div>
             <table style={styles.table}><thead><tr><th style={styles.tableHeader}>Product</th><th style={styles.tableHeader}>Sales</th><th style={styles.tableHeader}>Revenue</th></tr></thead>
-            <tbody>{productSales.map((item, i) => <tr key={i}><td style={styles.tableCell}>{item.product}</td><td style={styles.tableCell}>{item.sales}</td><td style={styles.tableCell}>${item.revenue.toFixed(2)}</td></tr>)}</tbody>
+            <tbody>{productSales.map((item, i) => (<tr key={i}><td style={styles.tableCell}>{item.product}</td><td style={styles.tableCell}>{item.sales}</td><td style={styles.tableCell}>{ item.revenue !== undefined ? item.revenue.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "$0.00"}</td></tr>))}</tbody>
             </table>
           </div>
           <button style={styles.exportButton} onClick={() => { const csvData = [...productSales.map((p) => ({ Type: "Product Sale", Product: p.product, Sales: p.sales, Revenue: p.revenue.toFixed(2), Date: p.date || "", Location: p.location || ""})), ...voucherRedemptions.map((v) => ({ Type: "Voucher Redemption", Product: v.product, Sales: "", Revenue: "", Date: v.date, Location: v.location})), ...giftCardRedemptions.map((g) => ({ Type: "Gift Card Redemption", Product: g.product, Sales: "", Revenue: "", Date: g.date, Location: g.location}))]; exportToCSV("sales_vouchers_report.csv", csvData)}}>

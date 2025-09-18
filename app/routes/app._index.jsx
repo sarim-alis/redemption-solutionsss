@@ -134,7 +134,7 @@ export const loader = async ({ request }) => {
   const responseJson = await response.json();
   const products = responseJson.data.products.edges.map(edge => edge.node);
 
-  // Filter orders by date
+  // Filter orders by date.
   if (filterDate !== "All") {
     const today = new Date();
     orders = orders.filter(order => {
@@ -154,7 +154,7 @@ export const loader = async ({ request }) => {
     });
   }
 
-  // Calculate analytics
+  // Calculate analytics.
   const totalProductSales = orders.reduce((total, order) => {
     if (order.displayFinancialStatus === "PAID" || order.displayFinancialStatus === "PAID_IN_FULL") {
       const orderTotal = parseFloat(order.totalPriceSet.shopMoney.amount);
@@ -168,7 +168,7 @@ export const loader = async ({ request }) => {
     return total + balance;
   }, 0);
 
-  // Fetch vouchers from database
+  // Fetch vouchers from database.
   const { getAllVouchers } = await import("../models/voucher.server");
   const { getAllLocations } = await import("../models/location.server");
   const locations = await getAllLocations();
@@ -183,11 +183,11 @@ export const loader = async ({ request }) => {
   const transformedProducts = products.map((p) => {
     const media = p.media?.edges.find(edge => edge.node.__typename === "MediaImage");
     
-    // Handle expire date safely to avoid Invalid Date errors
+    // Handle expire date safely to avoid Invalid Date errors.
     let expireDays = null;
     if (p.expiryDate?.value) {
       try {
-        // Parse as integer (days) since schema expects Int
+        // Parse as integer (days) since schema expects Int.
         const days = parseInt(p.expiryDate.value);
         if (!isNaN(days)) {
           expireDays = days;
@@ -199,45 +199,18 @@ export const loader = async ({ request }) => {
       }
     }
     
-    return {
-      shopifyId: p.id,
-      title: p.title,
-      description: p.description || null,
-      vendor: p.vendor || null,
-      status: p.status,
-      imageUrl: media?.node.image.url || null,
-      imageAlt: media?.node.image.altText || null,
-      totalInventory: p.totalInventory || 0,
-      categoryId: p.category?.id || null,
-      categoryName: p.category?.name || null,
-      type: p.productType?.value || null,
-      expire: expireDays,
-    };
+    return { shopifyId: p.id, title: p.title, description: p.description || null, vendor: p.vendor || null, status: p.status, imageUrl: media?.node.image.url || null, imageAlt: media?.node.image.altText || null, totalInventory: p.totalInventory || 0, categoryId: p.category?.id || null, categoryName: p.category?.name || null, type: p.productType?.value || null, expire: expireDays };
   });
 
   // Save to database.
-  await Promise.all(
-    transformedProducts.map((product) =>
-      prisma.product.upsert({
-        where: { shopifyId: product.shopifyId },
-        update: product,
-        create: product,
-      })
-    )
-  );
+  await Promise.all(transformedProducts.map((product) => prisma.product.upsert({ where: { shopifyId: product.shopifyId }, update: product, create: product })));
 
-  // Product sales by product (dynamic)
+  // Product sales by product.
   const productSalesMap = {};
   orders.forEach(order => {
     if (order.displayFinancialStatus === "PAID" || order.displayFinancialStatus === "PAID_IN_FULL") {
-      order.lineItems.edges.forEach(itemEdge => {
-        const item = itemEdge.node;
-        const title = item.title;
-        const quantity = item.quantity;
-        const price = parseFloat(item.originalUnitPriceSet.shopMoney.amount);
-        if (!productSalesMap[title]) {
-          productSalesMap[title] = { sales: 0, revenue: 0 };
-        }
+      order.lineItems.edges.forEach(itemEdge => { const item = itemEdge.node; const title = item.title; const quantity = item.quantity; const price = parseFloat(item.originalUnitPriceSet.shopMoney.amount);
+        if (!productSalesMap[title]) { productSalesMap[title] = { sales: 0, revenue: 0 };}
         productSalesMap[title].sales += quantity;
         productSalesMap[title].revenue += price * quantity;
       });
@@ -251,7 +224,7 @@ export const loader = async ({ request }) => {
 
   const productSales = (products || []).map(p => {
   const stats = productSalesMap[p.title] || { sales: 0, revenue: 0 };
-  // Find the most recent order for this product
+  // Recent order of product.
   let date = null;
   for (const order of orders) {
     if (order.lineItems && order.lineItems.edges) {
@@ -265,67 +238,30 @@ export const loader = async ({ request }) => {
     }
     if (date) break;
   }
-  return {
-    product: p.title,
-    sales: stats.sales,
-    revenue: stats.revenue,
-    date: date,
-    expire: p.expire ? new Date(p.expire).toLocaleDateString() : "No Expiry"
-  };
+  return { product: p.title, sales: stats.sales, revenue: stats.revenue, date: date, expire: p.expire ? new Date(p.expire).toLocaleDateString() : "No Expiry" };
 });
 
-  // Voucher Redemptions (dynamic)
-  // Join voucher with order and lineItems
-  const voucherRedemptions = await prisma.voucher.findMany({
-    where: { used: true },
-    include: {
-      order: true
-    }
-  });
-
-  // For each voucher, try to get product name from order.lineItems (JSON)
+  // Voucher Redemptions.
+  const voucherRedemptions = await prisma.voucher.findMany({ where: { used: true }, include: { order: true }});
   const voucherRedemptionRows = voucherRedemptions.map(voucher => {
-    let product = "";
-    let location = voucher.customerEmail || "";
-    let date = voucher.createdAt.toISOString().slice(0, 10);
-    // Try to get product from order.lineItems
+  let product = "";
+  let locationUsed = voucher.locationUsed || "";
+  let date = voucher.createdAt.toISOString().slice(0, 10);
     if (voucher.order && voucher.order.lineItems) {
       try {
-        const items = Array.isArray(voucher.order.lineItems)
-          ? voucher.order.lineItems
-          : JSON.parse(voucher.order.lineItems);
+        const items = Array.isArray(voucher.order.lineItems) ? voucher.order.lineItems : JSON.parse(voucher.order.lineItems);
         if (Array.isArray(items) && items.length > 0) {
           product = items[0].title || "";
         } else if (items.edges && items.edges.length > 0) {
           product = items.edges[0].node.title || "";
         }
       } catch (e) {
-        // ignore
       }
     }
-    return {
-      product,
-      date,
-      location
-    };
+    return { product, date, locationUsed };
   });
 
-  return { 
-    products, 
-    orders, 
-    giftCards,
-    analytics: {
-      totalProductSales,
-      totalGiftCardBalance,
-      totalVouchers: allVouchers.length,
-      activeVouchers: activeVouchers.length,
-      allProducts: products
-    },
-    productSales,
-    voucherRedemptions: voucherRedemptionRows,
-    vouchers: allVouchers,
-    locations: locations
-  };
+  return { products, orders, giftCards, analytics: { totalProductSales, totalGiftCardBalance, totalVouchers: allVouchers.length, activeVouchers: activeVouchers.length, allProducts: products }, productSales, voucherRedemptions: voucherRedemptionRows, vouchers: allVouchers, locations: locations };
 };
 
 export const action = async ({ request }) => {
