@@ -197,6 +197,9 @@ useEffect(() => { if (editingLocation) { editFormik.setValues({ id: editingLocat
             <div style={{ flex: 1, textAlign: 'left' }}>
               <Text variant="headingMd" as="h2">Location Name</Text>
             </div>
+            <div style={{ width: 200, textAlign: 'left' }}>
+              <Text variant="headingMd" as="h2">Market</Text>
+            </div>
             <div style={{ width: 200, textAlign: 'right' }}>
               <Text variant="headingMd" as="h2">Actions</Text>
             </div>
@@ -207,6 +210,7 @@ useEffect(() => { if (editingLocation) { editFormik.setValues({ id: editingLocat
               key={loc.id}
               style={{display: 'flex',alignItems: 'center',padding: '12px 0',color: 'black'}}>
               <span style={{ flex: 1, minWidth: "120px", textAlign: 'left' }}>{loc.name}</span>
+              <span style={{ width: 200, minWidth: "120px", textAlign: 'left' }}>{loc.market || "—"}</span>
               <div style={{ width: 200, textAlign: 'right' }}>
                 <Dropdown overlay={actionMenu(loc.id)} trigger={['click']} placement="bottomRight" arrow>
                   <MoreOutlined style={{ fontSize: 30, cursor: 'pointer' }} />
