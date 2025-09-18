@@ -192,33 +192,46 @@ useEffect(() => { if (editingLocation) { editFormik.setValues({ id: editingLocat
             </div>
           </div>
 
-        <div style={{ marginTop: "40px" }}>
-          <div style={{display: 'flex',fontWeight: 'bold',paddingBottom: '12px',borderBottom: '2px solid #333',color: 'black'}}>
-            <div style={{ flex: 1, textAlign: 'left' }}>
-              <Text variant="headingMd" as="h2">Location Name</Text>
-            </div>
-            <div style={{ width: 200, textAlign: 'left' }}>
-              <Text variant="headingMd" as="h2">Market</Text>
-            </div>
-            <div style={{ width: 200, textAlign: 'right' }}>
-              <Text variant="headingMd" as="h2">Actions</Text>
-            </div>
-          </div>
+       <div style={{ marginTop: "40px" }}>
+  {/* Header */}
+  <div
+    style={{
+      display: "flex",
+      fontWeight: "bold",
+      paddingBottom: "12px",
+      borderBottom: "2px solid #333",
+      color: "black",
+    }}
+  >
+    <div style={{ flex: 1, textAlign: "left" }}>
+      <Text variant="headingMd" as="h2">Location Name</Text>
+    </div>
+    <div style={{ flex: 1, textAlign: "center" }}>
+      <Text variant="headingMd" as="h2">Market</Text>
+    </div>
+    <div style={{ flex: 1, textAlign: "right" }}>
+      <Text variant="headingMd" as="h2">Actions</Text>
+    </div>
+  </div>
 
-          {locations.map((loc) => (
-            <div
-              key={loc.id}
-              style={{display: 'flex',alignItems: 'center',padding: '12px 0',color: 'black'}}>
-              <span style={{ flex: 1, minWidth: "120px", textAlign: 'left' }}>{loc.name}</span>
-              <span style={{ width: 200, minWidth: "120px", textAlign: 'left' }}>{loc.market || "—"}</span>
-              <div style={{ width: 200, textAlign: 'right' }}>
-                <Dropdown overlay={actionMenu(loc.id)} trigger={['click']} placement="bottomRight" arrow>
-                  <MoreOutlined style={{ fontSize: 30, cursor: 'pointer' }} />
-                </Dropdown>
-              </div>
-            </div>
-          ))}
-        </div>
+  {/* Rows */}
+  {locations.map((loc) => (
+    <div key={loc.id} style={{ display: "flex", alignItems: "center", padding: "12px 0", color: "black" }}>
+      <span style={{ flex: 1, minWidth: "120px", textAlign: "left" }}>
+        {loc.name}
+      </span>
+      <span style={{ flex: 1, minWidth: "120px", textAlign: "center" }}>
+        {loc.market || "—"}
+      </span>
+      <div style={{ flex: 1, textAlign: "right" }}>
+        <Dropdown overlay={actionMenu(loc.id)} trigger={["click"]} placement="bottomRight" arrow>
+          <MoreOutlined style={{ fontSize: 30, cursor: "pointer" }} />
+        </Dropdown>
+      </div>
+    </div>
+  ))}
+</div>
+
 
         
 
