@@ -191,7 +191,6 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
     }
     return isDateMatch(normDate, dateFilter, customStart, customEnd)
       && isProductMatch(item.product, filters.products)
-      && isLocationMatch(item.locationUsed || item.location, filters.locations);
   });
 
   // Filtered voucher redemptions
