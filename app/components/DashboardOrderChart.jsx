@@ -235,20 +235,8 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
         </select>
         {dateFilter === "Custom Range" && (
           <div style={{ marginTop: "0.5rem", display: "flex", gap: "8px" }}>
-            <DatePicker
-              style={{ width: "150px" }}
-              placeholder="Start Date"
-              value={customStart ? dayjs(customStart) : null}
-              onChange={(date, dateString) => setCustomStart(dateString)}
-              format="YYYY-MM-DD"
-            />
-            <DatePicker
-              style={{ width: "150px" }}
-              placeholder="End Date"
-              value={customEnd ? dayjs(customEnd) : null}
-              onChange={(date, dateString) => setCustomEnd(dateString)}
-              format="YYYY-MM-DD"
-            />
+            <DatePicker style={{ width: "150px" }} placeholder="Start Date" value={customStart ? dayjs(customStart) : null} onChange={(date, dateString) => setCustomStart(dateString)} format="YYYY-MM-DD" />
+            <DatePicker style={{ width: "150px" }} placeholder="End Date" value={customEnd ? dayjs(customEnd) : null} onChange={(date, dateString) => setCustomEnd(dateString)} format="YYYY-MM-DD" />
           </div>
         )}
         <select style={styles.select} value={filters.products} onChange={e => setFilters(f => ({ ...f, products: e.target.value }))}>
