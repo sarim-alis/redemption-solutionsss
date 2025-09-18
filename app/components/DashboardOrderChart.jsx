@@ -191,21 +191,21 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
     }
     return isDateMatch(normDate, dateFilter, customStart, customEnd)
       && isProductMatch(item.product, filters.products)
-      && isLocationMatch(item.location, filters.locations);
+      && isLocationMatch(item.locationUsed || item.location, filters.locations);
   });
 
   // Filtered voucher redemptions
   const voucherRedemptions = filteredVouchers.filter(item =>
-    !(item.product.toLowerCase().includes("gift") || item.type === "gift") &&
-    isProductMatch(item.product, filters.products) &&
-    isLocationMatch(item.location, filters.locations)
+  !(item.product.toLowerCase().includes("gift") || item.type === "gift") &&
+  isProductMatch(item.product, filters.products) &&
+  isLocationMatch(item.locationUsed, filters.locations)
   );
 
   // Filtered gift card redemptions
   const giftCardRedemptions = filteredVouchers.filter(item =>
-    (item.product.toLowerCase().includes("gift") || item.type === "gift") &&
-    isProductMatch(item.product, filters.products) &&
-    isLocationMatch(item.location, filters.locations)
+  (item.product.toLowerCase().includes("gift") || item.type === "gift") &&
+  isProductMatch(item.product, filters.products) &&
+  isLocationMatch(item.locationUsed, filters.locations)
   );
 
   // Filtered metrics
