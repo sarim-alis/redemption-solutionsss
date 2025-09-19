@@ -170,11 +170,12 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
 
   // Filtered product sales
   const productSales = (allProductSales || []).filter(item => {
-    let normDate = item.date;
+    let normDate = "";
     if (item.date) {
+      // Always convert to YYYY-MM-DD for filtering
       const d = new Date(item.date);
       if (!isNaN(d.getTime())) {
-        normDate = d.toISOString().slice(0, 10);
+        normDate = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
       }
     }
     return isDateMatch(normDate, dateFilter, customStart, customEnd)
