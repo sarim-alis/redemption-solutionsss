@@ -2,6 +2,8 @@
 import { useState } from "react"
 import { useLoaderData } from "@remix-run/react";
 import styles from "../styles/dash.js";
+import dayjs from "dayjs";
+import { DatePicker } from "antd";
 
 
 // Export to csv.
@@ -189,21 +191,20 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
     }
     return isDateMatch(normDate, dateFilter, customStart, customEnd)
       && isProductMatch(item.product, filters.products)
-      && isLocationMatch(item.location, filters.locations);
   });
 
   // Filtered voucher redemptions
   const voucherRedemptions = filteredVouchers.filter(item =>
-    !(item.product.toLowerCase().includes("gift") || item.type === "gift") &&
-    isProductMatch(item.product, filters.products) &&
-    isLocationMatch(item.location, filters.locations)
+  !(item.product.toLowerCase().includes("gift") || item.type === "gift") &&
+  isProductMatch(item.product, filters.products) &&
+  isLocationMatch(item.locationUsed, filters.locations)
   );
 
   // Filtered gift card redemptions
   const giftCardRedemptions = filteredVouchers.filter(item =>
-    (item.product.toLowerCase().includes("gift") || item.type === "gift") &&
-    isProductMatch(item.product, filters.products) &&
-    isLocationMatch(item.location, filters.locations)
+  (item.product.toLowerCase().includes("gift") || item.type === "gift") &&
+  isProductMatch(item.product, filters.products) &&
+  isLocationMatch(item.locationUsed, filters.locations)
   );
 
   // Filtered metrics
@@ -232,9 +233,9 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
           <option value="Custom Range">Custom Range</option>
         </select>
         {dateFilter === "Custom Range" && (
-          <div style={{ marginTop: "0.5rem" }}>
-            <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)}/>
-            <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)}/>
+          <div style={{ marginTop: "0.5rem", display: "flex", gap: "8px" }}>
+            <DatePicker style={{ width: "150px" }} placeholder="Start Date" value={customStart ? dayjs(customStart) : null} onChange={(date, dateString) => setCustomStart(dateString)} format="YYYY-MM-DD" />
+            <DatePicker style={{ width: "150px" }} placeholder="End Date" value={customEnd ? dayjs(customEnd) : null} onChange={(date, dateString) => setCustomEnd(dateString)} format="YYYY-MM-DD" />
           </div>
         )}
         <select style={styles.select} value={filters.products} onChange={e => setFilters(f => ({ ...f, products: e.target.value }))}>
