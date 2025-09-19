@@ -2,9 +2,9 @@
 
 client_id = "c2f415f66df6ec14c9b7ccef564c014c"
 name = "redeem-gift"
-handle = "redeem-gift"
-application_url = "https://conclude-builds-powell-something.trycloudflare.com"
+application_url = "https://example.com/"
 embedded = true
+handle = "redeem-gift"
 
 [build]
 automatically_update_urls_on_dev = true
@@ -17,11 +17,7 @@ api_version = "2025-07"
 scopes = "read_assigned_fulfillment_orders,read_customers,read_discounts,read_gift_cards,read_inventory,read_merchant_managed_fulfillment_orders,read_orders,read_third_party_fulfillment_orders,write_assigned_fulfillment_orders,write_discounts,write_gift_cards,write_inventory,write_merchant_managed_fulfillment_orders,write_orders,write_products,write_third_party_fulfillment_orders"
 
 [auth]
-redirect_urls = [
-  "https://conclude-builds-powell-something.trycloudflare.com/auth/callback",
-  "https://conclude-builds-powell-something.trycloudflare.com/auth/shopify/callback",
-  "https://conclude-builds-powell-something.trycloudflare.com/api/auth/callback"
-]
+redirect_urls = [ "https://example.com/api/auth" ]
 
 [pos]
 embedded = false

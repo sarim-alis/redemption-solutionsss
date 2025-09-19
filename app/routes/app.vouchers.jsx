@@ -254,7 +254,11 @@ export default function VouchersPage() {
                 filteredVouchers.map((v, idx) => (
                   <tr key={v.id} style={{background: idx % 2 === 0 ? "#fafbfc" : "#fff"}}>
                     <td style={cellStyle}>{v.code}</td>
-                    <td style={cellStyle}>{Array.isArray(v.type) ? v.type[0] : (typeof v.type === 'string' ? v.type.replace(/\[|\]|"/g, '') : 'voucher')}</td>
+                    <td style={cellStyle}>{
+                      (typeof v.type === 'string' && v.type.toLowerCase().includes('gift'))
+                        ? 'gift card'
+                        : (Array.isArray(v.type) ? v.type[0] : (typeof v.type === 'string' ? v.type.replace(/\[|\]|"/g, '') : 'voucher'))
+                    }</td>
                     <td style={cellStyle}>{v.shopifyOrderId}</td>
                     <td style={cellStyle}>{v.customerEmail}</td>
                     <td style={cellStyle}><span style={{ display: "inline-block", padding: "2px 8px", borderRadius: 8, background: v.order?.statusUse ? "#fee2e2" : "#f3f4f6", color: v.order?.statusUse ? "#b91c1c" : "#4b5563", fontWeight: 600, fontSize: 12, textTransform: 'uppercase' }}>{v.order?.statusUse ? "USED" : "UNUSED"}</span></td>
