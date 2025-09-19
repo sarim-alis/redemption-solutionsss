@@ -252,8 +252,8 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
       <div style={styles.metricsGrid}>
         <div style={styles.metricCard}><div style={styles.metricLabel}>Total Product Sales</div><div style={styles.metricValue}>{typeof totalProductSales === "number" ? totalProductSales.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }) : totalProductSales}</div></div>
         <div style={styles.metricCard}><div style={styles.metricLabel}>Total Gift Card Balances</div><div style={styles.metricValue}>{typeof totalGiftCardBalance === "number" ? totalGiftCardBalance.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }) : totalGiftCardBalance}</div></div>
-        <div style={styles.metricCard}><div style={styles.metricLabel}>Total Vouchers</div><div style={styles.metricValue}>{totalVouchers}</div></div>
-        <div style={styles.metricCard}><div style={styles.metricLabel}>Active Vouchers</div><div style={styles.metricValue}>{activeVouchers}</div></div>
+        <div style={styles.metricCard}><div style={styles.metricLabel}>Total Vouchers</div><div style={styles.metricValue}>{typeof totalVouchers === "number" ? totalVouchers.toLocaleString('en-US') : totalVouchers}</div></div>
+        <div style={styles.metricCard}><div style={styles.metricLabel}>Active Vouchers</div><div style={styles.metricValue}>{typeof activeVouchers === "number" ? activeVouchers.toLocaleString('en-US') : activeVouchers}</div></div>
       </div>
 
       {/* Charts Grid */}
