@@ -1,4 +1,34 @@
 // Imports.
+// Export to CSV utility
+function exportToCSV(filename, data) {
+  if (!data || data.length === 0) return;
+
+  const csvRows = [];
+  const headers = Object.keys(data[0]);
+  csvRows.push(headers.join(","));
+
+  for (const row of data) {
+    const values = headers.map((h) => {
+      let val = row[h] ?? "";
+      if (typeof val === "string") {
+        val = `"${val.replace(/"/g, '""')}"`;
+      }
+      return val;
+    });
+    csvRows.push(values.join(","));
+  }
+
+  const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.setAttribute("hidden", "");
+  a.setAttribute("href", url);
+  a.setAttribute("download", filename);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
 import React from "react";
 import { useLoaderData, useNavigation } from "@remix-run/react";
 import SidebarLayout from "../components/SidebarLayout";
@@ -94,19 +124,13 @@ export default function VouchersPage() {
       const code = (v.code || "").toLowerCase();
       const orderId = (v.shopifyOrderId || "").toLowerCase();
       const email = (v.customerEmail || "").toLowerCase();
-      // Use direct type from voucher table
       const type = (v.type || 'voucher').toLowerCase();
       const isGift = type.includes('gift');
       
       const matchesSearch = code.includes(q) || orderId.includes(q) || email.includes(q);
       const matchesDate = isDateMatch(v.createdAt, dateFilter);
-      const matchesType = typeFilter === 'all' || 
-                         (typeFilter === 'voucher' && !isGift) ||
-                         (typeFilter === 'gift' && isGift);
-      const matchesUsed = usedFilter === 'all' || 
-                         (usedFilter === 'used' && v.order?.statusUse) || 
-                         (usedFilter === 'not_used' && !v.order?.statusUse);
-      
+      const matchesType = typeFilter === 'all' || (typeFilter === 'voucher' && !isGift) || (typeFilter === 'gift' && isGift);
+      const matchesUsed = usedFilter === 'all' || (usedFilter === 'used' && v.order?.statusUse) || (usedFilter === 'not_used' && !v.order?.statusUse);
       return matchesSearch && matchesDate && matchesType && matchesUsed;
     });
   }, [vouchers, search, dateFilter, typeFilter, usedFilter]);
@@ -115,28 +139,8 @@ export default function VouchersPage() {
     <SidebarLayout>
       <div style={{ padding: 40, position: 'relative' }}>
         {isLoading && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(255, 255, 255, 0.8)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000
-          }}>
-            <div style={{
-              background: 'white',
-              padding: '20px 40px',
-              borderRadius: '8px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '16px'
-            }}>
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255, 255, 255, 0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+            <div style={{ background: 'white', padding: '20px 40px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
               <Spinner size="large" />
               <div style={{ color: '#4b5563', marginTop: '12px' }}>Loading vouchers...</div>
             </div>
@@ -184,36 +188,15 @@ export default function VouchersPage() {
         </div>
 
         {/* Search and Filters */}
-        <div style={{ 
-          backgroundColor: '#fff', 
-          padding: '20px', 
-          borderRadius: '8px', 
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          marginBottom: '24px'
-        }}>
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
-            gap: '16px',
-            marginBottom: '16px'
-          }}>
+        <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)',marginBottom: '24px'}}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px',marginBottom: '16px'}}>
             <div>
               <label style={labelStyle}>Search</label>
-              <input
-                type="text"
-                placeholder="Search by code, order ID, or email"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                style={inputStyle}
-              />
+              <input type="text" placeholder="Search by code, order ID, or email" value={search} onChange={e => setSearch(e.target.value)} style={inputStyle} />
             </div>
             <div>
               <label style={labelStyle}>Date Range</label>
-              <select
-                value={dateFilter}
-                onChange={e => setDateFilter(e.target.value)}
-                style={inputStyle}
-              >
+              <select value={dateFilter} onChange={e => setDateFilter(e.target.value)} style={inputStyle}>
                 <option value="All">All Time</option>
                 <option value="Today">Today</option>
                 <option value="Yesterday">Yesterday</option>
@@ -248,23 +231,13 @@ export default function VouchersPage() {
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <form method="post" action="/vouchers/export">
-              <button type="submit" style={exportButtonStyle}>
-                Export
-              </button>
-            </form>
+            <button type="button" style={exportButtonStyle} onClick={() => {const csvData = filteredVouchers.map(v => ({ Code: v.code, Type: Array.isArray(v.type) ? v.type[0] : (typeof v.type === 'string' ? v.type.replace(/\[|\]|"/g, '') : 'voucher'), OrderID: v.shopifyOrderId, CustomerEmail: v.customerEmail, Used: v.order?.statusUse ? "USED" : "UNUSED", CreatedAt: v.createdAt }));exportToCSV("all_vouchers.csv", csvData);}}>
+              Export
+            </button>
           </div>
         </div>
-        <div
-          style={containerStyle}
-        >
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: 13,
-            }}
-          >
+        <div style={containerStyle}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead style={{ background: "#f3f4f6" }}>
               <tr>
                 <th style={headStyle}>Code</th>
@@ -279,40 +252,17 @@ export default function VouchersPage() {
             <tbody>
               {filteredVouchers.length > 0 ? (
                 filteredVouchers.map((v, idx) => (
-                  <tr
-                    key={v.id}
-                    style={{
-                      background: idx % 2 === 0 ? "#fafbfc" : "#fff",
-                    }}
-                  >
+                  <tr key={v.id} style={{background: idx % 2 === 0 ? "#fafbfc" : "#fff"}}>
                     <td style={cellStyle}>{v.code}</td>
-                    <td style={cellStyle}>
-                      {Array.isArray(v.type) ? v.type[0] : (typeof v.type === 'string' ? v.type.replace(/\[|\]|"/g, '') : 'voucher')}
-                    </td>
-                    <td style={cellStyle}>
-                     
-                        {v.shopifyOrderId}
-                    
-                    </td>
+                    <td style={cellStyle}>{
+                      (typeof v.type === 'string' && v.type.toLowerCase().includes('gift'))
+                        ? 'gift card'
+                        : (Array.isArray(v.type) ? v.type[0] : (typeof v.type === 'string' ? v.type.replace(/\[|\]|"/g, '') : 'voucher'))
+                    }</td>
+                    <td style={cellStyle}>{v.shopifyOrderId}</td>
                     <td style={cellStyle}>{v.customerEmail}</td>
-                    <td style={cellStyle}>
-                      <span
-                        style={{
-                          display: "inline-block",
-                          padding: "2px 8px",
-                          borderRadius: 8,
-                          background: v.order?.statusUse ? "#fee2e2" : "#f3f4f6",
-                          color: v.order?.statusUse ? "#b91c1c" : "#4b5563",
-                          fontWeight: 600,
-                          fontSize: 12,
-                          textTransform: 'uppercase',
-                        }}>
-                        {v.order?.statusUse ? "USED" : "UNUSED"}
-                      </span>
-                    </td>
-                    <td style={cellStyle}>
-                      {new Date(v.createdAt).toLocaleString()}
-                    </td>
+                    <td style={cellStyle}><span style={{ display: "inline-block", padding: "2px 8px", borderRadius: 8, background: v.order?.statusUse ? "#fee2e2" : "#f3f4f6", color: v.order?.statusUse ? "#b91c1c" : "#4b5563", fontWeight: 600, fontSize: 12, textTransform: 'uppercase' }}>{v.order?.statusUse ? "USED" : "UNUSED"}</span></td>
+                    <td style={cellStyle}>{new Date(v.createdAt).toLocaleString()}</td>
                     <button onClick={() => window.open(`/vouchers/export?id=${v.id}`, "_blank")} style={{ padding: "6px 12px", backgroundColor: "#862633", color: "white", border: "none", borderRadius: "6px", cursor: "pointer"}}>
                       Download
                     </button>
@@ -320,18 +270,8 @@ export default function VouchersPage() {
                 ))
               ) : (
                 <tr>
-                  <td
-                    colSpan={6}
-                    style={{
-                      textAlign: "center",
-                      padding: 40,
-                    }}
-                  >
-                    <img
-                      src="/not-found.svg"
-                      alt="No vouchers found"
-                      style={{ width: 48, height: 48, opacity: 0.5 }}
-                    />
+                  <td colSpan={6} style={{ textAlign: "center", padding: 40 }}>
+                    <img src="/not-found.svg" alt="No vouchers found" style={{ width: 48, height: 48, opacity: 0.5 }} />
                   </td>
                 </tr>
               )}
@@ -344,87 +284,12 @@ export default function VouchersPage() {
 }
 
 // Styles
-const cardStyle = {
-  backgroundColor: '#fff',
-  borderRadius: '8px',
-  padding: '20px',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-  textAlign: 'center',
-  borderTop: '3px solid #862633'
-};
-
-const cardTitleStyle = {
-  color: '#6b7280',
-  fontSize: '14px',
-  marginBottom: '8px'
-};
-
-const cardValueStyle = {
-  color: '#111827',
-  fontSize: '24px',
-  fontWeight: '600'
-};
-
-const labelStyle = {
-  display: 'block',
-  marginBottom: '6px',
-  fontSize: '14px',
-  color: '#374151',
-  fontWeight: '500'
-};
-
-const inputStyle = {
-  width: '100%',
-  padding: '8px 12px',
-  border: '1px solid #d1d5db',
-  borderRadius: '6px',
-  fontSize: '14px',
-  color: '#111827',
-  backgroundColor: '#fff',
-  transition: 'border-color 0.2s',
-  ':focus': {
-    outline: 'none',
-    borderColor: '#862633',
-    boxShadow: '0 0 0 2px rgba(134, 38, 51, 0.1)'
-  }
-};
-
-const exportButtonStyle = {
-  backgroundColor: '#862633',
-  color: 'white',
-  border: 'none',
-  borderRadius: '6px',
-  padding: '10px 20px',
-  fontSize: '14px',
-  fontWeight: '500',
-  cursor: 'pointer',
-  transition: 'background-color 0.2s',
-  ':hover': {
-    backgroundColor: '#6e1e2c'
-  }
-};
-
-const containerStyle = {
-  overflowX: "auto",
-  width: "100%",
-  margin: 0,
-  background: "#fff",
-  borderRadius: 12,
-  boxShadow: "0 2px 16px #0001",
-  border: "1px solid #eee",
-}
-
-const headStyle = {
-  padding: "12px 6px",
-  fontWeight: 600,
-  borderBottom: "2px solid #e5e7eb",
-  fontSize: 13,
-  textAlign: "left"
-};
-
-const cellStyle = {
-  padding: "8px 6px",
-  borderBottom: "1px solid #f3f4f6",
-  fontSize: 13,
-  color: "#6b7280",
-};
+const cardStyle = { backgroundColor: '#fff', borderRadius: '8px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', textAlign: 'center', borderTop: '3px solid #862633' };
+const cardTitleStyle = { color: '#6b7280', fontSize: '14px', marginBottom: '8px'};
+const cardValueStyle = { color: '#111827', fontSize: '24px', fontWeight: '600' };
+const labelStyle = { display: 'block', marginBottom: '6px', fontSize: '14px', color: '#374151', fontWeight: '500' };
+const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', color: '#111827', backgroundColor: '#fff', transition: 'border-color 0.2s', ':focus': { outline: 'none', borderColor: '#862633', boxShadow: '0 0 0 2px rgba(134, 38, 51, 0.1)'}};
+const exportButtonStyle = { backgroundColor: '#862633', color: 'white', border: 'none', borderRadius: '6px', padding: '10px 20px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', transition: 'background-color 0.2s', ':hover': { backgroundColor: '#6e1e2c'}};
+const containerStyle = { overflowX: "auto", width: "100%", margin: 0, background: "#fff", borderRadius: 12, boxShadow: "0 2px 16px #0001", border: "1px solid #eee" }
+const headStyle = { padding: "12px 6px", fontWeight: 600, borderBottom: "2px solid #e5e7eb", fontSize: 13, textAlign: "left" };
+const cellStyle = { padding: "8px 6px", borderBottom: "1px solid #f3f4f6", fontSize: 13, color: "#6b7280" };
