@@ -91,7 +91,7 @@ export async function sendEmail({ to, subject, text, html, priority = 'normal', 
     try {
         // Prepare email options
         const mailOptions = {
-            from: `"Jiffy Lube" <${smtpUser}>`,
+            from: `"Jiffy Lube Specials" <${smtpUser}>`,
             to: Array.isArray(to) ? to.join(', ') : to,
             subject: subject || 'No Subject',
             priority: ['high', 'low'].includes(priority) ? priority : 'normal',
