@@ -53,6 +53,7 @@
     "undici-types": "^7.15.0",
     "uuid": "^11.1.0",
     "vite-tsconfig-paths": "^5.0.1",
+    "xlsx": "^0.18.5",
     "yup": "^1.6.1"
   },
   "devDependencies": {

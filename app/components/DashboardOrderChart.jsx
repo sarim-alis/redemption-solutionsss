@@ -4,37 +4,25 @@ import { useLoaderData } from "@remix-run/react";
 import styles from "../styles/dash.js";
 import dayjs from "dayjs";
 import { DatePicker } from "antd";
+import * as XLSX from "xlsx";
 
 
-// Export to csv.
-function exportToCSV(filename, data) {
-  if (!data || data.length === 0) return;
+function exportToExcel(productSales, voucherRedemptions, giftCardRedemptions) {
+  const productSalesSheet = productSales.map(p => ({ Type: "Product Sale", Product: p.product, Sales: p.sales, Revenue: p.revenue?.toFixed(2) ?? "0.00", Date: p.date || "", Location: p.location || ""}));
+  const voucherRedemptionsSheet = voucherRedemptions.map(v => ({ Type: "Voucher Redemption", Product: v.product, Date: v.date, Location: v.locationUsed, Revenue: "", Sales: ""}));
+  const giftCardRedemptionsSheet = giftCardRedemptions.map(g => ({ Type: "Gift Card Redemption", Product: g.product, Date: g.date, Location: g.locationUsed, Balance: g.balance?.toFixed(2) ?? "0.00"}));
 
-  const csvRows = [];
-  const headers = Object.keys(data[0]);
-  csvRows.push(headers.join(","));
+  // Create sheets.
+  const wb = XLSX.utils.book_new();
+  const ws1 = XLSX.utils.json_to_sheet(productSalesSheet);
+  const ws2 = XLSX.utils.json_to_sheet(voucherRedemptionsSheet);
+  const ws3 = XLSX.utils.json_to_sheet(giftCardRedemptionsSheet);
 
-  for (const row of data) {
-    const values = headers.map((h) => {
-      let val = row[h] ?? "";
-      if (typeof val === "string") {
-        val = `"${val.replace(/"/g, '""')}"`;
-      }
-      return val;
-    });
-    csvRows.push(values.join(","));
-  }
-
-  const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
-  const url = window.URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.setAttribute("hidden", "");
-  a.setAttribute("href", url);
-  a.setAttribute("download", filename);
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  // Append sheets to workbook.
+  XLSX.utils.book_append_sheet(wb, ws1, "Product Sales");
+  XLSX.utils.book_append_sheet(wb, ws2, "Voucher Redemptions");
+  XLSX.utils.book_append_sheet(wb, ws3, "Gift Card Redemptions");
+  XLSX.writeFile(wb, "sales_vouchers_report.xlsx");
 }
 
 
@@ -349,7 +337,7 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
             <tbody>{productSales.map((item, i) => (<tr key={i}><td style={styles.tableCell}>{item.product}</td><td style={styles.tableCell}>{item.sales}</td><td style={styles.tableCell}>{ item.revenue !== undefined ? item.revenue.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "$0.00"}</td></tr>))}</tbody>
             </table>
           </div>
-          <button style={styles.exportButton} onClick={() => { const csvData = [...productSales.map((p) => ({ Type: "Product Sale", Product: p.product, Sales: p.sales, Revenue: p.revenue.toFixed(2), Date: p.date || "", Location: p.location || ""})), ...voucherRedemptions.map((v) => ({ Type: "Voucher Redemption", Product: v.product, Sales: "", Revenue: "", Date: v.date, Location: v.location})), ...giftCardRedemptions.map((g) => ({ Type: "Gift Card Redemption", Product: g.product, Sales: "", Revenue: "", Date: g.date, Location: g.location}))]; exportToCSV("sales_vouchers_report.csv", csvData)}}>
+          <button style={styles.exportButton} onClick={() => exportToExcel(productSales, voucherRedemptions, giftCardRedemptions)}>
             Export
           </button>
         </div>
