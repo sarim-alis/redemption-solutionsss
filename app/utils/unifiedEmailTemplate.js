@@ -125,8 +125,7 @@ export function generateVoucherCard(voucher) {
         <tr>
           <td style="font-size:12px; font-style:italic; color:#ffffff; text-align:left; padding-top:35px;">
             *Only valid at participating ACE Jiffy Lube Locations. <br />
-            ** Term 2 <br />
-            *** Term 3
+        
             <table width="100%" style="margin-top:10px;">
               <tr>
                 <td align="right">
