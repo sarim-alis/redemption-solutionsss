@@ -42,7 +42,7 @@ export default function DashboardOrderChart({ analytics, vouchers, locations }) 
     ? (locations || [])
     : (locations || []).filter(loc => loc.market === filters.market);
   const isFilterActive = filters.date !== "All" || filters.products !== "All Products" || filters.locations !== "All Locations";
-  const { productSales: allProductSales, voucherRedemptions: allVoucherRedemptions } = useLoaderData();
+  const { voucherRedemptions: allVoucherRedemptions } = useLoaderData();
 
 // Is date match.
 function isDateMatch(dateString, filter, customStart, customEnd) {
@@ -188,19 +188,17 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
     return isDateMatch(item.date, dateFilter, customStart, customEnd);
   });
 
-  // Filtered product sales
-  const productSales = (allProductSales || []).filter(item => {
-    let normDate = "";
-    if (item.date) {
-      // Always convert to YYYY-MM-DD for filtering
-      const d = new Date(item.date);
-      if (!isNaN(d.getTime())) {
-        normDate = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-      }
+  // Group vouchers by productTitle and show count and totalPrice for each product
+  const productTitleMap = {};
+  filteredVouchers.forEach(voucher => {
+    const product = voucher.product || voucher.productTitle || "[voucher]";
+    if (!productTitleMap[product]) {
+      productTitleMap[product] = { product, sales: 0, revenue: 0 };
     }
-    return isDateMatch(normDate, dateFilter, customStart, customEnd)
-      && isProductMatch(item.product, filters.products)
+    productTitleMap[product].sales += 1;
+    productTitleMap[product].revenue += voucher.balance || 0;
   });
+  const productSales = Object.values(productTitleMap);
 
   // Filtered voucher redemptions
   const voucherRedemptions = filteredVouchers.filter(item => {
@@ -265,7 +263,6 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
         <select style={styles.select} value={filters.products} onChange={e => setFilters(f => ({ ...f, products: e.target.value }))}>
           <option>All Products</option>
           {[...new Set([
-          ...allProductSales.map(p => p.product),
           ...((vouchers || []).map(v => v.productTitle).filter(Boolean)),
           ...((analytics?.allProducts || []).map(p => p.title))
           ])].map((product, idx) => (
