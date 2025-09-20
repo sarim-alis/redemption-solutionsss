@@ -31,7 +31,16 @@ export default function DashboardOrderChart({ analytics, vouchers, locations }) 
   const [dateFilter, setDateFilter] = useState("All");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
-  const [filters, setFilters] = useState({ products: "All Products", locations: "All Locations"});
+  const marketOptions = ["Market #1", "Market #2", "Market #3", "Market #4", "Market #5", "Market #6", "Market #7"];
+  const [filters, setFilters] = useState({ products: "All Products", locations: "All Locations", market: "All Markets" });
+  // Reset location filter when market changes
+  function handleMarketChange(e) {
+    setFilters(f => ({ ...f, market: e.target.value, locations: "All Locations" }));
+  }
+  // Define filteredLocations for use in dropdowns and voucher filtering
+  const filteredLocations = filters.market === "All Markets"
+    ? (locations || [])
+    : (locations || []).filter(loc => loc.market === filters.market);
   const isFilterActive = filters.date !== "All" || filters.products !== "All Products" || filters.locations !== "All Locations";
   const { productSales: allProductSales, voucherRedemptions: allVoucherRedemptions } = useLoaderData();
 
@@ -164,9 +173,20 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
   });
 
   // Filtered vouchers by date
-  const filteredVouchers = transformedVouchers.filter(item =>
-    isDateMatch(item.date, dateFilter, customStart, customEnd)
-  );
+  // Filter vouchers by date and selected market
+  const filteredVouchers = transformedVouchers.filter(item => {
+    // Find location object for this voucher
+    let locationObj = filteredLocations.find(loc => {
+      if (!loc.name) return false;
+      // Match by name (case-insensitive)
+      return (item.locationUsed || "").toLowerCase().includes((loc.name || "").toLowerCase());
+    });
+    // If market filter is active, only show vouchers for that market
+    if (filters.market !== "All Markets") {
+      if (!locationObj) return false;
+    }
+    return isDateMatch(item.date, dateFilter, customStart, customEnd);
+  });
 
   // Filtered product sales
   const productSales = (allProductSales || []).filter(item => {
@@ -183,18 +203,33 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
   });
 
   // Filtered voucher redemptions
-  const voucherRedemptions = filteredVouchers.filter(item =>
-  !(item.product.toLowerCase().includes("gift") || item.type === "gift") &&
-  isProductMatch(item.product, filters.products) &&
-  isLocationMatch(item.locationUsed, filters.locations)
-  );
+  const voucherRedemptions = filteredVouchers.filter(item => {
+    if (item.product.toLowerCase().includes("gift") || item.type === "gift") return false;
+    if (!isProductMatch(item.product, filters.products)) return false;
+    // Location filter: only show if location matches or "All Locations"
+    if (filters.locations !== "All Locations") {
+      // Find location object for this voucher
+      let locationObj = filteredLocations.find(loc => {
+        if (!loc.name) return false;
+        return (item.locationUsed || "").toLowerCase().includes((loc.name || "").toLowerCase());
+      });
+      if (!locationObj || locationObj.name !== filters.locations) return false;
+    }
+    return true;
+  });
 
   // Filtered gift card redemptions
-  const giftCardRedemptions = filteredVouchers.filter(item =>
-  (item.product.toLowerCase().includes("gift") || item.type === "gift") &&
-  isProductMatch(item.product, filters.products) &&
-  isLocationMatch(item.locationUsed, filters.locations)
-  );
+  const giftCardRedemptions = filteredVouchers.filter(item => {
+    if (!(item.product.toLowerCase().includes("gift") || item.type === "gift")) return false;
+    if (!isProductMatch(item.product, filters.products)) return false;
+    // Location filter: show if any location in locationUsed matches selected location
+    if (filters.locations !== "All Locations") {
+      const locationsArr = (item.locationUsed || "").split(",").map(l => l.trim().toLowerCase());
+      const selectedLocation = filters.locations.toLowerCase();
+      if (!locationsArr.some(loc => loc === selectedLocation)) return false;
+    }
+    return true;
+  });
 
   // Filtered metrics
   const totalProductSales = productSales.reduce((sum, item) => sum + (item.revenue || 0), 0);
@@ -239,10 +274,22 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
         </select>
         <select style={styles.select} value={filters.locations} onChange={e => setFilters(f => ({ ...f, locations: e.target.value }))}>
           <option>All Locations</option>
-          {(locations || []).map((loc, idx) => (
-          <option key={idx} value={loc.name || loc}>
-            {loc.name || loc}
-          </option>
+          {(filteredLocations || []).map((loc, idx) => (
+            <option key={idx} value={loc.name || loc}>
+              {loc.name || loc}
+            </option>
+          ))}
+        </select>
+         {/* <select style={styles.select} value={filters.market} onChange={e => setFilters(f => ({ ...f, market: e.target.value }))}>
+          <option>All Markets</option>
+          {marketOptions.map((market, idx) => (
+            <option key={idx} value={market}>{market}</option>
+          ))}
+        </select> */}
+        <select style={styles.select} value={filters.market} onChange={handleMarketChange}>
+          <option>All Markets</option>
+          {marketOptions.map((market, idx) => (
+            <option key={idx} value={market}>{market}</option>
           ))}
         </select>
         {isFilterActive && <button style={styles.resetButton} onClick={() => { setDateFilter("All"); setCustomStart(""); setCustomEnd(""); setFilters({ products: "All Products", locations: "All Locations" })}}>
