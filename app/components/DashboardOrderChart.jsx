@@ -31,7 +31,8 @@ export default function DashboardOrderChart({ analytics, vouchers, locations }) 
   const [dateFilter, setDateFilter] = useState("All");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
-  const [filters, setFilters] = useState({ products: "All Products", locations: "All Locations"});
+  const marketOptions = ["Market #1", "Market #2", "Market #3", "Market #4", "Market #5", "Market #6", "Market #7"];
+  const [filters, setFilters] = useState({ products: "All Products", locations: "All Locations", market: "All Markets" });
   const isFilterActive = filters.date !== "All" || filters.products !== "All Products" || filters.locations !== "All Locations";
   const { productSales: allProductSales, voucherRedemptions: allVoucherRedemptions } = useLoaderData();
 
@@ -243,6 +244,12 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
           <option key={idx} value={loc.name || loc}>
             {loc.name || loc}
           </option>
+          ))}
+        </select>
+         <select style={styles.select} value={filters.market} onChange={e => setFilters(f => ({ ...f, market: e.target.value }))}>
+          <option>All Markets</option>
+          {marketOptions.map((market, idx) => (
+            <option key={idx} value={market}>{market}</option>
           ))}
         </select>
         {isFilterActive && <button style={styles.resetButton} onClick={() => { setDateFilter("All"); setCustomStart(""); setCustomEnd(""); setFilters({ products: "All Products", locations: "All Locations" })}}>
