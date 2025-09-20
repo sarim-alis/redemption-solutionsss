@@ -1,5 +1,6 @@
 // Imports.
 import { useState } from "react"
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { useLoaderData } from "@remix-run/react";
 import styles from "../styles/dash.js";
 import dayjs from "dayjs";
@@ -200,6 +201,16 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
   });
   const productSales = Object.values(productTitleMap);
 
+  // Prepare sales over time for chart (group by date)
+  const salesByDate = {};
+  filteredVouchers.forEach(voucher => {
+    const date = voucher.date || voucher.createdAt ? new Date(voucher.createdAt).toLocaleDateString("en-US") : "";
+    if (!date) return;
+    if (!salesByDate[date]) salesByDate[date] = 0;
+    salesByDate[date] += 1;
+  });
+  const salesChartData = Object.entries(salesByDate).map(([date, sales]) => ({ date, sales }));
+
   // Filtered voucher redemptions
   const voucherRedemptions = filteredVouchers.filter(item => {
     if (item.product.toLowerCase().includes("gift") || item.type === "gift") return false;
@@ -307,7 +318,18 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
         <div style={styles.chartColumn}>
           <div style={styles.chartContainer}>
             <div style={styles.chartTitle}>Product Sales Chart</div>
-            <div style={styles.lineChart}><svg width="100%" height="100%" viewBox="0 0 300 120"><polyline points="20,80 60,60 100,70 140,50 180,45 220,40 260,35" style={styles.chartLine} /></svg></div>
+            <div style={styles.lineChart}>
+              <ResponsiveContainer width="100%" height={120}>
+                <LineChart data={salesChartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="sales" stroke="#8884d8" name="Sales" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
           <div style={styles.tableContainer}>
             <div style={styles.tableTitle}>Voucher Redemptions</div>
