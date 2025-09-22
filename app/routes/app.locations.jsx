@@ -206,7 +206,7 @@ useEffect(() => { if (editingLocation) { editFormik.setValues({ id: editingLocat
     <div style={{ flex: 1, textAlign: "left" }}>
       <Text variant="headingMd" as="h2">Location Name</Text>
     </div>
-    <div style={{ flex: 1, textAlign: "center" }}>
+    <div style={{ flex: 1, textAlign: "left"}}>
       <Text variant="headingMd" as="h2">Market</Text>
     </div>
     <div style={{ flex: 1, textAlign: "right" }}>
@@ -220,7 +220,7 @@ useEffect(() => { if (editingLocation) { editFormik.setValues({ id: editingLocat
       <span style={{ flex: 1, minWidth: "120px", textAlign: "left" }}>
         {loc.name}
       </span>
-      <span style={{ flex: 1, minWidth: "120px", textAlign: "center" }}>
+      <span style={{ flex: 1, minWidth: "120px", textAlign: "left" }}>
         {loc.market || "—"}
       </span>
       <div style={{ flex: 1, textAlign: "right" }}>
