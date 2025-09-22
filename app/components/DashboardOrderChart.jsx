@@ -280,24 +280,18 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
           <option key={idx} value={product}>{product}</option>
           ))}
         </select>
+        <select style={styles.select} value={filters.market} onChange={handleMarketChange}>
+          <option>All Markets</option>
+          {marketOptions.map((market, idx) => (
+            <option key={idx} value={market}>{market}</option>
+          ))}
+        </select>
         <select style={styles.select} value={filters.locations} onChange={e => setFilters(f => ({ ...f, locations: e.target.value }))}>
           <option>All Locations</option>
           {(filteredLocations || []).map((loc, idx) => (
             <option key={idx} value={loc.name || loc}>
               {loc.name || loc}
             </option>
-          ))}
-        </select>
-         {/* <select style={styles.select} value={filters.market} onChange={e => setFilters(f => ({ ...f, market: e.target.value }))}>
-          <option>All Markets</option>
-          {marketOptions.map((market, idx) => (
-            <option key={idx} value={market}>{market}</option>
-          ))}
-        </select> */}
-        <select style={styles.select} value={filters.market} onChange={handleMarketChange}>
-          <option>All Markets</option>
-          {marketOptions.map((market, idx) => (
-            <option key={idx} value={market}>{market}</option>
           ))}
         </select>
         {isFilterActive && <button style={styles.resetButton} onClick={() => { setDateFilter("All"); setCustomStart(""); setCustomEnd(""); setFilters({ products: "All Products", locations: "All Locations" })}}>
