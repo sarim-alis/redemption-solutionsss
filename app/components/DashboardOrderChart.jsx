@@ -147,6 +147,7 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
   // Transform vouchers data for display
   const transformedVouchers = (vouchers || []).map(voucher => {
     let product = voucher.productTitle || "";
+    let use = voucher.statusUse || "";
     let date = voucher.createdAt
       ? new Date(voucher.createdAt).toLocaleDateString("en-US")
       : "";
@@ -170,7 +171,7 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
       }
     }
 
-    return { product, date, locationUsed: location, used: voucher.order?.statusUse || false, type: voucher.type || "[voucher]", createdAt: voucher.createdAt, balance: voucher.totalPrice || 0 };
+    return { product, date, locationUsed: location, used: voucher.order?.statusUse || false, type: voucher.type || "[voucher]", createdAt: voucher.createdAt, balance: voucher.totalPrice || 0, use: voucher.statusUse };
   });
 
   // Filtered vouchers by date
@@ -247,7 +248,8 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
   const totalProductSales = productSales.reduce((sum, item) => sum + (item.revenue || 0), 0);
   const totalGiftCardBalance = filteredVouchers.reduce((sum, v) => sum + (v.balance || 0), 0);
   const totalVouchers = filteredVouchers.length;
-  const activeVouchers = filteredVouchers.filter(v => !v.used).length;
+  const usedVouchersCount = filteredVouchers.filter(v => v.use === true).length;
+  const activeVouchers = totalVouchers - usedVouchersCount;
 
 
   return (
