@@ -302,7 +302,7 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
             ))}
           </select>
         )}
-        {isFilterActive && <button style={styles.resetButton} onClick={() => { setDateFilter("All"); setCustomStart(""); setCustomEnd(""); setFilters({ products: "All Products", locations: "All Locations" })}}>
+        {isFilterActive && <button style={styles.resetButton} onClick={() => { setDateFilter("All"); setCustomStart(""); setCustomEnd(""); setFilters({ products: "All Products", locations: "All Locations", market: "All Markets" })}}>
           Reset
         </button>}
       </div>
