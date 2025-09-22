@@ -204,12 +204,15 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
   // Prepare sales over time for chart (group by date)
   const salesByDate = {};
   filteredVouchers.forEach(voucher => {
-    const date = voucher.date || voucher.createdAt ? new Date(voucher.createdAt).toLocaleDateString("en-US") : "";
+    const date = voucher.date || (voucher.createdAt ? new Date(voucher.createdAt).toLocaleDateString("en-US") : "");
     if (!date) return;
     if (!salesByDate[date]) salesByDate[date] = 0;
     salesByDate[date] += 1;
   });
-  const salesChartData = Object.entries(salesByDate).map(([date, sales]) => ({ date, sales }));
+  // Sort dates ascending (oldest to newest)
+  const salesChartData = Object.entries(salesByDate)
+    .map(([date, sales]) => ({ date, sales }))
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
 
   // Filtered voucher redemptions
   const voucherRedemptions = filteredVouchers.filter(item => {
@@ -313,7 +316,7 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
           <div style={styles.chartContainer}>
             <div style={styles.chartTitle}>Product Sales Chart</div>
             <div style={styles.lineChart}>
-              <ResponsiveContainer width="100%" height={120}>
+              <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={salesChartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
