@@ -1,5 +1,6 @@
 // Imports.
 import { useState } from "react"
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { useLoaderData } from "@remix-run/react";
 import styles from "../styles/dash.js";
 import dayjs from "dayjs";
@@ -42,7 +43,7 @@ export default function DashboardOrderChart({ analytics, vouchers, locations }) 
     ? (locations || [])
     : (locations || []).filter(loc => loc.market === filters.market);
   const isFilterActive = filters.date !== "All" || filters.products !== "All Products" || filters.locations !== "All Locations";
-  const { productSales: allProductSales, voucherRedemptions: allVoucherRedemptions } = useLoaderData();
+  const { voucherRedemptions: allVoucherRedemptions } = useLoaderData();
 
 // Is date match.
 function isDateMatch(dateString, filter, customStart, customEnd) {
@@ -188,19 +189,30 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
     return isDateMatch(item.date, dateFilter, customStart, customEnd);
   });
 
-  // Filtered product sales
-  const productSales = (allProductSales || []).filter(item => {
-    let normDate = "";
-    if (item.date) {
-      // Always convert to YYYY-MM-DD for filtering
-      const d = new Date(item.date);
-      if (!isNaN(d.getTime())) {
-        normDate = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-      }
+  // Group vouchers by productTitle and show count and totalPrice for each product
+  const productTitleMap = {};
+  filteredVouchers.forEach(voucher => {
+    const product = voucher.product || voucher.productTitle || "[voucher]";
+    if (!productTitleMap[product]) {
+      productTitleMap[product] = { product, sales: 0, revenue: 0 };
     }
-    return isDateMatch(normDate, dateFilter, customStart, customEnd)
-      && isProductMatch(item.product, filters.products)
+    productTitleMap[product].sales += 1;
+    productTitleMap[product].revenue += voucher.balance || 0;
   });
+  const productSales = Object.values(productTitleMap);
+
+  // Prepare sales over time for chart (group by date)
+  const salesByDate = {};
+  filteredVouchers.forEach(voucher => {
+    const date = voucher.date || (voucher.createdAt ? new Date(voucher.createdAt).toLocaleDateString("en-US") : "");
+    if (!date) return;
+    if (!salesByDate[date]) salesByDate[date] = 0;
+    salesByDate[date] += 1;
+  });
+  // Sort dates ascending (oldest to newest)
+  const salesChartData = Object.entries(salesByDate)
+    .map(([date, sales]) => ({ date, sales }))
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
 
   // Filtered voucher redemptions
   const voucherRedemptions = filteredVouchers.filter(item => {
@@ -265,11 +277,16 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
         <select style={styles.select} value={filters.products} onChange={e => setFilters(f => ({ ...f, products: e.target.value }))}>
           <option>All Products</option>
           {[...new Set([
-          ...allProductSales.map(p => p.product),
           ...((vouchers || []).map(v => v.productTitle).filter(Boolean)),
           ...((analytics?.allProducts || []).map(p => p.title))
           ])].map((product, idx) => (
           <option key={idx} value={product}>{product}</option>
+          ))}
+        </select>
+        <select style={styles.select} value={filters.market} onChange={handleMarketChange}>
+          <option>All Markets</option>
+          {marketOptions.map((market, idx) => (
+            <option key={idx} value={market}>{market}</option>
           ))}
         </select>
         <select style={styles.select} value={filters.locations} onChange={e => setFilters(f => ({ ...f, locations: e.target.value }))}>
@@ -278,18 +295,6 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
             <option key={idx} value={loc.name || loc}>
               {loc.name || loc}
             </option>
-          ))}
-        </select>
-         {/* <select style={styles.select} value={filters.market} onChange={e => setFilters(f => ({ ...f, market: e.target.value }))}>
-          <option>All Markets</option>
-          {marketOptions.map((market, idx) => (
-            <option key={idx} value={market}>{market}</option>
-          ))}
-        </select> */}
-        <select style={styles.select} value={filters.market} onChange={handleMarketChange}>
-          <option>All Markets</option>
-          {marketOptions.map((market, idx) => (
-            <option key={idx} value={market}>{market}</option>
           ))}
         </select>
         {isFilterActive && <button style={styles.resetButton} onClick={() => { setDateFilter("All"); setCustomStart(""); setCustomEnd(""); setFilters({ products: "All Products", locations: "All Locations" })}}>
@@ -310,7 +315,18 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
         <div style={styles.chartColumn}>
           <div style={styles.chartContainer}>
             <div style={styles.chartTitle}>Product Sales Chart</div>
-            <div style={styles.lineChart}><svg width="100%" height="100%" viewBox="0 0 300 120"><polyline points="20,80 60,60 100,70 140,50 180,45 220,40 260,35" style={styles.chartLine} /></svg></div>
+            <div style={styles.lineChart}>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={salesChartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="sales" stroke="#8884d8" name="Sales" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
           <div style={styles.tableContainer}>
             <div style={styles.tableTitle}>Voucher Redemptions</div>
