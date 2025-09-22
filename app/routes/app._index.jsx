@@ -175,7 +175,7 @@ export const loader = async ({ request }) => {
   const allVouchers = await getAllVouchers();
   const activeVouchers = await prisma.voucher.findMany({
     where: {
-      used: false
+      statusUse: false
     }
   });
 
