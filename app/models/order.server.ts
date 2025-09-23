@@ -119,30 +119,36 @@ async function processOrderData(orderData: ShopifyOrder): Promise<ProcessResult>
     // @ts-ignore
     let processedLineItems = [];
     if (orderData.line_items) {
-      processedLineItems = orderData.line_items.map(item => ({
-        title: item.title || 'Untitled Product',
-        quantity: safeParseInt(item.quantity),
-        price: safeParseFloat(item.price),
-        productId: item.product_id?.toString() || null,
-        variantId: item.variant_id?.toString() || null
-      }));
+      processedLineItems = orderData.line_items.map(item => {
+        // No variant title available in direct line_items, just use item.title
+        return {
+          title: item.title || 'Untitled Product',
+          quantity: safeParseInt(item.quantity),
+          price: safeParseFloat(item.price),
+          productId: item.product_id?.toString() || null,
+          variantId: item.variant_id?.toString() || null
+        };
+      });
     } else if (orderData.lineItems?.edges) {
       processedLineItems = orderData.lineItems.edges
         .filter(edge => edge && edge.node)
-        .map(edge => ({
-          title: edge.node.title || 'Untitled Product',
-          quantity: safeParseInt(edge.node.quantity),
-          price: safeParseFloat(edge.node.originalUnitPriceSet?.shopMoney?.amount),
-          productId: edge.node.variant?.product?.id?.split('/').pop() || null,
-          variantId: edge.node.variant?.id?.split('/').pop() || null,
-          //@ts-ignore
-          type: edge.node.variant?.product?.metafield?.value || null,
-          //@ts-ignore
-          expire: edge.node.variant?.product?.metafield_expiry?.value || null,
-          // Preserve entire variant object for metafield access
-          //@ts-ignore
-          variant: edge.node.variant || null
-        }));
+        .map(edge => {
+          // No variant title available, just use edge.node.title
+          return {
+            title: edge.node.title || 'Untitled Product',
+            quantity: safeParseInt(edge.node.quantity),
+            price: safeParseFloat(edge.node.originalUnitPriceSet?.shopMoney?.amount),
+            productId: edge.node.variant?.product?.id?.split('/').pop() || null,
+            variantId: edge.node.variant?.id?.split('/').pop() || null,
+            //@ts-ignore
+            type: edge.node.variant?.product?.metafield?.value || null,
+            //@ts-ignore
+            expire: edge.node.variant?.product?.metafield_expiry?.value || null,
+            // Preserve entire variant object for metafield access
+            //@ts-ignore
+            variant: edge.node.variant || null
+          };
+        });
     }
 
     // @ts-ignore
