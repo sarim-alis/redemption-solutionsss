@@ -15,9 +15,11 @@ import { saveCustomer } from "../models/customer.server";
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
   console.log('🔄 Starting to fetch orders...');
-  const orderResponse = await admin.graphql(`
-    query {
-      orders(first: 250, reverse: true) {
+  const url = new URL(request.url);
+  const cursor = url.searchParams.get('cursor');
+  const query = `
+    query ($cursor: String) {
+      orders(first: 250, reverse: true, after: $cursor) {
         edges {
           node {
             id
@@ -73,10 +75,13 @@ export const loader = async ({ request }) => {
         }
       }
     }
-  `);
+  `;
+  const variables = cursor ? { cursor } : {};
+  const orderResponse = await admin.graphql(query, variables);
   const orderJson = await orderResponse.json();
   const orders = orderJson.data.orders.edges.map((edge) => edge.node);
   const hasNextPage = orderJson.data.orders.pageInfo.hasNextPage;
+  const endCursor = orderJson.data.orders.pageInfo.endCursor;
   const totalOrders = orders.length;
   
   // Save order to database.
@@ -195,6 +200,7 @@ export const loader = async ({ request }) => {
   return {
     orders,
     hasNextPage,
+    endCursor,
     totalOrders,
     voucherMap
   };
@@ -203,11 +209,15 @@ export const loader = async ({ request }) => {
 export default function OrdersPage() {
   const {
     orders: initialOrders,
-    hasNextPage,
+    hasNextPage: initialHasNextPage,
+    endCursor: initialEndCursor,
     totalOrders,
     voucherMap
   } = useLoaderData();
   const [orders, setOrders] = useState(initialOrders);
+  const [hasNextPage, setHasNextPage] = useState(initialHasNextPage);
+  const [endCursor, setEndCursor] = useState(initialEndCursor);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [lastUpdate, setLastUpdate] = useState(null);
 
@@ -283,9 +293,19 @@ export default function OrdersPage() {
     };
   };
 
+  async function loadMoreOrders() {
+    setLoadingMore(true);
+    const res = await fetch(`/app/orders?cursor=${endCursor}`);
+    const data = await res.json();
+    setOrders(prev => [...prev, ...data.orders]);
+    setHasNextPage(data.hasNextPage);
+    setEndCursor(data.endCursor);
+    setLoadingMore(false);
+  }
+
   return (
     <SidebarLayout>
-      <Page fullWidth title={`Orders (${totalOrders} showing${hasNextPage ? ', more available' : ''})`}>
+      <Page fullWidth title={`Orders (${orders.length}${hasNextPage ? '+' : ''} of ${totalOrders})`}>
         <BlockStack gap="400">
           {/* Connection Status Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
@@ -344,6 +364,11 @@ export default function OrdersPage() {
             <Text variant="bodyMd" as="p">
               No orders found.
             </Text>
+          )}
+          {hasNextPage && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+              <Button loading={loadingMore} onClick={loadMoreOrders} size="large">Load More</Button>
+            </div>
           )}
         </BlockStack>
       </Page>
