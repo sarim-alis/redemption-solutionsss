@@ -108,10 +108,15 @@ export async function createVouchersForOrder({
     // Create all vouchers at once
     const voucherPromises = Array.from({ length: totalVouchers }, async (_, index) => {
       try {
+        // Combine product title and variant title for display
+        let combinedTitle = item.title;
+        if (item.variantTitle && !item.title.toLowerCase().includes(item.variantTitle.toLowerCase())) {
+          combinedTitle = `${item.title} ${item.variantTitle}`;
+        }
         const voucher = await createVoucher({
           shopifyOrderId,
           customerEmail,
-          productTitle: isGiftCard ? `${item.title} - $${item.price}` : item.title,
+          productTitle: combinedTitle,
           type: isGiftCard ? 'gift' : (item.type || 'voucher'),
           expireDays: item.expire || null, // Pass expire days from lineItem
           totalPrice: item.price ?? null,
