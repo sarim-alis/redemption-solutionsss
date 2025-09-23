@@ -70,6 +70,12 @@ async function processWebhook({ shop, session, topic, payload }) {
               lineItems = paidOrder.lineItems.edges.map(edge => {
                 const variantTitle = edge.node.variant_title || edge.node.variant?.title || edge.node.title || 'Standard';
                 const baseQuantity = edge.node.quantity || 1;
+
+                // Combine product title and variant title for display
+                let combinedTitle = edge.node.title;
+                if (variantTitle && !edge.node.title.toLowerCase().includes(variantTitle.toLowerCase())) {
+                  combinedTitle = `${edge.node.title} ${variantTitle}`;
+                }
                 
                 // Get voucher_count from variant metafield (new approach)
                 let voucherCount = 1; // Default fallback
@@ -140,7 +146,7 @@ async function processWebhook({ shop, session, topic, payload }) {
                 console.log(`📦 Processing voucher item: ${edge.node.title} (Total Vouchers: ${totalVouchers}) - Type: ${type}`);
                 
                 return {
-                  title: edge.node.title,
+                  title: combinedTitle,
                   quantity: totalVouchers, // This now contains the final calculated vouchers
                   price: (edge.node.originalUnitPriceSet?.shopMoney?.amount || 0) * (edge.node.quantity || 1),
                   variantTitle: variantTitle,
