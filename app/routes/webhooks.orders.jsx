@@ -653,6 +653,12 @@ async function saveOrderToDatabase(payload, action, session = null) {
               const title = item.title || item.node?.title || '';
               const variantTitle = item.variant?.title || item.node?.variant?.title || title;
               const quantity = item.quantity || item.node?.quantity || 1;
+
+              // Combine product title and variant title for display (if not already included)
+              let combinedTitle = title;
+              if (variantTitle && !title.toLowerCase().includes(variantTitle.toLowerCase())) {
+                combinedTitle = `${title} ${variantTitle}`;
+              }
               
               // Debug log the item structure
               console.log('🔍 [SaveOrder-Fallback] Item structure:', JSON.stringify({
@@ -701,7 +707,7 @@ async function saveOrderToDatabase(payload, action, session = null) {
               
               // Return single line item with total quantity
               return {
-                title: title,
+                title: combinedTitle,
                 quantity: totalVouchers, // Total vouchers needed (pack count * quantity)
                 type: type,
                 price: item.price || item.node?.originalUnitPriceSet?.shopMoney?.amount || 0,
