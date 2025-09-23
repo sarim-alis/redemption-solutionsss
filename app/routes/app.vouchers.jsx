@@ -135,6 +135,8 @@ export default function VouchersPage() {
     });
   }, [vouchers, search, dateFilter, typeFilter, usedFilter]);
 
+  const [isExporting, setIsExporting] = React.useState(false);
+
   return (
     <SidebarLayout>
       <div style={{ padding: 40, position: 'relative' }}>

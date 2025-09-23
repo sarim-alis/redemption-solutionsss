@@ -70,6 +70,12 @@ async function processWebhook({ shop, session, topic, payload }) {
               lineItems = paidOrder.lineItems.edges.map(edge => {
                 const variantTitle = edge.node.variant_title || edge.node.variant?.title || edge.node.title || 'Standard';
                 const baseQuantity = edge.node.quantity || 1;
+
+                // Combine product title and variant title for display
+                let combinedTitle = edge.node.title;
+                if (variantTitle && !edge.node.title.toLowerCase().includes(variantTitle.toLowerCase())) {
+                  combinedTitle = `${edge.node.title} ${variantTitle}`;
+                }
                 
                 // Get voucher_count from variant metafield (new approach)
                 let voucherCount = 1; // Default fallback
@@ -140,13 +146,14 @@ async function processWebhook({ shop, session, topic, payload }) {
                 console.log(`📦 Processing voucher item: ${edge.node.title} (Total Vouchers: ${totalVouchers}) - Type: ${type}`);
                 
                 return {
-                  title: edge.node.title,
+                  title: combinedTitle,
                   quantity: totalVouchers, // This now contains the final calculated vouchers
-                  price: edge.node.originalUnitPriceSet?.shopMoney?.amount || 0,
+                  price: (edge.node.originalUnitPriceSet?.shopMoney?.amount || 0) * (edge.node.quantity || 1),
                   variantTitle: variantTitle,
                   variant: edge.node.variant || {},
                   voucherCount: voucherCount, // Store for reference
-                  baseQuantity: baseQuantity, // Store original quantity
+                  originalQuantity: edge.node.quantity || baseQuantity, // Always send original quantity
+                  unitPrice: edge.node.originalUnitPriceSet?.shopMoney?.amount || 0, // Always send unit price
                   type: type,
                   productId: edge.node.variant?.product?.id?.replace('gid://shopify/Product/', '') || null,
                   variantId: edge.node.variant?.id?.replace('gid://shopify/ProductVariant/', '') || null
@@ -229,11 +236,12 @@ async function processWebhook({ shop, session, topic, payload }) {
                 return {
                   title: node.title,
                   quantity: totalVouchers, // This now contains the final calculated vouchers
-                  price: node.price || node.originalUnitPriceSet?.shopMoney?.amount || 0,
+                  price: (node.price || node.originalUnitPriceSet?.shopMoney?.amount || 0) * (node.quantity || 1),
                   variantTitle: variantTitle,
                   variant: node.variant || {},
                   voucherCount: voucherCount, // Store for reference
-                  baseQuantity: baseQuantity, // Store original quantity
+                  originalQuantity: node.quantity || baseQuantity, // Always send original quantity
+                  unitPrice: node.price || node.originalUnitPriceSet?.shopMoney?.amount || 0, // Always send unit price
                   type: type,
                   productId: node.variant?.product?.id?.replace('gid://shopify/Product/', '') || null,
                   variantId: node.variant?.id?.replace('gid://shopify/ProductVariant/', '') || null
@@ -247,6 +255,7 @@ async function processWebhook({ shop, session, topic, payload }) {
             console.log('🔍 [DEBUG] Parsed voucher items:', JSON.stringify(lineItems, null, 2));
             
             // Create vouchers for each product
+            console.log('🟢 [DEBUG] lineItems sent to createVouchersForOrder:', JSON.stringify(lineItems, null, 2));
             const newVouchers = await createVouchersForOrder({
               shopifyOrderId: paidOrder.shopifyOrderId,
               customerEmail: paidOrder.customerEmail || '',
@@ -644,6 +653,12 @@ async function saveOrderToDatabase(payload, action, session = null) {
               const title = item.title || item.node?.title || '';
               const variantTitle = item.variant?.title || item.node?.variant?.title || title;
               const quantity = item.quantity || item.node?.quantity || 1;
+
+              // Combine product title and variant title for display (if not already included)
+              let combinedTitle = title;
+              if (variantTitle && !title.toLowerCase().includes(variantTitle.toLowerCase())) {
+                combinedTitle = `${title} ${variantTitle}`;
+              }
               
               // Debug log the item structure
               console.log('🔍 [SaveOrder-Fallback] Item structure:', JSON.stringify({
@@ -692,7 +707,7 @@ async function saveOrderToDatabase(payload, action, session = null) {
               
               // Return single line item with total quantity
               return {
-                title: title,
+                title: combinedTitle,
                 quantity: totalVouchers, // Total vouchers needed (pack count * quantity)
                 type: type,
                 price: item.price || item.node?.originalUnitPriceSet?.shopMoney?.amount || 0,

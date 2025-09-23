@@ -4,35 +4,41 @@ import prisma from "../db.server";
 import { v4 as uuidv4 } from "uuid";
 import type { LineItem } from "./order.server";
 
-function generateVoucherCode(): string {
+function generateVoucherCode(codeLength = 8, split = 4): string {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let code = '';
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < codeLength; i++) {
     code += characters.charAt(Math.floor(Math.random() * characters.length));
   }
-  return `${code.slice(0, 4)}-${code.slice(4)}`;
+  // Split code for readability
+  return `${code.slice(0, split)}-${code.slice(split)}`;
 }
 
-export async function createVoucher({ 
-  shopifyOrderId, 
-  customerEmail, 
-  productTitle = null, 
+export async function createVoucher({
+  shopifyOrderId,
+  customerEmail,
+  productTitle = null,
   type = null,
   expireDays = null,
   totalPrice = null,
   afterExpiredPrice = null
-}: { 
-  shopifyOrderId: string, 
-  customerEmail: string, 
-  productTitle?: string | null, 
+}: {
+  shopifyOrderId: string,
+  customerEmail: string,
+  productTitle?: string | null,
   type?: string | null,
   expireDays?: number | string | null,
   totalPrice?: number | null,
   afterExpiredPrice?: number | null
 }) {
   // Generate a unique code for the voucher
-  const code = generateVoucherCode();
-  
+  let code;
+  if (type && type.toLowerCase() === 'gift') {
+    code = generateVoucherCode(10, 5); // 10 chars, 5-5 split
+  } else {
+    code = generateVoucherCode(8, 4); // 8 chars, 4-4 split
+  }
+
   // Calculate expire date from expireDays
   let expireDate = null;
   if (expireDays) {
@@ -48,7 +54,7 @@ export async function createVoucher({
       console.log(`⚠️ Error calculating expire date from ${expireDays}:`, (err as Error).message);
     }
   }
-  
+
   return prisma.voucher.create({
     data: {
       code,
@@ -89,23 +95,29 @@ export async function createVouchersForOrder({
       console.log(`📦 Creating ${totalVouchers} voucher(s) for: ${item.title}`);
     }
     
-    // Calculate afterExpiredPrice for each voucher
+    // Calculate afterExpiredPrice as (item.price * originalQuantity) / totalVouchers
     let afterExpiredPrice = null;
-    if (item.price && totalVouchers && item.quantity) {
-      // item.price is unit price, item.quantity is number of packs, totalVouchers = packCount * quantity
-      const totalProductPrice = Number(item.price) * Number(item.quantity);
-      afterExpiredPrice = totalProductPrice / Number(totalVouchers);
+    const originalQuantity = (item as any).originalQuantity || null;
+    if (item.price && originalQuantity && totalVouchers) {
+      afterExpiredPrice = (Number(item.price) * Number(originalQuantity)) / Number(totalVouchers);
     } else if (item.price && totalVouchers) {
-      // fallback for single quantity
+      // fallback to old logic
       afterExpiredPrice = Number(item.price) / Number(totalVouchers);
     }
+    console.log('[VoucherCreate] item.price:', item.price, 'originalQuantity:', originalQuantity, 'totalVouchers:', totalVouchers, 'item.quantity:', item.quantity);
+    console.log('[VoucherCreate] Calculated afterExpiredPrice:', afterExpiredPrice);
     // Create all vouchers at once
     const voucherPromises = Array.from({ length: totalVouchers }, async (_, index) => {
       try {
+        // Combine product title and variant title for display
+        let combinedTitle = item.title;
+        if (item.variantTitle && !item.title.toLowerCase().includes(item.variantTitle.toLowerCase())) {
+          combinedTitle = `${item.title} ${item.variantTitle}`;
+        }
         const voucher = await createVoucher({
           shopifyOrderId,
           customerEmail,
-          productTitle: isGiftCard ? `${item.title} - $${item.price}` : item.title,
+          productTitle: combinedTitle,
           type: isGiftCard ? 'gift' : (item.type || 'voucher'),
           expireDays: item.expire || null, // Pass expire days from lineItem
           totalPrice: item.price ?? null,
