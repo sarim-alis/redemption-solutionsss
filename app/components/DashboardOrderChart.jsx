@@ -232,31 +232,17 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
   });
 
   // Filtered gift card redemptions
-  // Group gift card redemptions by product and price
-  const giftCardGroups = {};
-  filteredVouchers.forEach(item => {
-    if (!(item.product.toLowerCase().includes("gift") || item.type === "gift")) return;
-    if (!isProductMatch(item.product, filters.products)) return;
+  const giftCardRedemptions = filteredVouchers.filter(item => {
+    if (!(item.product.toLowerCase().includes("gift") || item.type === "gift")) return false;
+    if (!isProductMatch(item.product, filters.products)) return false;
+    // Location filter: show if any location in locationUsed matches selected location
     if (filters.locations !== "All Locations") {
       const locationsArr = (item.locationUsed || "").split(",").map(l => l.trim().toLowerCase());
       const selectedLocation = filters.locations.toLowerCase();
-      if (!locationsArr.some(loc => loc === selectedLocation)) return;
+      if (!locationsArr.some(loc => loc === selectedLocation)) return false;
     }
-    // Group by product and price
-    const key = `${item.product}|${item.balance}`;
-    if (!giftCardGroups[key]) {
-      giftCardGroups[key] = {
-        product: item.product,
-        balance: item.balance,
-        quantity: 0,
-        totalBalance: 0,
-        locationUsed: item.locationUsed
-      };
-    }
-    giftCardGroups[key].quantity += 1;
-    giftCardGroups[key].totalBalance += item.balance || 0;
+    return true;
   });
-  const giftCardRedemptions = Object.values(giftCardGroups);
 
   // Filtered metrics
   const totalProductSales = productSales.reduce((sum, item) => sum + (item.revenue || 0), 0);
@@ -415,16 +401,8 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
           </div>
           <div style={styles.tableContainer}>
             <div style={styles.tableTitle}>Gift Card Redemption</div>
-            <table style={styles.tables}><thead><tr><th style={styles.tableHeader}>Product</th><th style={styles.tableHeader}>Unit Value</th><th style={styles.tableHeader}>Quantity</th><th style={styles.tableHeader}>Total Balance</th><th style={styles.tableHeader}>Location</th></tr></thead>
-            <tbody>{giftCardRedemptions.map((item, i) => (
-              <tr key={i}>
-                <td style={styles.tableCell}>{item.product || "—"}</td>
-                <td style={styles.tableCell}>{item.balance !== undefined ? item.balance.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "$0.00"}</td>
-                <td style={styles.tableCell}>{item.quantity}</td>
-                <td style={styles.tableCell}>{item.totalBalance.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td style={styles.tableCell}>{item.locationUsed || "—"}</td>
-              </tr>
-            ))}</tbody>
+            <table style={styles.tables}><thead><tr><th style={styles.tableHeader}>Product</th><th style={styles.tableHeader}>Date</th><th style={styles.tableHeader}>Location</th><th style={styles.tableHeader}>Balance</th></tr></thead>
+            <tbody>{giftCardRedemptions.map((item, i) => (<tr key={i}><td style={styles.tableCell}>{item.product || "—"}</td><td style={styles.tableCell}>{item.date || "—"}</td><td style={styles.tableCell}>{item.locationUsed || "—"}</td><td style={styles.tableCell}>{item.balance !== undefined ? item.balance.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "$0.00"}</td></tr>))}</tbody>
             </table>
           </div>
         </div>
