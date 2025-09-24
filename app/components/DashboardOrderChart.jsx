@@ -291,7 +291,7 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
           </div>
         )}
         <select style={styles.select} value={filters.products} onChange={e => setFilters(f => ({ ...f, products: e.target.value }))}>
-          <option>All Product</option>
+          <option>All Products</option>
           {[
             ...new Set([
               ...((vouchers || []).map(v => v.productTitle).filter(Boolean)),
