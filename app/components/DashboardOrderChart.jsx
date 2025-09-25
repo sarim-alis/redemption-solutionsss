@@ -251,7 +251,10 @@ const filteredVouchers = transformedVouchers.filter(item => {
 
   // Filtered metrics
   const totalProductSales = productSales.reduce((sum, item) => sum + (item.revenue || 0), 0);
-  const totalGiftCardBalance = filteredVouchers.reduce((sum, v) => sum + (v.balance || 0), 0);
+  // Only sum gift card type vouchers for total gift card balances
+  const totalGiftCardBalance = filteredVouchers
+    .filter(v => v.product.toLowerCase().includes("gift") || v.type === "gift")
+    .reduce((sum, v) => sum + (v.balance || 0), 0);
   const totalVouchers = filteredVouchers.length;
   const usedVouchersCount = filteredVouchers.filter(v => v.use === true).length;
   const activeVouchers = totalVouchers - usedVouchersCount;
