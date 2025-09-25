@@ -135,9 +135,10 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
 }
 
 
-  function isProductMatch(product, filter) {
-    return filter === "All Products" ? true : product === filter;
-  }
+function isProductMatch(product, filter) {
+  if (!product) return false;
+  return filter === "All Products" ? true : product === filter;
+}
 
   function isLocationMatch(location, filter) {
     return filter === "All Locations" ? true : location === filter;
@@ -176,19 +177,23 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
 
   // Filtered vouchers by date
   // Filter vouchers by date and selected market
-  const filteredVouchers = transformedVouchers.filter(item => {
-    // Find location object for this voucher
-    let locationObj = filteredLocations.find(loc => {
-      if (!loc.name) return false;
-      // Match by name (case-insensitive)
-      return (item.locationUsed || "").toLowerCase().includes((loc.name || "").toLowerCase());
-    });
-    // If market filter is active, only show vouchers for that market
-    if (filters.market !== "All Markets") {
-      if (!locationObj) return false;
-    }
-    return isDateMatch(item.date, dateFilter, customStart, customEnd);
+const filteredVouchers = transformedVouchers.filter(item => {
+  // Market/location filter
+  let locationObj = filteredLocations.find(loc => {
+    if (!loc.name) return false;
+    return (item.locationUsed || "").toLowerCase().includes((loc.name || "").toLowerCase());
   });
+  if (filters.market !== "All Markets") {
+    if (!locationObj) return false;
+  }
+
+  // Product filter
+  if (!isProductMatch(item.product, filters.products)) return false;
+
+  // Date filter
+  return isDateMatch(item.date, dateFilter, customStart, customEnd);
+});
+
 
   // Group vouchers by productTitle and show count and totalPrice for each product
   const productTitleMap = {};
@@ -246,7 +251,10 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
 
   // Filtered metrics
   const totalProductSales = productSales.reduce((sum, item) => sum + (item.revenue || 0), 0);
-  const totalGiftCardBalance = filteredVouchers.reduce((sum, v) => sum + (v.balance || 0), 0);
+  // Only sum gift card type vouchers for total gift card balances
+  const totalGiftCardBalance = filteredVouchers
+    .filter(v => v.product.toLowerCase().includes("gift") || v.type === "gift")
+    .reduce((sum, v) => sum + (v.balance || 0), 0);
   const totalVouchers = filteredVouchers.length;
   const usedVouchersCount = filteredVouchers.filter(v => v.use === true).length;
   const activeVouchers = totalVouchers - usedVouchersCount;
