@@ -15,10 +15,14 @@ import { saveCustomer } from "../models/customer.server";
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
   console.log('🔄 Starting to fetch orders...');
-  const orderResponse = await admin.graphql(`
-    query {
-      orders(first: 250, reverse: true) {
+  const url = new URL(request.url);
+  const cursor = url.searchParams.get('cursor') || null;
+  const direction = url.searchParams.get('direction') || 'next';
+  const query = `
+    query ($cursor: String) {
+      orders(first: 50, after: $cursor, reverse: true) {
         edges {
+          cursor
           node {
             id
             name
@@ -69,15 +73,23 @@ export const loader = async ({ request }) => {
         }
         pageInfo {
           hasNextPage
+          hasPreviousPage
           endCursor
+          startCursor
         }
       }
     }
-  `);
+  `;
+  const variables = cursor ? { cursor } : {};
+  const orderResponse = await admin.graphql(query, variables);
   const orderJson = await orderResponse.json();
-  const orders = orderJson.data.orders.edges.map((edge) => edge.node);
-  const hasNextPage = orderJson.data.orders.pageInfo.hasNextPage;
-  const totalOrders = orders.length;
+  const orders = orderJson.data.orders.edges.map((edge) => ({ ...edge.node, _cursor: edge.cursor }));
+  const pageInfo = orderJson.data.orders.pageInfo;
+  // Get total count from Shopify (separate query)
+  const countQuery = `query { ordersCount }`;
+  const countRes = await admin.graphql(countQuery);
+  const countJson = await countRes.json();
+  const totalOrders = countJson.data.ordersCount;
   
   // Save order to database.
   let savedCount = 0;
@@ -194,7 +206,10 @@ export const loader = async ({ request }) => {
 
   return {
     orders,
-    hasNextPage,
+    hasNextPage: pageInfo.hasNextPage,
+    hasPreviousPage: pageInfo.hasPreviousPage,
+    endCursor: pageInfo.endCursor,
+    startCursor: pageInfo.startCursor,
     totalOrders,
     voucherMap
   };
@@ -202,12 +217,14 @@ export const loader = async ({ request }) => {
 
 export default function OrdersPage() {
   const {
-    orders: initialOrders,
+    orders,
     hasNextPage,
+    hasPreviousPage,
+    endCursor,
+    startCursor,
     totalOrders,
     voucherMap
   } = useLoaderData();
-  const [orders, setOrders] = useState(initialOrders);
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [lastUpdate, setLastUpdate] = useState(null);
 
@@ -285,7 +302,7 @@ export default function OrdersPage() {
 
   return (
     <SidebarLayout>
-      <Page fullWidth title={`Orders (${totalOrders} showing${hasNextPage ? ', more available' : ''})`}>
+      <Page fullWidth title={`Orders (${totalOrders} total)`}>
         <BlockStack gap="400">
           {/* Connection Status Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
@@ -306,8 +323,7 @@ export default function OrdersPage() {
               </Text>
             )}
           </div>
-  
-          
+
           {orders.length > 0 ? (
             <DataTable
               columnContentTypes={[
@@ -345,6 +361,25 @@ export default function OrdersPage() {
               No orders found.
             </Text>
           )}
+
+          {/* Cursor-based Pagination Controls */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24, gap: 8 }}>
+            <Button disabled={!hasPreviousPage} onClick={() => {
+              const params = new URLSearchParams();
+              if (startCursor) params.set('cursor', startCursor);
+              params.set('direction', 'prev');
+              window.location.href = `/app/orders?${params.toString()}`;
+            }}>Previous</Button>
+            <Text variant="bodyMd" as="span" tone="subdued">
+              Showing {orders.length} of {totalOrders} orders
+            </Text>
+            <Button disabled={!hasNextPage} onClick={() => {
+              const params = new URLSearchParams();
+              if (endCursor) params.set('cursor', endCursor);
+              params.set('direction', 'next');
+              window.location.href = `/app/orders?${params.toString()}`;
+            }}>Next</Button>
+          </div>
         </BlockStack>
       </Page>
     </SidebarLayout>
