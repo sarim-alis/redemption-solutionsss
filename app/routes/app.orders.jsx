@@ -15,39 +15,9 @@ import { saveCustomer } from "../models/customer.server";
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
   console.log('🔄 Starting to fetch orders...');
-  const url = new URL(request.url);
-  const page = parseInt(url.searchParams.get('page') || '1', 10);
-  const pageSize = 50;
-  let cursor = null;
-  let current = 1;
-  let fetched = 0;
-  let lastCursor = null;
-  // To get the correct cursor for the requested page, we need to paginate through previous pages
-  if (page > 1) {
-    let hasNext = true;
-    let tempCursor = null;
-    while (hasNext && current < page) {
-      const tempQuery = `
-        query ($cursor: String) {
-          orders(first: ${pageSize}, reverse: true, after: $cursor) {
-            edges { cursor }
-            pageInfo { hasNextPage endCursor }
-          }
-        }
-      `;
-      const tempVars = tempCursor ? { cursor: tempCursor } : {};
-      const tempRes = await admin.graphql(tempQuery, tempVars);
-      const tempJson = await tempRes.json();
-      hasNext = tempJson.data.orders.pageInfo.hasNextPage;
-      tempCursor = tempJson.data.orders.pageInfo.endCursor;
-      current++;
-      lastCursor = tempCursor;
-    }
-    cursor = lastCursor;
-  }
-  const query = `
-    query ($cursor: String) {
-      orders(first: ${pageSize}, reverse: true, after: $cursor) {
+  const orderResponse = await admin.graphql(`
+    query {
+      orders(first: 250, reverse: true) {
         edges {
           node {
             id
@@ -103,24 +73,11 @@ export const loader = async ({ request }) => {
         }
       }
     }
-  `;
-  const variables = cursor ? { cursor } : {};
-  const orderResponse = await admin.graphql(query, variables);
+  `);
   const orderJson = await orderResponse.json();
   const orders = orderJson.data.orders.edges.map((edge) => edge.node);
   const hasNextPage = orderJson.data.orders.pageInfo.hasNextPage;
-  const endCursor = orderJson.data.orders.pageInfo.endCursor;
-  // Get total count from Shopify (separate query)
-  const countQuery = `query { ordersCount }`;
-  const countRes = await admin.graphql(countQuery);
-  const countJson = await countRes.json();
-  const totalOrders = countJson.data.ordersCount;
-  console.log('🟢 Loader debug:', {
-    hasNextPage,
-    endCursor,
-    ordersLength: orders.length,
-    pageInfo: orderJson.data.orders.pageInfo
-  });
+  const totalOrders = orders.length;
   
   // Save order to database.
   let savedCount = 0;
@@ -238,25 +195,19 @@ export const loader = async ({ request }) => {
   return {
     orders,
     hasNextPage,
-    endCursor,
     totalOrders,
-    page,
-    pageSize,
     voucherMap
   };
 };
 
 export default function OrdersPage() {
   const {
-    orders,
+    orders: initialOrders,
     hasNextPage,
-    endCursor,
     totalOrders,
-    page: initialPage,
-    pageSize,
     voucherMap
   } = useLoaderData();
-  const [currentPage, setCurrentPage] = useState(initialPage);
+  const [orders, setOrders] = useState(initialOrders);
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [lastUpdate, setLastUpdate] = useState(null);
 
@@ -332,14 +283,9 @@ export default function OrdersPage() {
     };
   };
 
-
-  function handlePageChange(newPage) {
-    window.location.href = `/app/orders?page=${newPage}`;
-  }
-
   return (
     <SidebarLayout>
-      <Page fullWidth title={`Orders (${orders.length}${hasNextPage ? '+' : ''} of ${totalOrders})`}>
+      <Page fullWidth title={`Orders (${totalOrders} showing${hasNextPage ? ', more available' : ''})`}>
         <BlockStack gap="400">
           {/* Connection Status Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
@@ -399,18 +345,6 @@ export default function OrdersPage() {
               No orders found.
             </Text>
           )}
-          {/* Pagination Controls */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24, gap: 8 }}>
-            <Button disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>
-              Previous
-            </Button>
-            <Text variant="bodyMd" as="span" tone="subdued">
-              Page {currentPage} of {Math.ceil(totalOrders / pageSize)}
-            </Text>
-            <Button disabled={orders.length < pageSize || (currentPage * pageSize) >= totalOrders} onClick={() => handlePageChange(currentPage + 1)}>
-              Next
-            </Button>
-          </div>
         </BlockStack>
       </Page>
     </SidebarLayout>
