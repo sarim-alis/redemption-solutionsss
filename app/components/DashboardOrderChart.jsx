@@ -42,6 +42,104 @@ export default function DashboardOrderChart({ analytics, vouchers, locations }) 
   const filteredLocations = filters.market === "All Markets"
     ? (locations || [])
     : (locations || []).filter(loc => loc.market === filters.market);
+  // Helper to parse and sort products: group by base name then sort variants
+  function getSortedProducts() {
+    const exclude = new Set([
+      "Conventional Oil Change",
+      "Synthetic Blend Oil Change",
+      "Full Synthetic Oil Change",
+      "Jiffy Lube® Gift Card",
+    ]);
+
+    const raw = [
+      ...((vouchers || []).map(v => v.productTitle).filter(Boolean)),
+      ...((analytics?.allProducts || []).map(p => p.title).filter(Boolean))
+    ];
+
+    const unique = Array.from(new Set(raw)).filter(p => !exclude.has(p));
+
+    function parseTitle(t) {
+      if (!t) return { base: "", variant: "", title: t };
+      // Split on common delimiters first
+      const delim = t.match(/(.*?)\s*[-–—:\|]\s*(.+)$/);
+      if (delim) return { base: delim[1].trim(), variant: delim[2].trim(), title: t };
+      // Trailing pack / gift patterns
+      const pack = t.match(/^(.*?)(\b\d+\s*Pack\b|\bPack\b|\bGift Card\b|\bGift\b)$/i);
+      if (pack) return { base: pack[1].trim(), variant: (pack[2] || "").trim(), title: t };
+      // Trailing currency/amount without explicit delimiter, e.g. "Gift Card $100" or "Gift Card 100"
+      const trailingAmount = t.match(/^(.*?)(?:\s*[-–—:\|]?\s*)?\$?\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]+(?:\.[0-9]+)?)$/);
+      if (trailingAmount) return { base: trailingAmount[1].trim(), variant: (trailingAmount[2] || "").trim(), title: t };
+      // Parenthesis variant
+      const paren = t.match(/^(.*?)\s*\((.+)\)$/);
+      if (paren) return { base: paren[1].trim(), variant: paren[2].trim(), title: t };
+      // Default: treat whole title as base
+      return { base: t.trim(), variant: "", title: t };
+    }
+
+    // Build map base -> list of titles
+    const map = unique.reduce((acc, title) => {
+      const parsed = parseTitle(title);
+      const base = parsed.base || title;
+      acc[base] = acc[base] || [];
+      acc[base].push(parsed);
+      return acc;
+    }, {});
+
+    // Preferred product ordering (show these first in this exact order)
+    const preferredOrder = [
+      "Conventional Oil Change",
+      "Synthetic Blend Oil Change",
+      "Full Synthetic Oil Change",
+      "Jiffy Lube® Gift Card",
+    ];
+
+    // Sort bases: preferred first (in order), then remaining alphabetically
+    const bases = Object.keys(map).sort((a, b) => {
+      const ia = preferredOrder.indexOf(a);
+      const ib = preferredOrder.indexOf(b);
+      if (ia !== -1 || ib !== -1) {
+        if (ia === -1) return 1; // b is preferred, a after
+        if (ib === -1) return -1; // a is preferred, b after
+        return ia - ib; // both preferred, keep preferred order
+      }
+      return a.localeCompare(b, undefined, { sensitivity: 'base' });
+    });
+
+    const result = [];
+    bases.forEach(base => {
+      const items = map[base];
+      // Sort variants: no-variant first, then numeric pack ascending, then alphabetic
+      items.sort((x, y) => {
+        // No variant first
+        if (!x.variant && y.variant) return -1;
+        if (!y.variant && x.variant) return 1;
+
+        // If titles contain numeric amounts (e.g., gift card values), sort numerically.
+        // Prefer numbers in the variant part, then in the full title. Support $, commas, decimals.
+        const extractNumber = (t) => {
+          if (!t) return null;
+          // Match currency-like numbers with optional $ and commas/decimals
+          const m = t.match(/\$?\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]+(?:\.[0-9]+)?)/);
+          if (!m) return null;
+          const num = parseFloat(m[1].replace(/,/g, ""));
+          return isNaN(num) ? null : num;
+        };
+        const nx = extractNumber(x.variant) ?? extractNumber(x.title);
+        const ny = extractNumber(y.variant) ?? extractNumber(y.title);
+        if (nx != null && ny != null) {
+          return nx - ny; // ascending numeric
+        }
+        if (nx != null && ny == null) return -1; // numeric before non-numeric
+        if (nx == null && ny != null) return 1;
+
+        // Final fallback: alphabetical
+        return (x.title || "").localeCompare(y.title || "", undefined, { sensitivity: 'base' });
+      });
+      items.forEach(i => result.push(i.title));
+    });
+
+    return result;
+  }
   const isFilterActive = filters.date !== "All" || filters.products !== "All Products" || filters.locations !== "All Locations";
   const { voucherRedemptions: allVoucherRedemptions } = useLoaderData();
 
@@ -135,9 +233,10 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
 }
 
 
-  function isProductMatch(product, filter) {
-    return filter === "All Products" ? true : product === filter;
-  }
+function isProductMatch(product, filter) {
+  if (!product) return false;
+  return filter === "All Products" ? true : product === filter;
+}
 
   function isLocationMatch(location, filter) {
     return filter === "All Locations" ? true : location === filter;
@@ -176,19 +275,23 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
 
   // Filtered vouchers by date
   // Filter vouchers by date and selected market
-  const filteredVouchers = transformedVouchers.filter(item => {
-    // Find location object for this voucher
-    let locationObj = filteredLocations.find(loc => {
-      if (!loc.name) return false;
-      // Match by name (case-insensitive)
-      return (item.locationUsed || "").toLowerCase().includes((loc.name || "").toLowerCase());
-    });
-    // If market filter is active, only show vouchers for that market
-    if (filters.market !== "All Markets") {
-      if (!locationObj) return false;
-    }
-    return isDateMatch(item.date, dateFilter, customStart, customEnd);
+const filteredVouchers = transformedVouchers.filter(item => {
+  // Market/location filter
+  let locationObj = filteredLocations.find(loc => {
+    if (!loc.name) return false;
+    return (item.locationUsed || "").toLowerCase().includes((loc.name || "").toLowerCase());
   });
+  if (filters.market !== "All Markets") {
+    if (!locationObj) return false;
+  }
+
+  // Product filter
+  if (!isProductMatch(item.product, filters.products)) return false;
+
+  // Date filter
+  return isDateMatch(item.date, dateFilter, customStart, customEnd);
+});
+
 
   // Group vouchers by productTitle and show count and totalPrice for each product
   const productTitleMap = {};
@@ -246,7 +349,10 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
 
   // Filtered metrics
   const totalProductSales = productSales.reduce((sum, item) => sum + (item.revenue || 0), 0);
-  const totalGiftCardBalance = filteredVouchers.reduce((sum, v) => sum + (v.balance || 0), 0);
+  // Only sum gift card type vouchers for total gift card balances
+  const totalGiftCardBalance = filteredVouchers
+    .filter(v => v.product.toLowerCase().includes("gift") || v.type === "gift")
+    .reduce((sum, v) => sum + (v.balance || 0), 0);
   const totalVouchers = filteredVouchers.length;
   const usedVouchersCount = filteredVouchers.filter(v => v.use === true).length;
   const activeVouchers = totalVouchers - usedVouchersCount;
@@ -278,11 +384,8 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
         )}
         <select style={styles.select} value={filters.products} onChange={e => setFilters(f => ({ ...f, products: e.target.value }))}>
           <option>All Products</option>
-          {[...new Set([
-          ...((vouchers || []).map(v => v.productTitle).filter(Boolean)),
-          ...((analytics?.allProducts || []).map(p => p.title))
-          ])].map((product, idx) => (
-          <option key={idx} value={product}>{product}</option>
+          {getSortedProducts().map((product, idx) => (
+            <option key={idx} value={product}>{product}</option>
           ))}
         </select>
         <select style={styles.select} value={filters.market} onChange={handleMarketChange}>
@@ -346,7 +449,10 @@ function isDateMatch(dateString, filter, customStart, customEnd) {
               )}
             </tbody>
           </table>
-        </div>
+          </div>
+
+          {/* Gift Card Redemption (moved here under Voucher Redemptions) */}
+          
         </div>
 
         {/* Column 2: Active vs Total Vouchers + Gift Card Redemption */}
