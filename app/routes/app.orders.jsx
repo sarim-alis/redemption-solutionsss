@@ -81,15 +81,39 @@ export const loader = async ({ request }) => {
     }
   `;
   const variables = cursor ? { cursor } : {};
-  const orderResponse = await admin.graphql(query, variables);
-  const orderJson = await orderResponse.json();
+  let orderJson;
+  try {
+    const orderResponse = await admin.graphql(query, variables);
+    orderJson = await orderResponse.json();
+  } catch (err) {
+    console.error('❌ Shopify GraphQL network error:', err);
+    throw new Response('Shopify GraphQL network error', { status: 500 });
+  }
+  if (orderJson.errors || orderJson.errors?.length) {
+    console.error('❌ Shopify GraphQL errors:', orderJson.errors);
+    throw new Response('Shopify GraphQL error', { status: 500 });
+  }
+  if (orderJson.data?.orders == null) {
+    console.error('❌ Shopify GraphQL missing orders:', orderJson);
+    throw new Response('Shopify GraphQL missing orders', { status: 500 });
+  }
+  if (orderJson.data.orders.edges == null) {
+    console.error('❌ Shopify GraphQL missing order edges:', orderJson);
+    throw new Response('Shopify GraphQL missing order edges', { status: 500 });
+  }
   const orders = orderJson.data.orders.edges.map((edge) => ({ ...edge.node, _cursor: edge.cursor }));
   const pageInfo = orderJson.data.orders.pageInfo;
   // Get total count from Shopify (separate query)
-  const countQuery = `query { ordersCount }`;
-  const countRes = await admin.graphql(countQuery);
-  const countJson = await countRes.json();
-  const totalOrders = countJson.data.ordersCount;
+  let totalOrders = 0;
+  try {
+    const countQuery = `query { ordersCount }`;
+    const countRes = await admin.graphql(countQuery);
+    const countJson = await countRes.json();
+    totalOrders = countJson.data.ordersCount;
+  } catch (err) {
+    console.error('❌ Shopify ordersCount error:', err);
+    totalOrders = 0;
+  }
   
   // Save order to database.
   let savedCount = 0;
