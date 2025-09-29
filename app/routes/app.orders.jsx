@@ -20,7 +20,7 @@ export const loader = async ({ request }) => {
   const direction = url.searchParams.get('direction') || 'next';
   const query = `
     query ($cursor: String) {
-      orders(first: 50, after: $cursor, reverse: true) {
+      orders(first: 250, after: $cursor, reverse: true) {
         edges {
           cursor
           node {
@@ -106,10 +106,10 @@ export const loader = async ({ request }) => {
   // Get total count from Shopify (separate query)
   let totalOrders = 0;
   try {
-    const countQuery = `query { ordersCount }`;
+    const countQuery = `query { ordersCount { count } }`;
     const countRes = await admin.graphql(countQuery);
     const countJson = await countRes.json();
-    totalOrders = countJson.data.ordersCount;
+    totalOrders = countJson.data.ordersCount?.count ?? 0;
   } catch (err) {
     console.error('❌ Shopify ordersCount error:', err);
     totalOrders = 0;
