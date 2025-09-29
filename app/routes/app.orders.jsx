@@ -83,6 +83,12 @@ export const loader = async ({ request }) => {
   const hasNextPage = orderJson.data.orders.pageInfo.hasNextPage;
   const endCursor = orderJson.data.orders.pageInfo.endCursor;
   const totalOrders = orders.length;
+  console.log('🟢 Loader debug:', {
+    hasNextPage,
+    endCursor,
+    ordersLength: orders.length,
+    pageInfo: orderJson.data.orders.pageInfo
+  });
   
   // Save order to database.
   let savedCount = 0;
