@@ -41,8 +41,8 @@ export function generateVoucherEmailHTML(voucher) {
     console.error('Error parsing line items:', error);
   }
   
-  // Get product title from line items or use a default
-  const productTitle = lineItems[0]?.title || 'Oil Change Voucher';
+  // Prefer voucher.productTitle if provided, otherwise get product title from line items or use a default
+  const productTitle = voucher.productTitle || lineItems[0]?.title || 'Oil Change Voucher';
 
   return `
     <!DOCTYPE html>
