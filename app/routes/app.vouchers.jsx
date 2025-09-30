@@ -194,7 +194,7 @@ export default function VouchersPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px',marginBottom: '16px'}}>
             <div>
               <label style={labelStyle}>Search</label>
-              <input type="text" placeholder="Search by code, order ID, or email" value={search} onChange={e => setSearch(e.target.value)} style={inputStyle} />
+              <input type="text" placeholder="Search by code, order or email" value={search} onChange={e => setSearch(e.target.value)} style={inputStyle} />
             </div>
             <div>
               <label style={labelStyle}>Date Range</label>
@@ -233,9 +233,13 @@ export default function VouchersPage() {
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button type="button" style={exportButtonStyle} onClick={() => {const csvData = filteredVouchers.map(v => ({ Code: v.code, Type: Array.isArray(v.type) ? v.type[0] : (typeof v.type === 'string' ? v.type.replace(/\[|\]|"/g, '') : 'voucher'), OrderID: v.shopifyOrderId, CustomerEmail: v.customerEmail, Used: v.order?.statusUse ? "USED" : "UNUSED", CreatedAt: v.createdAt }));exportToCSV("all_vouchers.csv", csvData);}}>
-              Export
-            </button>
+            <button type="button" style={{ ...exportButtonStyle, opacity: isExporting ? 0.6 : 1, pointerEvents: isExporting ? 'none' : 'auto', position: 'relative' }} disabled={isExporting} onClick={async () => { setIsExporting(true); const csvData = filteredVouchers.map(v => ({ Code: v.code, Type: Array.isArray(v.type) ? v.type[0] : (typeof v.type === 'string' ? v.type.replace(/\[|\]|"/g, '') : 'voucher'), OrderID: v.shopifyOrderId, CustomerEmail: v.customerEmail, Used: v.order?.statusUse ? "USED" : "UNUSED", CreatedAt: v.createdAt})); await new Promise(res => setTimeout(res, 500)); exportToCSV("all_vouchers.csv", csvData); setIsExporting(false);}} >{isExporting ? (<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span className="loader" style={{ width: 16, height: 16, border: '2px solid #fff', borderTop: '2px solid #862633', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span>Exporting...</span>) : ('Export')}</button>
+            <style>{`
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            `}</style>
           </div>
         </div>
         <div style={containerStyle}>
