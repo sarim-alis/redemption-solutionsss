@@ -247,6 +247,8 @@ export default function VouchersPage() {
             <thead style={{ background: "#f3f4f6" }}>
               <tr>
                 <th style={headStyle}>Code</th>
+                <th style={headStyle}>Product</th>
+                <th style={headStyle}>Value</th> 
                 <th style={headStyle}>Type</th>
                 <th style={headStyle}>Order ID</th>
                 <th style={headStyle}>Customer Email</th>
@@ -259,7 +261,9 @@ export default function VouchersPage() {
               {filteredVouchers.length > 0 ? (
                 filteredVouchers.map((v, idx) => (
                   <tr key={v.id} style={{background: idx % 2 === 0 ? "#fafbfc" : "#fff"}}>
+                    <td style={cellStyle}>{v.productTitle}</td>
                     <td style={cellStyle}>{v.code}</td>
+                    <td style={cellStyle}>{v.totalPrice} $</td>
                     <td style={cellStyle}>{
                       (typeof v.type === 'string' && v.type.toLowerCase().includes('gift'))
                         ? 'gift card'

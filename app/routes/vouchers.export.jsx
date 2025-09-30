@@ -3,6 +3,7 @@ import puppeteer from "puppeteer";
 import { getAllVouchers } from "../models/voucher.server";
 import prisma from "../db.server";
 import { generateVoucherEmailHTML } from "../utils/voucherEmailTemplateShareds.js";
+import { generateGiftCardEmailHTML } from "../utils/giftCardEmailTemplate.js";
 
 // 🔥 Shared function to build PDF
 async function buildPdf(vouchers, singleId = null) {
@@ -11,7 +12,12 @@ async function buildPdf(vouchers, singleId = null) {
   if (singleId) {
     // ✅ Single voucher → use fancy template
     const voucher = vouchers[0];
-    html = generateVoucherEmailHTML(voucher);
+    // If this voucher is a gift card, use the gift card email template
+    if (voucher && (voucher.type === "gift" || (voucher.product && String(voucher.product).toLowerCase().includes("gift")))) {
+      html = generateGiftCardEmailHTML(voucher);
+    } else {
+      html = generateVoucherEmailHTML(voucher);
+    }
   } else {
     // ✅ Multiple vouchers → keep the table report
     html = `
