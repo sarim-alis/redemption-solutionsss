@@ -57,12 +57,12 @@ export default function VouchersPage() {
   // Calculate summary counts
   const summary = React.useMemo(() => {
     return vouchers.reduce((acc, v) => {
-      // Use direct type from voucher table instead of parsing line items
-      const type = v.type || 'voucher'; // Default to 'voucher' if type is null
-      console.log('Voucher type from table:', type, 'for voucher:', v.code);
-      const isGift = type.toLowerCase().includes('gift');
+      // Normalize type and used
+      const rawType = Array.isArray(v.type) ? (v.type[0] || '') : (typeof v.type === 'string' ? v.type : 'voucher');
+      const normalizedType = String(rawType).replace(/\[|\]|\"/g, '').toLowerCase();
+      const isGift = normalizedType.includes('gift');
       const isVoucher = !isGift;
-      const isUsed = v.order?.statusUse;
+      const isUsed = (x => x === true || x === 1 || x === '1' || String(x).toLowerCase() === 'true')(v.used ?? v.statusUse ?? v.order?.statusUse ?? v.use);
       
       // Total counts
       acc.totalVouchers++;
@@ -124,13 +124,15 @@ export default function VouchersPage() {
       const code = (v.code || "").toLowerCase();
       const orderId = (v.shopifyOrderId || "").toLowerCase();
       const email = (v.customerEmail || "").toLowerCase();
-      const type = (v.type || 'voucher').toLowerCase();
-      const isGift = type.includes('gift');
-      
+      const rawType = Array.isArray(v.type) ? (v.type[0] || '') : (typeof v.type === 'string' ? v.type : 'voucher');
+      const normalizedType = String(rawType).replace(/\[|\]|\"/g, '').toLowerCase();
+      const isGift = normalizedType.includes('gift');
+      const isUsed = (x => x === true || x === 1 || x === '1' || String(x).toLowerCase() === 'true')(v.used ?? v.statusUse ?? v.order?.statusUse ?? v.use);
+
       const matchesSearch = code.includes(q) || orderId.includes(q) || email.includes(q);
       const matchesDate = isDateMatch(v.createdAt, dateFilter);
       const matchesType = typeFilter === 'all' || (typeFilter === 'voucher' && !isGift) || (typeFilter === 'gift' && isGift);
-      const matchesUsed = usedFilter === 'all' || (usedFilter === 'used' && v.order?.statusUse) || (usedFilter === 'not_used' && !v.order?.statusUse);
+      const matchesUsed = usedFilter === 'all' || (usedFilter === 'used' && isUsed) || (usedFilter === 'not_used' && !isUsed);
       return matchesSearch && matchesDate && matchesType && matchesUsed;
     });
   }, [vouchers, search, dateFilter, typeFilter, usedFilter]);
@@ -259,25 +261,27 @@ export default function VouchersPage() {
             </thead>
             <tbody>
               {filteredVouchers.length > 0 ? (
-                filteredVouchers.map((v, idx) => (
-                  <tr key={v.id} style={{background: idx % 2 === 0 ? "#fafbfc" : "#fff"}}>
-                    <td style={cellStyle}>{v.productTitle}</td>
-                    <td style={cellStyle}>{v.code}</td>
-                    <td style={cellStyle}>{v.totalPrice} $</td>
-                    <td style={cellStyle}>{
-                      (typeof v.type === 'string' && v.type.toLowerCase().includes('gift'))
-                        ? 'gift card'
-                        : (Array.isArray(v.type) ? v.type[0] : (typeof v.type === 'string' ? v.type.replace(/\[|\]|"/g, '') : 'voucher'))
-                    }</td>
-                    <td style={cellStyle}>{v.shopifyOrderId}</td>
-                    <td style={cellStyle}>{v.customerEmail}</td>
-                    <td style={cellStyle}><span style={{ display: "inline-block", padding: "2px 8px", borderRadius: 8, background: v.order?.statusUse ? "#fee2e2" : "#f3f4f6", color: v.order?.statusUse ? "#b91c1c" : "#4b5563", fontWeight: 600, fontSize: 12, textTransform: 'uppercase' }}>{v.order?.statusUse ? "USED" : "UNUSED"}</span></td>
-                    <td style={cellStyle}>{new Date(v.createdAt).toLocaleString()}</td>
-                    <button onClick={() => window.open(`/vouchers/export?id=${v.id}`, "_blank")} style={{ padding: "6px 12px", backgroundColor: "#862633", color: "white", border: "none", borderRadius: "6px", cursor: "pointer"}}>
-                      Download
-                    </button>
-                  </tr>
-                ))
+                filteredVouchers.map((v, idx) => {
+                  const rawType = Array.isArray(v.type) ? (v.type[0] || '') : (typeof v.type === 'string' ? v.type : 'voucher');
+                  const normalizedType = String(rawType).replace(/\[|\]|\"/g, '').toLowerCase();
+                  const isGift = normalizedType.includes('gift');
+                  const isUsed = (x => x === true || x === 1 || x === '1' || String(x).toLowerCase() === 'true')(v.used ?? v.statusUse ?? v.order?.statusUse ?? v.use);
+                  return (
+                    <tr key={v.id} style={{background: idx % 2 === 0 ? "#fafbfc" : "#fff"}}>
+                      <td style={cellStyle}>{v.productTitle}</td>
+                      <td style={cellStyle}>{v.code}</td>
+                      <td style={cellStyle}>{v.totalPrice} $</td>
+                      <td style={cellStyle}>{isGift ? 'gift card' : 'voucher'}</td>
+                      <td style={cellStyle}>{v.shopifyOrderId}</td>
+                      <td style={cellStyle}>{v.customerEmail}</td>
+                      <td style={cellStyle}><span style={{ display: "inline-block", padding: "2px 8px", borderRadius: 8, background: isUsed ? "#fee2e2" : "#f3f4f6", color: isUsed ? "#b91c1c" : "#4b5563", fontWeight: 600, fontSize: 12, textTransform: 'uppercase' }}>{isUsed ? "USED" : "UNUSED"}</span></td>
+                      <td style={cellStyle}>{new Date(v.createdAt).toLocaleString()}</td>
+                      <button onClick={() => window.open(`/vouchers/export?id=${v.id}`, "_blank")} style={{ padding: "6px 12px", backgroundColor: "#862633", color: "white", border: "none", borderRadius: "6px", cursor: "pointer"}}>
+                        Download
+                      </button>
+                    </tr>
+                  )
+                })
               ) : (
                 <tr>
                   <td colSpan={6} style={{ textAlign: "center", padding: 40 }}>
