@@ -181,7 +181,10 @@ export default function VouchersPage() {
       const matchesSearch = code.includes(q) || orderId.includes(q) || email.includes(q);
       const matchesDate = isDateMatch(v.createdAt, dateFilter);
       const matchesType = typeFilter === 'all' || (typeFilter === 'voucher' && !isGift) || (typeFilter === 'gift' && isGift);
-      const matchesUsed = usedFilter === 'all' || (usedFilter === 'used' && status === 'USED') || (usedFilter === 'not_used' && status !== 'USED');
+      const matchesUsed = usedFilter === 'all' ||
+        (usedFilter === 'used' && status === 'USED') ||
+        (usedFilter === 'partial' && status === 'PARTIALLY USED') ||
+        (usedFilter === 'unused' && status === 'UNUSED');
       return matchesSearch && matchesDate && matchesType && matchesUsed;
     });
   }, [vouchers, search, dateFilter, typeFilter, usedFilter]);
@@ -279,12 +282,50 @@ export default function VouchersPage() {
               >
                 <option value="all">All Status</option>
                 <option value="used">Used</option>
-                <option value="not_used">Not Used</option>
+                <option value="partial">Partially Used</option>
+                <option value="unused">Unused</option>
               </select>
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button type="button" style={{ ...exportButtonStyle, opacity: isExporting ? 0.6 : 1, pointerEvents: isExporting ? 'none' : 'auto', position: 'relative' }} disabled={isExporting} onClick={async () => { setIsExporting(true); const csvData = filteredVouchers.map(v => ({ Code: v.code, Type: Array.isArray(v.type) ? v.type[0] : (typeof v.type === 'string' ? v.type.replace(/\[|\]|"/g, '') : 'voucher'), OrderID: v.shopifyOrderId, CustomerEmail: v.customerEmail, Used: v.order?.statusUse ? "USED" : "UNUSED", CreatedAt: v.createdAt})); await new Promise(res => setTimeout(res, 500)); exportToCSV("all_vouchers.csv", csvData); setIsExporting(false);}} >{isExporting ? (<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span className="loader" style={{ width: 16, height: 16, border: '2px solid #fff', borderTop: '2px solid #862633', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span>Exporting...</span>) : ('Export')}</button>
+            <button type="button" style={{ ...exportButtonStyle, opacity: isExporting ? 0.6 : 1, pointerEvents: isExporting ? 'none' : 'auto', position: 'relative' }} disabled={isExporting} onClick={async () => {
+              setIsExporting(true);
+              const csvData = filteredVouchers.map(v => {
+                // compute status the same way we do for the table
+                function parseNumber(x) { const n = Number.parseFloat(x); return Number.isFinite(n) ? n : null; }
+                const rawType = Array.isArray(v.type) ? (v.type[0] || '') : (typeof v.type === 'string' ? v.type : 'voucher');
+                const normalizedType = String(rawType).replace(/\[|\]|\"/g, '').toLowerCase();
+                const isGift = normalizedType.includes('gift');
+                const possibleRemaining = [v.balance, v.remaining, v.remainingBalance, v.amountRemaining, v.currentBalance, v.current_amount, v.remaining_amount];
+                const possibleOriginal = [v.initialBalance, v.amount, v.originalAmount, v.totalPrice, v.value, v.initial_amount];
+                const remaining = possibleRemaining.map(parseNumber).find(n => n !== null);
+                const original = possibleOriginal.map(parseNumber).find(n => n !== null);
+                const usedBool = (x => x === true || x === 1 || x === '1' || String(x).toLowerCase() === 'true')(v.used ?? v.statusUse ?? v.order?.statusUse ?? v.use);
+                let status = 'UNUSED';
+                if (!isGift) status = usedBool ? 'USED' : 'UNUSED';
+                else {
+                  if (remaining == null || original == null) status = usedBool ? 'USED' : 'UNUSED';
+                  else if (remaining <= 0) status = 'USED';
+                  else if (remaining < original) status = 'PARTIALLY USED';
+                  else status = 'UNUSED';
+                }
+
+                return {
+                  Code: v.code,
+                  Type: Array.isArray(v.type) ? v.type[0] : (typeof v.type === 'string' ? v.type.replace(/\[|\]|"/g, '') : 'voucher'),
+                  OrderID: v.shopifyOrderId,
+                  CustomerEmail: v.customerEmail,
+                  Status: status,
+                  Remaining: remaining ?? '',
+                  Original: original ?? '',
+                  CreatedAt: v.createdAt
+                };
+              });
+
+              await new Promise(res => setTimeout(res, 500));
+              exportToCSV("all_vouchers.csv", csvData);
+              setIsExporting(false);
+            }} >{isExporting ? (<span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span className="loader" style={{ width: 16, height: 16, border: '2px solid #fff', borderTop: '2px solid #862633', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span>Exporting...</span>) : ('Export')}</button>
             <style>{`
               @keyframes spin {
                 0% { transform: rotate(0deg); }
