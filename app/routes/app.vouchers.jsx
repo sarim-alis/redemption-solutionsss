@@ -56,35 +56,68 @@ export default function VouchersPage() {
   
   // Calculate summary counts
   const summary = React.useMemo(() => {
-    return vouchers.reduce((acc, v) => {
-      // Normalize type and used
+    // Helper to parse potential numeric fields safely
+    function parseNumber(x) {
+      const n = Number.parseFloat(x);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    // Determine status for vouchers/gift cards. For gift cards we try to detect remaining/original
+    function getVoucherStatus(v) {
       const rawType = Array.isArray(v.type) ? (v.type[0] || '') : (typeof v.type === 'string' ? v.type : 'voucher');
       const normalizedType = String(rawType).replace(/\[|\]|\"/g, '').toLowerCase();
       const isGift = normalizedType.includes('gift');
-      const isVoucher = !isGift;
-      const isUsed = (x => x === true || x === 1 || x === '1' || String(x).toLowerCase() === 'true')(v.used ?? v.statusUse ?? v.order?.statusUse ?? v.use);
-      
+
+      // possible fields for remaining/current balance
+      const possibleRemaining = [v.balance, v.remaining, v.remainingBalance, v.amountRemaining, v.currentBalance, v.current_amount, v.remaining_amount];
+      const possibleOriginal = [v.initialBalance, v.amount, v.originalAmount, v.totalPrice, v.value, v.initial_amount];
+
+      const remaining = possibleRemaining.map(parseNumber).find(n => n !== null);
+      const original = possibleOriginal.map(parseNumber).find(n => n !== null);
+
+      const usedBool = (x => x === true || x === 1 || x === '1' || String(x).toLowerCase() === 'true')(v.used ?? v.statusUse ?? v.order?.statusUse ?? v.use);
+
+      // Default status
+      let status = 'UNUSED';
+
+      if (!isGift) {
+        status = usedBool ? 'USED' : 'UNUSED';
+      } else {
+        // Gift card: prefer numeric detection when available
+        if (remaining == null || original == null) {
+          status = usedBool ? 'USED' : 'UNUSED';
+        } else {
+          if (remaining <= 0) status = 'USED';
+          else if (remaining < original) status = 'PARTIALLY USED';
+          else status = 'UNUSED';
+        }
+      }
+
+      return { isGift, status, remaining, original };
+    }
+
+    return vouchers.reduce((acc, v) => {
+      const { isGift, status } = getVoucherStatus(v);
+
       // Total counts
       acc.totalVouchers++;
-      
-      // Voucher specific counts
-      if (isVoucher) {
+
+      if (!isGift) {
         acc.vouchers.total++;
-        if (isUsed) acc.vouchers.used++;
+        if (status === 'USED') acc.vouchers.used++;
         else acc.vouchers.unused++;
-      } 
-      // Gift card specific counts
-      else if (isGift) {
+      } else {
         acc.gifts.total++;
-        if (isUsed) acc.gifts.used++;
+        if (status === 'USED') acc.gifts.used++;
+        else if (status === 'PARTIALLY USED') acc.gifts.partial++;
         else acc.gifts.unused++;
       }
-      
+
       return acc;
-    }, { 
+    }, {
       totalVouchers: 0,
       vouchers: { total: 0, used: 0, unused: 0 },
-      gifts: { total: 0, used: 0, unused: 0 }
+      gifts: { total: 0, used: 0, partial: 0, unused: 0 }
     });
   }, [vouchers]);
 
@@ -124,15 +157,31 @@ export default function VouchersPage() {
       const code = (v.code || "").toLowerCase();
       const orderId = (v.shopifyOrderId || "").toLowerCase();
       const email = (v.customerEmail || "").toLowerCase();
+      // Reuse the same status detection logic as summary
+      function parseNumber(x) { const n = Number.parseFloat(x); return Number.isFinite(n) ? n : null; }
       const rawType = Array.isArray(v.type) ? (v.type[0] || '') : (typeof v.type === 'string' ? v.type : 'voucher');
       const normalizedType = String(rawType).replace(/\[|\]|\"/g, '').toLowerCase();
       const isGift = normalizedType.includes('gift');
-      const isUsed = (x => x === true || x === 1 || x === '1' || String(x).toLowerCase() === 'true')(v.used ?? v.statusUse ?? v.order?.statusUse ?? v.use);
+
+      const possibleRemaining = [v.balance, v.remaining, v.remainingBalance, v.amountRemaining, v.currentBalance, v.current_amount, v.remaining_amount];
+      const possibleOriginal = [v.initialBalance, v.amount, v.originalAmount, v.totalPrice, v.value, v.initial_amount];
+      const remaining = possibleRemaining.map(parseNumber).find(n => n !== null);
+      const original = possibleOriginal.map(parseNumber).find(n => n !== null);
+      const usedBool = (x => x === true || x === 1 || x === '1' || String(x).toLowerCase() === 'true')(v.used ?? v.statusUse ?? v.order?.statusUse ?? v.use);
+
+      let status = 'UNUSED';
+      if (!isGift) status = usedBool ? 'USED' : 'UNUSED';
+      else {
+        if (remaining == null || original == null) status = usedBool ? 'USED' : 'UNUSED';
+        else if (remaining <= 0) status = 'USED';
+        else if (remaining < original) status = 'PARTIALLY USED';
+        else status = 'UNUSED';
+      }
 
       const matchesSearch = code.includes(q) || orderId.includes(q) || email.includes(q);
       const matchesDate = isDateMatch(v.createdAt, dateFilter);
       const matchesType = typeFilter === 'all' || (typeFilter === 'voucher' && !isGift) || (typeFilter === 'gift' && isGift);
-      const matchesUsed = usedFilter === 'all' || (usedFilter === 'used' && isUsed) || (usedFilter === 'not_used' && !isUsed);
+      const matchesUsed = usedFilter === 'all' || (usedFilter === 'used' && status === 'USED') || (usedFilter === 'not_used' && status !== 'USED');
       return matchesSearch && matchesDate && matchesType && matchesUsed;
     });
   }, [vouchers, search, dateFilter, typeFilter, usedFilter]);
@@ -265,7 +314,27 @@ export default function VouchersPage() {
                   const rawType = Array.isArray(v.type) ? (v.type[0] || '') : (typeof v.type === 'string' ? v.type : 'voucher');
                   const normalizedType = String(rawType).replace(/\[|\]|\"/g, '').toLowerCase();
                   const isGift = normalizedType.includes('gift');
-                  const isUsed = (x => x === true || x === 1 || x === '1' || String(x).toLowerCase() === 'true')(v.used ?? v.statusUse ?? v.order?.statusUse ?? v.use);
+
+                  // determine status again
+                  function parseNumber(x) { const n = Number.parseFloat(x); return Number.isFinite(n) ? n : null; }
+                  const possibleRemaining = [v.balance, v.remaining, v.remainingBalance, v.amountRemaining, v.currentBalance, v.current_amount, v.remaining_amount];
+                  const possibleOriginal = [v.initialBalance, v.amount, v.originalAmount, v.totalPrice, v.value, v.initial_amount];
+                  const remaining = possibleRemaining.map(parseNumber).find(n => n !== null);
+                  const original = possibleOriginal.map(parseNumber).find(n => n !== null);
+                  const usedBool = (x => x === true || x === 1 || x === '1' || String(x).toLowerCase() === 'true')(v.used ?? v.statusUse ?? v.order?.statusUse ?? v.use);
+
+                  let status = 'UNUSED';
+                  if (!isGift) status = usedBool ? 'USED' : 'UNUSED';
+                  else {
+                    if (remaining == null || original == null) status = usedBool ? 'USED' : 'UNUSED';
+                    else if (remaining <= 0) status = 'USED';
+                    else if (remaining < original) status = 'PARTIALLY USED';
+                    else status = 'UNUSED';
+                  }
+
+                  const isUsed = status === 'USED';
+                  const isPartial = status === 'PARTIALLY USED';
+
                   return (
                     <tr key={v.id} style={{background: idx % 2 === 0 ? "#fafbfc" : "#fff"}}>
                       <td style={cellStyle}>{v.productTitle}</td>
@@ -274,7 +343,20 @@ export default function VouchersPage() {
                       <td style={cellStyle}>{isGift ? 'gift card' : 'voucher'}</td>
                       <td style={cellStyle}>{v.shopifyOrderId}</td>
                       <td style={cellStyle}>{v.customerEmail}</td>
-                      <td style={cellStyle}><span style={{ display: "inline-block", padding: "2px 8px", borderRadius: 8, background: isUsed ? "#fee2e2" : "#f3f4f6", color: isUsed ? "#b91c1c" : "#4b5563", fontWeight: 600, fontSize: 12, textTransform: 'uppercase' }}>{isUsed ? "USED" : "UNUSED"}</span></td>
+                      <td style={cellStyle}>
+                        <span style={{
+                          display: "inline-block",
+                          padding: "2px 8px",
+                          borderRadius: 8,
+                          background: isUsed ? "#fee2e2" : (isPartial ? "#fff7ed" : "#f3f4f6"),
+                          color: isUsed ? "#b91c1c" : (isPartial ? "#92400e" : "#4b5563"),
+                          fontWeight: 600,
+                          fontSize: 12,
+                          textTransform: 'uppercase'
+                        }}>
+                          {isUsed ? "USED" : (isPartial ? "PARTIALLY USED" : "UNUSED")}
+                        </span>
+                      </td>
                       <td style={cellStyle}>{new Date(v.createdAt).toLocaleString()}</td>
                       <button onClick={() => window.open(`/vouchers/export?id=${v.id}`, "_blank")} style={{ padding: "6px 12px", backgroundColor: "#862633", color: "white", border: "none", borderRadius: "6px", cursor: "pointer"}}>
                         Download
