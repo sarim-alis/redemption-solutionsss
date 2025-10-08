@@ -438,7 +438,7 @@ const filteredVouchers = transformedVouchers.filter(item => {
           </div>
           <div style={styles.tableContainer}>
             <div style={styles.tableTitle}>Voucher Redemptions</div>
-            <table style={styles.table}><thead><tr><th style={styles.tableHeader}>Product</th><th style={styles.tableHeader}>Date</th><th style={styles.tableHeader}>Location</th></tr></thead>
+            <table style={styles.table}><thead><tr><th style={styles.tableHeader}>Product</th><th style={styles.tableHeader}>Purchase</th><th style={styles.tableHeader}>Location</th></tr></thead>
             <tbody>
               {voucherRedemptions && voucherRedemptions.length > 0 ? (
                 voucherRedemptions.map((item, index) => (
