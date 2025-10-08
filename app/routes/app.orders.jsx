@@ -314,7 +314,7 @@ export default function OrdersPage() {
                 "text","text","text","text","numeric","text","text","text","text","text"
               ]}
               headings={[
-                "Order ID","Customer","Email","Date","Price","Items","Payment Status","Voucher","Download"
+                "Order ID","Customer","Email","Date","Price","Items","Payment Status"
               ]}
               rows={orders.map((order) => {
                 const id = order.name;
@@ -332,10 +332,6 @@ export default function OrdersPage() {
                  }</Text>,
                  <Text variant="bodyMd">{order.lineItems.edges.length}</Text>,
                  <Badge status={order.displayFinancialStatus === 'PAID' ? 'success' : 'attention'}>{order.displayFinancialStatus}</Badge>,
-                <Text variant="bodyMd">{code}</Text>,
-                code !== '—'
-                  ? <Button url={`/vouchers/${shopId}/download`} external>Download PDF</Button>
-                  : <Text variant="bodyMd" as="span" tone="subdued">N/A</Text>
               ];
               })}
             />
