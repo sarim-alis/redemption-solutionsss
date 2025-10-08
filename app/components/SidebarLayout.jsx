@@ -9,7 +9,7 @@ const navItems = [
   { label: "Orders", url: "/app/orders", icon: OrderIcon },
   { label: "Vouchers", url: "/app/vouchers", icon: ReceiptIcon },
   { label: "Locations", url: "/app/locations", icon: LocationIcon },
-  { label: "Customers", url: "/app/customers", icon: ProfileIcon },
+  // { label: "Customers", url: "/app/customers", icon: ProfileIcon },
   { label: "Employees", url: "/app/users", icon: PersonFilledIcon },
   // { label: "Login", url: "/app/login", icon: LockFilledIcon },
   // { label: "Voucher", url: "/app/voucher", icon: CashDollarFilledIcon },
