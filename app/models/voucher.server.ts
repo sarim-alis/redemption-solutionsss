@@ -169,6 +169,41 @@ export async function getAllVouchers() {
   return vouchers;
 }
 
+// Paginated fetch for vouchers
+export async function getVouchersPage(page = 1, perPage = 25) {
+  const take = Number(perPage) || 25;
+  const skip = (Math.max(Number(page) || 1, 1) - 1) * take;
+
+  const [items, totalCount] = await Promise.all([
+    prisma.voucher.findMany({
+      orderBy: { createdAt: "desc" },
+      skip,
+      take,
+      include: {
+        order: {
+          select: {
+            id: true,
+            shopifyOrderId: true,
+            statusUse: true,
+            lineItems: true,
+            createdAt: true,
+            updatedAt: true
+          }
+        }
+      }
+    }),
+    prisma.voucher.count()
+  ]);
+
+  return {
+    items,
+    totalCount,
+    page: Number(page) || 1,
+    perPage: take,
+    totalPages: Math.max(1, Math.ceil(totalCount / take))
+  };
+}
+
 // Fetch a voucher by Shopify order ID
 export async function getVoucherByOrderId(shopifyOrderId: string) {
   return prisma.voucher.findFirst({ where: { shopifyOrderId } });

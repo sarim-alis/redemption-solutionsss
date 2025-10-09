@@ -33,19 +33,23 @@ import React from "react";
 import { useLoaderData, useNavigation } from "@remix-run/react";
 import SidebarLayout from "../components/SidebarLayout";
 import { json } from "@remix-run/node";
-import { getAllVouchers } from "../models/voucher.server";
+import { getAllVouchers, getVouchersPage } from "../models/voucher.server";
 import { Spinner } from "@shopify/polaris";
 
 
 // Loader.
-export const loader = async () => {
-  const vouchers = await getAllVouchers();
-  return json({ vouchers });
+export const loader = async ({ request }) => {
+  const url = new URL(request.url);
+  const page = Number(url.searchParams.get('page') || '1');
+  const perPage = Number(url.searchParams.get('perPage') || '25');
+
+  const data = await getVouchersPage(page, perPage);
+  return json({ vouchers: data.items, pagination: { page: data.page, perPage: data.perPage, totalPages: data.totalPages, totalCount: data.totalCount } });
 };
 
 // Frontend.
 export default function VouchersPage() {
-  const { vouchers } = useLoaderData();
+  const { vouchers, pagination } = useLoaderData();
   const navigation = useNavigation();
   const [search, setSearch] = React.useState("");
   
@@ -243,7 +247,7 @@ export default function VouchersPage() {
           </div>
         </div>
 
-        {/* Search and Filters */}
+  {/* Search and Filters */}
         <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)',marginBottom: '24px'}}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px',marginBottom: '16px'}}>
             <div>
@@ -334,6 +338,40 @@ export default function VouchersPage() {
             `}</style>
           </div>
         </div>
+        {/* Pagination controls */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button disabled={!pagination || pagination.page <= 1} onClick={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.set('page', String((pagination?.page || 1) - 1));
+              window.location.href = url.toString();
+            }} style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #e5e7eb', background: '#fff' }}>Prev</button>
+
+            <div>Page <strong>{pagination?.page || 1}</strong> of <strong>{pagination?.totalPages || 1}</strong></div>
+
+            <button disabled={!pagination || (pagination.page >= pagination.totalPages)} onClick={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.set('page', String((pagination?.page || 1) + 1));
+              window.location.href = url.toString();
+            }} style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #e5e7eb', background: '#fff' }}>Next</button>
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <label style={{ color: '#6b7280' }}>Per page</label>
+            <select value={pagination?.perPage || 25} onChange={(e) => {
+              const url = new URL(window.location.href);
+              url.searchParams.set('perPage', String(e.target.value));
+              url.searchParams.set('page', '1');
+              window.location.href = url.toString();
+            }} style={{ padding: '6px', borderRadius: 6 }}>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+        </div>
+
         <div style={containerStyle}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead style={{ background: "#f3f4f6" }}>
