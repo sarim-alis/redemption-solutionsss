@@ -275,7 +275,7 @@ export default function OrdersPage() {
 
   return (
     <SidebarLayout>
-      <Page fullWidth title={`Orders (${totalOrders} showing${hasNextPage ? ', more available' : ''})`}>
+      <Page fullWidth title={`Orders (${totalOrders} showing${pageInfo?.hasNextPage ? ', more available' : ''})`}>
         <BlockStack gap="400">
           {/* Connection Status Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
