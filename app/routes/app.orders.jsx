@@ -1,6 +1,6 @@
 // Imports.
 import React, { useState, useEffect } from "react";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, useNavigation, useNavigate } from "@remix-run/react";
 import { Page, DataTable, Text, BlockStack, Badge, Button } from "@shopify/polaris";
 import SidebarLayout from "../components/SidebarLayout";
 import { authenticate } from "../shopify.server";
@@ -14,10 +14,23 @@ import { saveCustomer } from "../models/customer.server";
 // Frontend.
 export const loader = async ({ request }) => {
   const { admin } = await authenticate.admin(request);
-  console.log('🔄 Starting to fetch orders...');
-  const orderResponse = await admin.graphql(`
+  console.log("🔄 Starting to fetch orders (paginated)...");
+
+  const url = new URL(request.url);
+  const perPage = Number(url.searchParams.get("perPage") || "25");
+  const cursor = url.searchParams.get("cursor");
+  const direction = url.searchParams.get("direction") || "next"; // next or prev
+
+  let args = `first: ${perPage}, reverse: true`;
+  if (cursor && direction !== "prev") {
+    args = `first: ${perPage}, after: "${cursor}", reverse: true`;
+  } else if (cursor && direction === "prev") {
+    args = `last: ${perPage}, before: "${cursor}", reverse: true`;
+  }
+
+  const query = `
     query {
-      orders(first: 250, reverse: true) {
+      orders(${args}) {
         edges {
           node {
             id
@@ -26,40 +39,22 @@ export const loader = async ({ request }) => {
             displayFinancialStatus
             displayFulfillmentStatus
             totalPriceSet {
-              shopMoney {
-                amount
-                currencyCode
-              }
+              shopMoney { amount currencyCode }
             }
-            customer {
-              id
-              firstName
-              lastName
-              email
-              createdAt
-            }
+            customer { id firstName lastName email createdAt }
             lineItems(first: 250) {
               edges {
                 node {
                   title
                   quantity
-                  originalUnitPriceSet {
-                    shopMoney {
-                      amount
-                      currencyCode
-                    }
-                  }
+                  originalUnitPriceSet { shopMoney { amount currencyCode } }
                   variant {
                     id
                     product {
                       id
                       title
-                      metafield(namespace: "custom", key: "product_type") {
-                        value
-                      }
-                      metafield_expiry: metafield(namespace: "custom", key: "expiry_date") {
-                        value
-                      }
+                      metafield(namespace: "custom", key: "product_type") { value }
+                      metafield_expiry: metafield(namespace: "custom", key: "expiry_date") { value }
                     }
                   }
                 }
@@ -69,33 +64,36 @@ export const loader = async ({ request }) => {
         }
         pageInfo {
           hasNextPage
+          hasPreviousPage
+          startCursor
           endCursor
         }
       }
     }
-  `);
+  `;
+
+  const orderResponse = await admin.graphql(query);
   const orderJson = await orderResponse.json();
   const orders = orderJson.data.orders.edges.map((edge) => edge.node);
-  const hasNextPage = orderJson.data.orders.pageInfo.hasNextPage;
+  const pageInfo = orderJson.data.orders.pageInfo || {};
   const totalOrders = orders.length;
-  
+
   // Save order to database.
   let savedCount = 0;
   let skippedCount = 0;
   let customersSaved = 0;
   let customersSkipped = 0;
-  
+
   for (const order of orders) {
     try {
       const numericId = order.id.split('/').pop();
-      
+
       // Save customer.
       let savedCustomer = null;
       if (order.customer && order.customer.id) {
         try {
           const customerShopifyId = order.customer.id.split('/').pop();
 
-          // Prepare customer data.
           const customerData = {
             shopifyId: customerShopifyId,
             firstName: order.customer.firstName,
@@ -117,7 +115,6 @@ export const loader = async ({ request }) => {
         console.log('⚠️ Order has no customer data:', numericId);
       }
 
-      // Line items data.
       const lineItems = {
         edges: order.lineItems.edges.map((edge) => ({
           node: {
@@ -141,7 +138,6 @@ export const loader = async ({ request }) => {
         }))
       };
 
-      // Order data.
       const orderData = {
         id: numericId,
         shopifyOrderId: numericId,
@@ -159,34 +155,23 @@ export const loader = async ({ request }) => {
         const savedOrder = await saveOrder(orderData);
 
         const voucher = await prisma.voucher.findFirst({
-          where: {
-            shopifyOrderId: numericId,
-          },
+          where: { shopifyOrderId: numericId }
         });
 
         savedCount++;
       } catch (error) {
-        console.error('❌ Failed to save order:', {
-          orderId: numericId,
-          error: error.message
-        });
+        console.error('❌ Failed to save order:', { orderId: numericId, error: error.message });
         skippedCount++;
       }
     } catch (error) {
-      console.error('❌ Error processing order:', {
-        name: order.name,
-        id: order.id,
-        error: error.message
-      });
+      console.error('❌ Error processing order:', { name: order.name, id: order.id, error: error.message });
       skippedCount++;
     }
   }
-  
+
   console.log(`💾 Orders saved: ${savedCount}, skipped: ${skippedCount}`);
   console.log(`👤 Customers saved: ${customersSaved}, skipped: ${customersSkipped}`);
-  
-  // Fetch any existing vouchers for these orders.
-  // Ab sirf orders fetch kar rahe hain, save karna webhook pe hota hai
+
   const orderIdsList = orders.map(o => o.name.split('/').pop() || o.name);
   const { getVouchersByOrderIds } = await import('../models/voucher.server');
   const vouchers = await getVouchersByOrderIds(orderIdsList);
@@ -194,7 +179,8 @@ export const loader = async ({ request }) => {
 
   return {
     orders,
-    hasNextPage,
+    pageInfo,
+    perPage,
     totalOrders,
     voucherMap
   };
@@ -203,13 +189,17 @@ export const loader = async ({ request }) => {
 export default function OrdersPage() {
   const {
     orders: initialOrders,
-    hasNextPage,
+    pageInfo,
+    perPage,
     totalOrders,
     voucherMap
   } = useLoaderData();
+  const navigation = useNavigation();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState(initialOrders);
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [lastUpdate, setLastUpdate] = useState(null);
+  const isLoading = navigation.state !== 'idle';
 
   // SSE connection for real-time updates.
   useEffect(() => {
@@ -308,6 +298,64 @@ export default function OrdersPage() {
           </div>
   
           
+          {/* Pagination controls */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button
+                disabled={isLoading || !pageInfo?.hasPreviousPage}
+                onClick={() => {
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('cursor', pageInfo.startCursor);
+                  url.searchParams.set('direction', 'prev');
+                  url.searchParams.set('perPage', String(perPage));
+                  navigate(url.pathname + url.search);
+                }}
+                style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #e5e7eb', background: '#fff' }}
+              >
+                Prev
+              </button>
+
+              <div style={{ color: '#374151' }}>
+                Showing {initialOrders.length} orders
+              </div>
+
+              <button
+                disabled={isLoading || !pageInfo?.hasNextPage}
+                onClick={() => {
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('cursor', pageInfo.endCursor);
+                  url.searchParams.set('direction', 'next');
+                  url.searchParams.set('perPage', String(perPage));
+                  navigate(url.pathname + url.search);
+                }}
+                style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #e5e7eb', background: '#fff' }}
+              >
+                Next
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <label style={{ color: '#6b7280' }}>Per page</label>
+              <select
+                disabled={isLoading}
+                value={perPage}
+                onChange={(e) => {
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('perPage', String(e.target.value));
+                  url.searchParams.delete('cursor');
+                  url.searchParams.delete('direction');
+                  navigate(url.pathname + url.search);
+                }}
+                style={{ padding: '6px', borderRadius: 6 }}
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+          </div>
+
           {orders.length > 0 ? (
             <DataTable
               columnContentTypes={[
