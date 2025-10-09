@@ -201,6 +201,11 @@ export default function OrdersPage() {
   const [lastUpdate, setLastUpdate] = useState(null);
   const isLoading = navigation.state !== 'idle';
 
+  // Keep local orders in sync when loader provides new data (after navigation)
+  React.useEffect(() => {
+    setOrders(initialOrders || []);
+  }, [initialOrders]);
+
   // SSE connection for real-time updates.
   useEffect(() => {
     const eventSource = new EventSource('/webhook-stream');
@@ -276,6 +281,15 @@ export default function OrdersPage() {
   return (
     <SidebarLayout>
       <Page fullWidth title={`Orders (${totalOrders} showing${pageInfo?.hasNextPage ? ', more available' : ''})`}>
+        {isLoading && (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
+            <div style={{ background: '#fff', padding: 20, borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.12)', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div className="loader" style={{ width: 20, height: 20, border: '3px solid #ddd', borderTop: '3px solid #862633', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+              <div style={{ color: '#374151' }}>Loading orders...</div>
+            </div>
+            <style>{`@keyframes spin {0%{transform:rotate(0)}100%{transform:rotate(360deg)}}`}</style>
+          </div>
+        )}
         <BlockStack gap="400">
           {/* Connection Status Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
