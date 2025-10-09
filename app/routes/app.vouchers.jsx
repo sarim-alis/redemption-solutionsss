@@ -234,20 +234,24 @@ export default function VouchersPage() {
           {/* Gift Cards Card */}
           <div style={cardStyle}>
             <div style={{ ...cardTitleStyle, fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>Gift Cards</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-              <div>
-                <div style={cardTitleStyle}>Total</div>
-                <div style={cardValueStyle}>{summary.gifts.total}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                <div>
+                  <div style={cardTitleStyle}>Total</div>
+                  <div style={cardValueStyle}>{summary.gifts.total}</div>
+                </div>
+                <div>
+                  <div style={cardTitleStyle}>Used</div>
+                  <div style={{ ...cardValueStyle, color: '#b91c1c' }}>{summary.gifts.used}</div>
+                </div>
+                <div>
+                  <div style={cardTitleStyle}>Partially Used</div>
+                  <div style={{ ...cardValueStyle, color: '#92400e' }}>{summary.gifts.partial}</div>
+                </div>
+                <div>
+                  <div style={cardTitleStyle}>Available</div>
+                  <div style={{ ...cardValueStyle, color: '#065f46' }}>{summary.gifts.unused}</div>
+                </div>
               </div>
-              <div>
-                <div style={cardTitleStyle}>Used</div>
-                <div style={{ ...cardValueStyle, color: '#b91c1c' }}>{summary.gifts.used}</div>
-              </div>
-              <div>
-                <div style={cardTitleStyle}>Available</div>
-                <div style={{ ...cardValueStyle, color: '#065f46' }}>{summary.gifts.unused}</div>
-              </div>
-            </div>
           </div>
         </div>
 
