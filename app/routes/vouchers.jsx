@@ -3,9 +3,9 @@ import { useLoaderData } from "@remix-run/react";
 import { json } from "@remix-run/node";
 import { Page, DataTable, Text, Button, BlockStack } from "@shopify/polaris";
 import SidebarLayout from "../components/SidebarLayout";
-import { getAllVouchers } from "../models/voucher.server";
-
+// server-only functions will be imported dynamically inside loader to avoid bundling into client
 export const loader = async ({ request }) => {
+  const { getAllVouchers } = await import("../models/voucher.server");
   const vouchers = await getAllVouchers();
   return json({ vouchers });
 };
