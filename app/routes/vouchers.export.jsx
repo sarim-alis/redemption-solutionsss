@@ -1,6 +1,5 @@
 // /app/routes/vouchers.export.jsx
 import puppeteer from "puppeteer";
-import { getAllVouchers } from "../models/voucher.server";
 import prisma from "../db.server";
 import { generateVoucherEmailHTML } from "../utils/voucherEmailTemplateShareds.js";
 import { generateGiftCardEmailHTML } from "../utils/giftCardEmailTemplates.js";
@@ -104,13 +103,15 @@ export const loader = async ({ request }) => {
     return buildPdf([voucher], id);
   }
 
-  // No ID → export all
+  // No ID → export all (dynamically import server-only helper)
+  const { getAllVouchers } = await import("../models/voucher.server");
   const vouchers = await getAllVouchers();
   return buildPdf(vouchers);
 };
 
 // 🔹 Action handles POST requests (export all)
 export const action = async () => {
+  const { getAllVouchers } = await import("../models/voucher.server");
   const vouchers = await getAllVouchers();
   return buildPdf(vouchers);
 };
