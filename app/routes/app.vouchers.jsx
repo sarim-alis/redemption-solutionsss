@@ -30,7 +30,7 @@ function exportToCSV(filename, data) {
   document.body.removeChild(a);
 }
 import React from "react";
-import { useLoaderData, useNavigation } from "@remix-run/react";
+import { useLoaderData, useNavigation, useNavigate } from "@remix-run/react";
 import SidebarLayout from "../components/SidebarLayout";
 import { json } from "@remix-run/node";
 // server-only utilities (imported dynamically inside loader)
@@ -53,9 +53,11 @@ export const loader = async ({ request }) => {
 export default function VouchersPage() {
   const { vouchers, pagination } = useLoaderData();
   const navigation = useNavigation();
+  const navigate = useNavigate();
   const [search, setSearch] = React.useState("");
   
-  const isLoading = navigation.state === "loading";
+  // treat any navigation state other than 'idle' as loading (submitting/loading)
+  const isLoading = navigation.state !== "idle";
   const [dateFilter, setDateFilter] = React.useState("All");
   const [typeFilter, setTypeFilter] = React.useState("all");
   const [usedFilter, setUsedFilter] = React.useState("all");
@@ -343,34 +345,35 @@ export default function VouchersPage() {
         {/* Pagination controls */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <button disabled={!pagination || pagination.page <= 1} onClick={() => {
+            <button disabled={isLoading || !pagination || pagination.page <= 1} onClick={() => {
               const url = new URL(window.location.href);
               url.searchParams.set('page', String((pagination?.page || 1) - 1));
-              window.location.href = url.toString();
+              navigate(url.pathname + url.search);
             }} style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #e5e7eb', background: '#fff' }}>Prev</button>
 
             <div>Page <strong>{pagination?.page || 1}</strong> of <strong>{pagination?.totalPages || 1}</strong></div>
 
-            <button disabled={!pagination || (pagination.page >= pagination.totalPages)} onClick={() => {
+            <button disabled={isLoading || !pagination || (pagination.page >= pagination.totalPages)} onClick={() => {
               const url = new URL(window.location.href);
               url.searchParams.set('page', String((pagination?.page || 1) + 1));
-              window.location.href = url.toString();
+              navigate(url.pathname + url.search);
             }} style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #e5e7eb', background: '#fff' }}>Next</button>
           </div>
 
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <label style={{ color: '#6b7280' }}>Per page</label>
-            <select value={pagination?.perPage || 25} onChange={(e) => {
+            <select disabled={isLoading} value={pagination?.perPage || 25} onChange={(e) => {
               const url = new URL(window.location.href);
               url.searchParams.set('perPage', String(e.target.value));
               url.searchParams.set('page', '1');
-              window.location.href = url.toString();
+              navigate(url.pathname + url.search);
             }} style={{ padding: '6px', borderRadius: 6 }}>
               <option value={10}>10</option>
               <option value={25}>25</option>
               <option value={50}>50</option>
               <option value={100}>100</option>
             </select>
+            {isLoading && <div style={{ marginLeft: 8 }}><Spinner size="small" /></div>}
           </div>
         </div>
 
