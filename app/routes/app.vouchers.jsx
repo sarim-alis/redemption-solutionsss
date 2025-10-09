@@ -33,7 +33,7 @@ import React from "react";
 import { useLoaderData, useNavigation } from "@remix-run/react";
 import SidebarLayout from "../components/SidebarLayout";
 import { json } from "@remix-run/node";
-import { getAllVouchers, getVouchersPage } from "../models/voucher.server";
+// server-only utilities (imported dynamically inside loader)
 import { Spinner } from "@shopify/polaris";
 
 
@@ -43,6 +43,8 @@ export const loader = async ({ request }) => {
   const page = Number(url.searchParams.get('page') || '1');
   const perPage = Number(url.searchParams.get('perPage') || '25');
 
+  // Dynamically import server-only function to avoid bundling server code into client bundle
+  const { getVouchersPage } = await import("../models/voucher.server");
   const data = await getVouchersPage(page, perPage);
   return json({ vouchers: data.items, pagination: { page: data.page, perPage: data.perPage, totalPages: data.totalPages, totalCount: data.totalCount } });
 };
