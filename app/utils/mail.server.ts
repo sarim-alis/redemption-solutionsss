@@ -13,9 +13,13 @@ const transporter = nodemailer.createTransport({
   host: "email-smtp.us-east-1.amazonaws.com",
   port: 587,
   secure: false,
+  requireTLS: true,
   auth: {
     user: smtpUser,
     pass: smtpPass,
+  },
+  tls: {
+    rejectUnauthorized: false,
   },
 });
 
