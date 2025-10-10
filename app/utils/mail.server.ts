@@ -10,7 +10,7 @@ if (!smtpUser || !smtpPass) {
 }
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
+  host: "email-smtp.us-east-1.amazonaws.com",
   port: 587,
   secure: false,
   auth: {
@@ -22,7 +22,7 @@ const transporter = nodemailer.createTransport({
 //@ts-ignore
 export async function sendEmail({ to, subject, text, html }) {
   const info = await transporter.sendMail({
-    from: `"Redemption 👻" <${smtpUser}>`,
+    from: `"Redemption" <${smtpUser}>`,
     to,
     subject,
     text,

@@ -3,9 +3,10 @@ import nodemailer from "nodemailer";
 // Environment variables
 const smtpUser = process.env.SMTP_USER;
 const smtpPass = process.env.SMTP_PASS;
-const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
+const smtpHost = process.env.SMTP_HOST || "email-smtp.us-east-1.amazonaws.com";
 const smtpPort = process.env.SMTP_PORT || 587;
-const smtpSecure = process.env.SMTP_SECURE === 'true' || false;
+const smtpSecure = false;
+const smtpFrom = process.env.SMTP_FROM || "info@jiffylubespecials.com";
 
 console.log("📧 [MailServer] Loading SMTP configuration...");
 console.log(`📧 [MailServer] Host: ${smtpHost}:${smtpPort}`);
@@ -91,7 +92,7 @@ export async function sendEmail({ to, subject, text, html, priority = 'normal', 
     try {
         // Prepare email options
         const mailOptions = {
-            from: `"Jiffy Lube Specials" <${smtpUser}>`,
+            from: `"Jiffy Lube Specials" <${smtpFrom}>`,
             to: Array.isArray(to) ? to.join(', ') : to,
             subject: subject || 'No Subject',
             priority: ['high', 'low'].includes(priority) ? priority : 'normal',
