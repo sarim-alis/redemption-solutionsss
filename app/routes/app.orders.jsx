@@ -78,6 +78,20 @@ export const loader = async ({ request }) => {
   const pageInfo = orderJson.data.orders.pageInfo || {};
   const totalOrders = orders.length;
 
+  // Filter for UI: hide orders processed before 2025-09-25 (inclusive)
+  const HIDE_BEFORE_ISO = '2025-09-25T00:00:00.000Z';
+  const hideBeforeDate = new Date(HIDE_BEFORE_ISO);
+  // visibleOrders are used for rendering and counts; keep original `orders` for saving/processing
+  const visibleOrders = orders.filter(o => {
+    try {
+      const processed = new Date(o.processedAt);
+      return processed >= hideBeforeDate;
+    } catch (e) {
+      // If processedAt is missing or invalid, hide the order by default
+      return false;
+    }
+  });
+
   // Save order to database.
   let savedCount = 0;
   let skippedCount = 0;
@@ -177,11 +191,12 @@ export const loader = async ({ request }) => {
   const vouchers = await getVouchersByOrderIds(orderIdsList);
   const voucherMap = vouchers.reduce((map, v) => ({ ...map, [v.shopifyOrderId]: v.code }), {});
 
+  // For the UI return only visibleOrders (filtered by date)
   return {
-    orders,
+    orders: visibleOrders,
     pageInfo,
     perPage,
-    totalOrders,
+    totalOrders: visibleOrders.length,
     voucherMap
   };
 };
@@ -200,6 +215,10 @@ export default function OrdersPage() {
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [lastUpdate, setLastUpdate] = useState(null);
   const isLoading = navigation.state !== 'idle';
+
+  // Client-side cutoff to keep in sync with server-side filter (hide orders before this date)
+  const HIDE_BEFORE_ISO = '2025-09-25T00:00:00.000Z';
+  const hideBeforeDate = new Date(HIDE_BEFORE_ISO);
 
   // Keep local orders in sync when loader provides new data (after navigation)
   React.useEffect(() => {
@@ -221,8 +240,27 @@ export default function OrdersPage() {
         
         if (data.type === 'webhook' && data.topic?.startsWith('ORDERS_')) {
           console.log('🔄 Received order webhook:', data.topic);
+          // Ignore webhook events for orders older than the cutoff date
+          try {
+            const payloadProcessedAt = data.payload?.processedAt;
+            if (payloadProcessedAt) {
+              const payloadDate = new Date(payloadProcessedAt);
+              if (payloadDate < hideBeforeDate) {
+                console.log('🔇 Ignoring webhook for old order (before cutoff):', data.payload?.id || data.payload?.name);
+                return; // ignore this event
+              }
+            } else {
+              // If payload doesn't include processedAt, be conservative and ignore
+              console.log('🔇 Ignoring webhook without processedAt:', data.payload?.id || data.payload?.name);
+              return;
+            }
+          } catch (err) {
+            console.error('❌ Error parsing webhook processedAt:', err);
+            return;
+          }
+
           setLastUpdate(new Date());
-          
+
           setOrders(currentOrders => {
             switch (data.topic) {
               case 'ORDERS_CREATE':
