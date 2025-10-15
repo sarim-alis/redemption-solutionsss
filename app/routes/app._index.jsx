@@ -164,8 +164,19 @@ export const loader = async ({ request }) => {
   }, 0);
 
   const totalGiftCardBalance = giftCards.reduce((total, card) => {
-    const balance = parseFloat(card.balance.amount);
-    return total + balance;
+    // Prefer remaining/available fields if present; fallback to balance.amount
+    const tryParse = (v) => {
+      if (v === undefined || v === null) return null;
+      const s = String(v).trim();
+      if (s.length === 0) return null;
+      const cleaned = s.replace(/[^0-9.\-]/g, '');
+      const n = Number(cleaned);
+      return Number.isFinite(n) ? n : null;
+    };
+
+    const possible = [card.remainingBalance, card.remaining, card.balance?.amount, card.initialValue?.amount];
+    const val = possible.map(tryParse).find(n => n !== null);
+    return total + (val != null ? val : 0);
   }, 0);
 
   // Fetch vouchers from database.
