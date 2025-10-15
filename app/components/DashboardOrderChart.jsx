@@ -253,7 +253,31 @@ function isProductMatch(product, filter) {
     let location = Array.isArray(voucher.locationUsed)
       ? voucher.locationUsed.filter(Boolean).join(", ")
       : (voucher.locationUsed || "—");
-    let balance = voucher.totalPrice;
+    // Determine available/remaining balance for gift cards/vouchers.
+    // Prefer explicit remaining/available fields over totalPrice (original amount).
+    function parseNumber(val) {
+      if (val === undefined || val === null) return null;
+      const s = String(val).trim();
+      if (s.length === 0) return null;
+      // Remove currency symbols and commas
+      const cleaned = s.replace(/[^0-9.\-]/g, '');
+      const n = Number(cleaned);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    const possibleRemaining = [
+      voucher.remainingBalance,
+      voucher.remaining,
+      voucher.balance,
+      voucher.amountRemaining,
+      voucher.currentBalance,
+      voucher.current_amount,
+      voucher.remaining_amount
+    ];
+    const remaining = possibleRemaining.map(parseNumber).find(n => n !== null);
+
+    // Use remaining if present; otherwise fall back to totalPrice (original amount) or 0
+    let balance = remaining != null ? remaining : (parseNumber(voucher.totalPrice) ?? 0);
 
     if (!product && voucher.order?.lineItems) {
       try {
@@ -270,7 +294,7 @@ function isProductMatch(product, filter) {
       }
     }
 
-    return { product, date, locationUsed: location, used: voucher.order?.statusUse || false, type: voucher.type || "[voucher]", createdAt: voucher.createdAt, balance: voucher.totalPrice || 0, use: voucher.statusUse };
+  return { product, date, locationUsed: location, used: voucher.order?.statusUse || false, type: voucher.type || "[voucher]", createdAt: voucher.createdAt, balance: balance, use: voucher.statusUse };
   });
 
   // Filtered vouchers by date
