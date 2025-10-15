@@ -288,7 +288,7 @@ export function generateUnifiedEmailHTML({ order, vouchers }) {
                   </tr>
                   <tr>
                     <td align="center">
-                      <a href="https://redemption-portal-487066d362b4.herokuapp.com" 
+                      <a href="https://portal.shopjiffylubespecials.com" 
                         style="display:block; background:#862633; color:#ffffff; 
                                 text-decoration:none; font-size:16px; font-weight:bold; 
                                 padding:14px 30px; border-radius:6px; width:100%; box-sizing:border-box">
