@@ -70,8 +70,8 @@ export async function sendVoucherEmailIfFirstOrder(order, voucher, retryCount = 
     let emailSubject, emailText, emailHtml, attachments = [];
     
     if (isGift) {
-      // Gift card email
-      const giftCardAmount = order.totalPrice || 0;
+      // Gift card email - Use voucher.totalPrice instead of order.totalPrice to get the original value before discounts
+      const giftCardAmount = voucher.totalPrice || 0;
       const productTitle = voucher.productTitle || 'Gift Card';
       emailSubject = `Your Jiffy Lube ${productTitle} - Thank You!`;
       emailText = `Hello ${customerName},\n\nThank you for your gift purchase!\n\nProduct: ${productTitle}\nGift Amount: $${giftCardAmount.toFixed(2)}\nGift Code: ${voucherCode}\n\nYou can use this gift at any Jiffy Lube location or online at checkout.\n\nThank you for choosing Jiffy Lube!`;
