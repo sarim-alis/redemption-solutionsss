@@ -341,11 +341,6 @@ export function generateUnifiedEmailHTML({ order, vouchers }) {
                             ${order?.billingAddress?.city || ''}${order?.billingAddress?.province ? ', ' + order.billingAddress.province : ''} ${order?.billingAddress?.zip || ''}<br/>
                             ${order?.billingAddress?.country || ''}
                           </td>
-                          <!-- Payment Method -->
-                          <td width="50%" valign="top" style="font-size:16px; color:#000000;">
-                            <strong style="display:block; margin-bottom:6px;">Payment Method</strong>
-                            Apple Pay
-                          </td>
                         </tr>
                       </table>
                     </td>
